@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Start DevProposal phase — epics, stories, readiness check (John/PM, medium audience)'
 ---
 

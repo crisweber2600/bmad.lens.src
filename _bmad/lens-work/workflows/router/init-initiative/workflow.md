@@ -65,18 +65,21 @@ Collect missing parameters from the user. Present track options from `lifecycle.
 Apply slug-safe validation to all name components (domain, service, feature):
 
 **Rules:**
-- Lowercase alphanumeric characters and hyphens only
-- No leading or trailing hyphens
-- No consecutive hyphens
+- Normalize each component by lowercasing and removing non-alphanumeric characters
+- Resulting component must contain lowercase letters and digits only (`a-z0-9`)
 - 2-50 characters length
 - Must not conflict with reserved tokens: `small`, `medium`, `large`, `base`
 - Must not conflict with phase names: `preplan`, `businessplan`, `techplan`, `devproposal`, `sprintplan`, `dev`
 
-**If invalid:** Reject with explanation and suggest correction.
+**Normalization examples:**
+- `TheNext one` -> `thenextone`
+- `My Feature!` -> `myfeature`
+
+**If invalid after normalization:** Reject with explanation and suggest correction.
 ```
 ❌ Name "My Feature!" is not slug-safe.
-   Suggested: "my-feature"
-   Rules: lowercase, alphanumeric, hyphens only, no leading/trailing hyphens.
+  Suggested: "myfeature"
+  Rules: lowercase alphanumeric only (a-z0-9), 2-50 chars.
 ```
 
 ### Step 3: Derive Initiative Root

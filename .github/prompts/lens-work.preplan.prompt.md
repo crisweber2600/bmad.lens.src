@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Start PrePlan phase — brainstorm, research, product brief (Mary/Analyst, small audience)'
 ---
 

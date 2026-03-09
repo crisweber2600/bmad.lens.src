@@ -1,4 +1,5 @@
 ---
+model: Sonnet 4.6
 description: "Switch to a different initiative branch"
 ---
 

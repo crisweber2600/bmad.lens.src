@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Show consolidated status report across all active initiatives'
 ---
 

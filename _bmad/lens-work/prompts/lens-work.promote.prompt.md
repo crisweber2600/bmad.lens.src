@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /promote Prompt
 
 Promote the current initiative from the current audience tier to the next.

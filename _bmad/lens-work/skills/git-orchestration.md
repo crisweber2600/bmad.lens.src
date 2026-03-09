@@ -42,7 +42,7 @@ git push -u origin "${NEW_BRANCH}"
 - Branch name MUST match lifecycle.yaml `branch_patterns`
 - Audience token MUST be one of: `small`, `medium`, `large`, `base`
 - Phase name MUST be defined in lifecycle.yaml `phases`
-- Initiative root MUST be slug-safe (lowercase alphanumeric + hyphens)
+- Initiative root MUST be slug-safe (`{domain}-{service}-{feature}` pattern where each component is lowercase alphanumeric)
 - Reject invalid names with clear error message
 
 **Audience branch creation policy: LAZY**
@@ -130,7 +130,7 @@ Validate a proposed branch name against lifecycle.yaml patterns.
 **Algorithm:**
 ```bash
 # Parse proposed name against patterns
-# Check: slug-safe characters only (lowercase, digits, hyphens)
+# Check: slug-safe root pattern from normalized components
 # Check: audience token is valid
 # Check: phase name is defined in lifecycle.yaml
 # Return: valid/invalid with reason
@@ -155,7 +155,7 @@ parsed:
   scope: domain
 ```
 
-Service-level example:
+Feature-level example:
 ```yaml
 name: test-worker-small
 valid: true
@@ -169,7 +169,7 @@ Invalid example:
 ```yaml
 name: Foo Bar Auth
 valid: false
-reason: "Branch name must be slug-safe (lowercase alphanumeric and hyphens only)"
+reason: "Name components must be slug-safe (lowercase alphanumeric only)"
 ```
 
 ---

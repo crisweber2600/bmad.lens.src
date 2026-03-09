@@ -1,4 +1,5 @@
 ---
+model: Sonnet 4.6
 description: "Bootstrap a new control repo and onboard the user to lens-work v2"
 ---
 

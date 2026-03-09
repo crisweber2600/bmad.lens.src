@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /techplan Prompt
 
 Route to the techplan phase workflow via the @lens phase router.

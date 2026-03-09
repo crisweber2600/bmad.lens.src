@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Create a new initiative — /new-domain, /new-service, or /new-feature with branch topology'
 ---
 

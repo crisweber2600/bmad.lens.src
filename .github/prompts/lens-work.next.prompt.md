@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Recommend the next actionable task based on lifecycle state'
 ---
 

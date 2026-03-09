@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /devproposal Prompt
 
 Route to the devproposal phase workflow via the @lens phase router.

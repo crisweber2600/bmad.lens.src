@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Start SprintPlan phase — sprint status, story files (Bob/SM, large audience)'
 ---
 

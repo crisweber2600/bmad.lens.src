@@ -40,12 +40,13 @@
 
 | Input Name | Valid | Reason |
 |-----------|-------|--------|
-| `foo-bar-auth` | ✅ | Lowercase alphanumeric + hyphens |
-| `Foo-Bar` | ❌ | Uppercase characters |
+| `thenextone` | ✅ | Lowercase alphanumeric only |
+| `foo-bar` | ❌ | Hyphens are not allowed in a single name component |
+| `FooBar` | ❌ | Uppercase characters |
 | `foo bar` | ❌ | Spaces |
 | `foo_bar` | ❌ | Underscores (not slug-safe) |
-| `foo--bar` | ❌ | Double hyphens |
-| `-foo-bar` | ❌ | Leading hyphen |
+| `foo--bar` | ❌ | Non-alphanumeric separators are stripped during normalization |
+| `-foobar` | ❌ | Non-alphanumeric prefix is invalid input for direct slug-safe validation |
 
 ## Verification Method
 

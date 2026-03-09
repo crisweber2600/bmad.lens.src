@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /preplan Prompt
 
 Route to the preplan phase workflow via the @lens phase router.

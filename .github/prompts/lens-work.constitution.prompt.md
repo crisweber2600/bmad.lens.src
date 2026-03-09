@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Check or resolve constitutional governance for the current initiative'
 ---
 

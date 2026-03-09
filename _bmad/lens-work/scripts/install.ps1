@@ -129,6 +129,7 @@ function New-GHStubPrompt {
     return @"
 ````prompt
 ---
+model: Sonnet 4.6
 description: '$Description'
 ---
 

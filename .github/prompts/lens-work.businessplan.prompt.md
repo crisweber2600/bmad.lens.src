@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM, small audience)'
 ---
 

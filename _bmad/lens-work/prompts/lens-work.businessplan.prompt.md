@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /businessplan Prompt
 
 Route to the businessplan phase workflow via the @lens phase router.

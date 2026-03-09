@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /constitution Prompt
 
 Check or resolve constitutional governance for the current initiative.

@@ -158,6 +158,7 @@ gh_stub_prompt() {
   cat <<EOF
 \`\`\`\`prompt
 ---
+model: Sonnet 4.6
 description: '${description}'
 ---
 

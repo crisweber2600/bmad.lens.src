@@ -1,5 +1,6 @@
 ````prompt
 ---
+model: Sonnet 4.6
 description: 'Promote the active initiative to the next audience level — runs gate checks and creates a promotion PR'
 ---
 

@@ -1,3 +1,7 @@
+---
+model: Sonnet 4.6
+---
+
 # /sprintplan Prompt
 
 Route to the sprintplan phase workflow via the @lens phase router.

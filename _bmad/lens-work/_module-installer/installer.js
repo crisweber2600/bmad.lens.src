@@ -75,6 +75,7 @@ function ghStubPrompt(name, description, targetPrompt, extra) {
     const extraBlock = extra ? `\n${extra}` : '';
     return `\`\`\`\`prompt
 ---
+model: Sonnet 4.6
 description: '${description}'
 ---
 
