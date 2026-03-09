@@ -215,6 +215,11 @@ function Install-GitHubCopilot {
     $agentsDir  = Join-Path $ghDir 'agents'
     $promptsDir = Join-Path $ghDir 'prompts'
 
+    if (Test-Path (Join-Path $ghDir '.git')) {
+        Write-Skip "GitHub Copilot adapter already installed via cloned copilot repo at .github/; skipping generation"
+        return
+    }
+
     Ensure-Directory $agentsDir
     Ensure-Directory $promptsDir
 

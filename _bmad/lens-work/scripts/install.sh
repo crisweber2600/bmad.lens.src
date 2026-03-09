@@ -245,6 +245,11 @@ install_github_copilot() {
   local agents_dir="${gh_dir}/agents"
   local prompts_dir="${gh_dir}/prompts"
 
+  if [[ -d "${gh_dir}/.git" ]]; then
+    log_skip "GitHub Copilot adapter already installed via cloned copilot repo at .github/; skipping generation"
+    return
+  fi
+
   ensure_dir "$agents_dir"
   ensure_dir "$prompts_dir"
 

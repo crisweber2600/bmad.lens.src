@@ -182,6 +182,10 @@ Write-Host "  $ReleaseOrg/$ReleaseRepo -> $ReleaseRepo\    (branch: $ReleaseBran
 Write-Host "  $CopilotOrg/$CopilotRepo -> .github\               (branch: $CopilotBranch)" -ForegroundColor Green
 Write-Host "  $GovernanceOrg/$GovernanceRepo -> $GovernancePath\  (branch: $GovernanceBranch)" -ForegroundColor Green
 Write-Host ""
-Write-Host "Next: Run the module installer to generate IDE-specific adapters:"
-Write-Host "  .\_bmad\lens-work\scripts\install.ps1" -ForegroundColor Cyan
+Write-Host "GitHub Copilot adapter is already installed via the copilot repo (.github/)."
+Write-Host "No further setup is needed if GitHub Copilot is your only IDE."
+Write-Host ""
+Write-Host "For non-Copilot IDEs (cursor, claude, codex), run the module installer:"
+Write-Host "  .\_bmad\lens-work\scripts\install.ps1 -IDE cursor" -ForegroundColor Cyan
+Write-Host "  .\_bmad\lens-work\scripts\install.ps1 -AllIDEs" -ForegroundColor Cyan
 Write-Host ""
