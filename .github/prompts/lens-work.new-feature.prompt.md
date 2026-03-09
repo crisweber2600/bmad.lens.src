@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Create new feature-level initiative within a service'
@@ -14,4 +13,3 @@ Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/l
 ```
 
 Invoke with scope: **feature**
-````

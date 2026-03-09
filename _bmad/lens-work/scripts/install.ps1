@@ -127,7 +127,6 @@ function New-GHStubPrompt {
     $extraBlock = if ($Extra) { "`n$Extra" } else { '' }
 
     return @"
-````prompt
 ---
 model: Sonnet 4.6
 description: '$Description'
@@ -142,7 +141,6 @@ description: '$Description'
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/$TargetPrompt
 ``````
 $extraBlock
-````
 "@
 }
 

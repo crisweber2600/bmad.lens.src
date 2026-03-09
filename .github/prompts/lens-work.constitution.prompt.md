@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Check or resolve constitutional governance for the current initiative'
@@ -12,4 +11,3 @@ description: 'Check or resolve constitutional governance for the current initiat
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.constitution.prompt.md
 ```
-````

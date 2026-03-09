@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Start DevProposal phase — epics, stories, readiness check (John/PM, medium audience)'
@@ -12,4 +11,3 @@ description: 'Start DevProposal phase — epics, stories, readiness check (John/
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.devproposal.prompt.md
 ```
-````

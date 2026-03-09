@@ -73,8 +73,7 @@ You must fully embody this agent's persona and follow all activation instruction
 
 function ghStubPrompt(name, description, targetPrompt, extra) {
     const extraBlock = extra ? `\n${extra}` : '';
-    return `\`\`\`\`prompt
----
+    return `---
 model: Sonnet 4.6
 description: '${description}'
 ---
@@ -88,7 +87,6 @@ description: '${description}'
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/${targetPrompt}
 \`\`\`
 ${extraBlock}
-\`\`\`\`
 `;
 }
 

@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Promote the active initiative to the next audience level — runs gate checks and creates a promotion PR'
@@ -12,4 +11,3 @@ description: 'Promote the active initiative to the next audience level — runs 
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.promote.prompt.md
 ```
-````

@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Create new service-level initiative within a domain'
@@ -14,4 +13,3 @@ Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/l
 ```
 
 Invoke with scope: **service**
-````

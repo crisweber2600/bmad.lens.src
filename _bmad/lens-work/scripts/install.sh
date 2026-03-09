@@ -156,7 +156,6 @@ gh_stub_prompt() {
   local extra="${4:-}"
 
   cat <<EOF
-\`\`\`\`prompt
 ---
 model: Sonnet 4.6
 description: '${description}'
@@ -171,7 +170,6 @@ description: '${description}'
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/${target_prompt}
 \`\`\`
 ${extra}
-\`\`\`\`
 EOF
 }
 

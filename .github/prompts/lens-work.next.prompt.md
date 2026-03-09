@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Recommend the next actionable task based on lifecycle state'
@@ -12,4 +11,3 @@ description: 'Recommend the next actionable task based on lifecycle state'
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.next.prompt.md
 ```
-````

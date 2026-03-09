@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM, small audience)'
@@ -12,4 +11,3 @@ description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM, sma
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.businessplan.prompt.md
 ```
-````

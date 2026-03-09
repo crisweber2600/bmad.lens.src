@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Start TechPlan phase — architecture, technical decisions (Winston/Architect, small audience)'
@@ -12,4 +11,3 @@ description: 'Start TechPlan phase — architecture, technical decisions (Winsto
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.techplan.prompt.md
 ```
-````

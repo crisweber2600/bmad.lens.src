@@ -1,4 +1,3 @@
-````prompt
 ---
 model: Sonnet 4.6
 description: 'Create a new initiative — /new-domain, /new-service, or /new-feature with branch topology'
@@ -12,4 +11,3 @@ description: 'Create a new initiative — /new-domain, /new-service, or /new-fea
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.new-initiative.prompt.md
 ```
-````
