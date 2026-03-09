@@ -94,7 +94,6 @@ Behavior:
   - if missing and remote URL present: run `git clone {remote_url} {local_path}`
   - if missing required fields: mark as `skipped` with reason
 4. Continue processing even if one clone fails; collect per-repo status.
-5. Mirror the inventory file to `_bmad-output/lens-work/repo-inventory.yaml` for local tooling compatibility.
 
 Output a compact result table:
 
@@ -116,7 +115,7 @@ Verify all systems are operational:
 |-------|--------|----------|
 | Provider auth | `provider-adapter validate-auth` | authenticated |
 | Governance repo | File system check at configured path | directory exists |
-| Repo inventory | `{governance_local_path}/repo-inventory.yaml` | file exists |
+| Repo inventory | `{governance_local_path}/repo-inventory.yaml` (in governance repo) | file exists |
 | TargetProjects bootstrap | Clone status table from Step 5 | no fatal failures |
 | Release module version | Read `module.yaml` version | semver present |
 | Workspace structure | Check `_bmad-output/lens-work/` exists | directory exists |

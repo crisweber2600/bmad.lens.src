@@ -126,6 +126,61 @@ function Invoke-CloneOrPull {
     }
 }
 
+function Ensure-GitIgnoreEntries {
+    param(
+        [string]$RootPath
+    )
+
+    $gitIgnorePath = Join-Path $RootPath ".gitignore"
+    $entries = @(
+        "_bmad-output/lens-work/personal/",
+        ".github/",
+        "bmad.lens.release/",
+        "TargetProjects/"
+    )
+
+    $addedCount = 0
+
+    if (-not (Test-Path $gitIgnorePath)) {
+        if ($DryRun) {
+            Write-Info "[DRY-RUN] Would create $gitIgnorePath"
+        }
+        else {
+            New-Item -ItemType File -Path $gitIgnorePath -Force | Out-Null
+            Write-Info "Created $gitIgnorePath"
+        }
+    }
+
+    $existingEntries = @()
+    if (Test-Path $gitIgnorePath) {
+        $existingEntries = Get-Content $gitIgnorePath -ErrorAction SilentlyContinue
+    }
+
+    foreach ($entry in $entries) {
+        if ($existingEntries -contains $entry) {
+            continue
+        }
+
+        if ($DryRun) {
+            Write-Info "[DRY-RUN] Would add '$entry' to .gitignore"
+        }
+        else {
+            Add-Content -Path $gitIgnorePath -Value $entry
+            $addedCount++
+            Write-Info "Added '$entry' to .gitignore"
+        }
+    }
+
+    if (-not $DryRun) {
+        if ($addedCount -eq 0) {
+            Write-Ok ".gitignore already contains required entries"
+        }
+        else {
+            Write-Ok ".gitignore updated with required entries"
+        }
+    }
+}
+
 # =============================================================================
 # MAIN
 # =============================================================================
@@ -173,6 +228,9 @@ if (-not $DryRun) {
 else {
     Write-Info "[DRY-RUN] Would create _bmad-output\lens-work\ directories"
 }
+
+# -- 5. Ensure .gitignore entries -------------------------------------------
+Ensure-GitIgnoreEntries -RootPath $ProjectRoot
 
 # -- Summary ----------------------------------------------------------------
 Write-Host ""

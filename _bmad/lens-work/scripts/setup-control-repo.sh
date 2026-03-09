@@ -186,6 +186,49 @@ clone_or_pull() {
   fi
 }
 
+ensure_gitignore_entries() {
+  local gitignore_file="${PROJECT_ROOT}/.gitignore"
+  local entries=(
+    "_bmad-output/lens-work/personal/"
+    ".github/"
+    "bmad.lens.release/"
+    "TargetProjects/"
+  )
+
+  local added_count=0
+
+  if [[ ! -f "$gitignore_file" ]]; then
+    if [[ "$DRY_RUN" == true ]]; then
+      log_info "[DRY-RUN] Would create ${gitignore_file}"
+    else
+      : > "$gitignore_file"
+      log_info "Created ${gitignore_file}"
+    fi
+  fi
+
+  for entry in "${entries[@]}"; do
+    if [[ -f "$gitignore_file" ]] && grep -Fxq "$entry" "$gitignore_file"; then
+      continue
+    fi
+
+    if [[ "$DRY_RUN" == true ]]; then
+      log_info "[DRY-RUN] Would add '${entry}' to .gitignore"
+    else
+      printf '%s\n' "$entry" >> "$gitignore_file"
+      added_count=$((added_count + 1))
+      log_info "Added '${entry}' to .gitignore"
+    fi
+  done
+
+  if [[ "$DRY_RUN" != true ]]; then
+    if [[ "$added_count" -eq 0 ]]; then
+      log_ok ".gitignore already contains required entries"
+    else
+      log_ok ".gitignore updated with required entries"
+    fi
+  fi
+}
+
 # =============================================================================
 # MAIN
 # =============================================================================
@@ -224,6 +267,9 @@ if [[ "$DRY_RUN" != true ]]; then
 else
   log_info "[DRY-RUN] Would create _bmad-output/lens-work/ directories"
 fi
+
+# -- 5. Ensure .gitignore entries -------------------------------------------
+ensure_gitignore_entries
 
 # -- Summary ----------------------------------------------------------------
 echo ""
