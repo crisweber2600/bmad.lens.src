@@ -482,6 +482,13 @@ PROMPT
             git push origin alpha
             echo "has_changes=true" >> "$GITHUB_ENV"
             echo "✅ Committed and pushed to alpha"
+            echo ""
+            echo "=== Git Commit Verification ==="
+            git log -1 --oneline
+            git log -1 --stat
+            echo ""
+            echo "=== Sample Prompt Content (lens-work.help.prompt.md) ==="
+            head -5 prompts/lens-work.help.prompt.md
           fi
 
       # ── 11. Create PR alpha → beta ─────────────────────────────────
