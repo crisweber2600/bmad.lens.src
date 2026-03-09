@@ -386,21 +386,20 @@ jobs:
               skill_dir="copilot-repo/skills/lens-work-$base"
               mkdir -p "$skill_dir"
 
-              cat > "$skill_dir/SKILL.md" <<EOF
----
-name: lens-work-$base
-description: "LENS Workbench skill '$base' wrapper. Use when lifecycle and orchestration guidance from lens-work is needed."
----
-
-# lens-work-$base
-
-Read and follow all instructions in:
-
-
-\`\`\`
-bmad.lens.release/_bmad/lens-work/skills/$base.md
-\`\`\`
-EOF
+              {
+                echo '---'
+                echo "name: lens-work-$base"
+                echo "description: \"LENS Workbench skill '$base' wrapper. Use when lifecycle and orchestration guidance from lens-work is needed.\""
+                echo '---'
+                echo
+                echo "# lens-work-$base"
+                echo
+                echo 'Read and follow all instructions in:'
+                echo
+                echo '```'
+                echo "bmad.lens.release/_bmad/lens-work/skills/$base.md"
+                echo '```'
+              } > "$skill_dir/SKILL.md"
             done
 
             SKILL_COUNT=$(find copilot-repo/skills -type f -name 'SKILL.md' | wc -l)
