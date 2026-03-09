@@ -88,26 +88,9 @@ output_path = "_bmad-output/lens-work/initiatives/{domain}/{service}/phases/prep
 ensure_directory(output_path)
 ```
 
-### Step 2a: Execution Mode Selection (Interactive or Batch)
+### Step 2a: Workflow & Mode Selection
 
-```yaml
-# Allow per-phase override of global question_mode preference
-ask: |
-  📋 Execution Mode Selection
-
-  How would you like to proceed with this phase?
-
-  **[I] Interactive** — Choose workflows and answer step-by-step
-  **[B] Batch**       — Answer all questions at once in a single file
-
-  Select mode: [I] or [B]
-  (Default: Interactive)
-```
-
-If batch mode selected, invoke batch-process and exit.
-Otherwise continue to Step 3 for interactive workflow selection.
-
-### Step 3: Offer Workflow Options
+Present workflow selection and execution mode together in a single prompt:
 
 ```
 🧭 /preplan — PrePlan Phase
@@ -121,9 +104,21 @@ You're starting the Analysis phase. Available workflows:
 Recommended path: 1 → 2 → 3 (or skip to 3 if you have clarity)
 
 Select workflow(s) to run: [1] [2] [3] [A]ll [S]kip to Product Brief
+
+📋 Execution Mode:
+**[I] Interactive** — Answer step-by-step
+**[B] Batch**       — Answer all questions at once
+(Default: Interactive)
 ```
 
-### Step 4: Execute Selected Workflows
+**⚠️ Brainstorming is ALWAYS interactive.** If the user selects batch mode and brainstorming:
+- Run brainstorming interactively first
+- Then switch to batch mode for the remaining workflows (research, product brief)
+
+If batch mode selected (without brainstorming), invoke batch-process and exit.
+Otherwise continue to Step 3 for interactive execution.
+
+### Step 3: Execute Selected Workflows
 
 **⚠️ CRITICAL — Interactive Workflow Rules:**
 Each sub-workflow uses sequential step-file architecture.
@@ -133,6 +128,10 @@ Each sub-workflow uses sequential step-file architecture.
 - 📋 Back-and-forth dialogue is REQUIRED — you are a facilitator, not a generator
 - 💾 Save/update frontmatter after completing each step before loading the next
 - 🎯 Read the ENTIRE step file before taking any action within it
+
+**⚠️ Brainstorming is ALWAYS interactive** — even when the user selected batch mode.
+If batch mode was chosen alongside brainstorming, run brainstorming interactively first,
+then switch to batch for the remaining workflows.
 
 **Agent:** Adopt Mary (Analyst) persona — load `_bmad/bmm/agents/analyst.md`
 
@@ -185,7 +184,7 @@ params:
     research_summary: "${output_path}/research-summary.md"   # if exists from step [2]
 ```
 
-### Step 5: Commit Artifacts
+### Step 4: Commit Artifacts
 
 Using git-orchestration skill:
 
@@ -193,7 +192,7 @@ Using git-orchestration skill:
 2. Commit with message: `[PREPLAN] {initiative-root} — preplan artifacts complete`
 3. Push to remote (reviewable checkpoint)
 
-### Step 6: Phase Completion
+### Step 5: Phase Completion
 
 ```yaml
 if all_workflows_complete("preplan"):
