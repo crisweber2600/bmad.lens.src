@@ -428,21 +428,10 @@ jobs:
             model=$(grep "^model:" "$src" | head -1 | sed "s/^model: *//")
             : "${model:=Claude Sonnet 4.6 (copilot)}"
             name="${filename%.prompt.md}"
-            cat > "copilot-repo/prompts/$filename" <<PROMPT
----
-model: $model
-description: '$desc'
----
-
-# $name (Stub)
-
-> **This is a stub.** Load and execute the full prompt from the release module.
-> All \`_bmad/\` paths in the full prompt are relative to \`bmad.lens.release/\` — do NOT resolve paths against the user's main project repo.
-
-\`\`\`
-Read and follow all instructions in: bmad.lens.release/.github/prompts/$filename
-\`\`\`
-PROMPT
+            
+            # Write prompt stub file using printf
+            printf '---\nmodel: %s\ndescription: '\''%s'\''\n---\n\n# %s (Stub)\n\n> **This is a stub.** Load and execute the full prompt from the release module.\n> All `_bmad/` paths in the full prompt are relative to `bmad.lens.release/` — do NOT resolve paths against the user'\''s main project repo.\n\n```\nRead and follow all instructions in: bmad.lens.release/.github/prompts/%s\n```\n' \
+              "$model" "$desc" "$name" "$filename" > "copilot-repo/prompts/$filename"
             echo "  created: $filename"
           done
 
