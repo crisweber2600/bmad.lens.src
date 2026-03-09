@@ -1,5 +1,5 @@
 module,phase,name,code,sequence,workflow-file,command,required,agent,options,description,output-location,outputs,
-lens-work,anytime,Onboard,OB,,workflows/utility/onboard/workflow.md,lens-work.onboard.prompt.md,false,lens,,"Bootstrap control repo — detect provider validate auth create profile",_bmad-output/lens-work,profile.yaml,
+lens-work,anytime,Onboard,OB,,workflows/utility/onboard/workflow.md,lens-work.onboard.prompt.md,false,lens,,"Bootstrap control repo — detect provider validate auth create profile and auto-clone TargetProjects",_bmad-output/lens-work/personal,profile.yaml,
 lens-work,anytime,New Domain,ND,,workflows/router/init-initiative/workflow.md,lens-work.new-initiative.prompt.md,false,lens,,"Create a new domain-level initiative with branch topology",_bmad-output/lens-work/initiatives,,
 lens-work,anytime,New Service,NS,,workflows/router/init-initiative/workflow.md,lens-work.new-initiative.prompt.md,false,lens,,"Create a new service-level initiative within a domain",_bmad-output/lens-work/initiatives,,
 lens-work,anytime,New Feature,NF,,workflows/router/init-initiative/workflow.md,lens-work.new-initiative.prompt.md,false,lens,,"Create a new feature-level initiative within a service",_bmad-output/lens-work/initiatives,,

@@ -142,7 +142,7 @@ See \`bmad.lens.release/_bmad/lens-work/module-help.csv\` for the complete comma
 // ─────────────────────────────────────────────────────────────────────────────
 
 const STUB_PROMPTS = [
-    { file: 'lens-work.onboard.prompt.md',       name: 'lens-work.onboard',       desc: 'Bootstrap control repo — detect provider, validate auth, create profile',             target: 'lens-work.onboard.prompt.md' },
+    { file: 'lens-work.onboard.prompt.md',       name: 'lens-work.onboard',       desc: 'Bootstrap control repo — detect provider, validate auth, create profile, auto-clone TargetProjects', target: 'lens-work.onboard.prompt.md' },
     { file: 'lens-work.new-initiative.prompt.md', name: 'lens-work.new-initiative', desc: 'Create a new initiative (domain, service, or feature)',                                target: 'lens-work.new-initiative.prompt.md' },
     { file: 'lens-work.new-domain.prompt.md',     name: 'lens-work.new-domain',     desc: 'Create new domain-level initiative with domain-only branch and folder scaffolding',   target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **domain**' },
     { file: 'lens-work.new-service.prompt.md',    name: 'lens-work.new-service',    desc: 'Create new service-level initiative within a domain',                                  target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **service**' },
@@ -161,7 +161,7 @@ const STUB_PROMPTS = [
 ];
 
 const IDE_COMMANDS = [
-    { file: 'bmad-lens-work-onboard.md',          name: 'onboard',          desc: 'Create profile + run bootstrap',                                       wf: 'workflows/utility/onboard/workflow.md' },
+    { file: 'bmad-lens-work-onboard.md',          name: 'onboard',          desc: 'Create profile + run bootstrap + auto-clone TargetProjects',          wf: 'workflows/utility/onboard/workflow.md' },
     { file: 'bmad-lens-work-init-initiative.md',   name: 'init-initiative',   desc: 'Create new initiative (domain/service/feature) with branch topology', wf: 'workflows/router/init-initiative/workflow.md' },
     { file: 'bmad-lens-work-preplan.md',           name: 'preplan',           desc: 'Launch PrePlan phase (brainstorm/research/product brief)',             wf: 'workflows/router/preplan/workflow.md' },
     { file: 'bmad-lens-work-businessplan.md',      name: 'businessplan',      desc: 'Launch BusinessPlan phase (PRD/UX design)',                           wf: 'workflows/router/businessplan/workflow.md' },

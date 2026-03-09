@@ -14,7 +14,7 @@
 Check if the user is a first-time user (no `profile.yaml`):
 
 ```bash
-test -f _bmad-output/lens-work/profile.yaml
+test -f _bmad-output/lens-work/personal/profile.yaml
 ```
 
 - **First-time user:** Show extended introduction before command list.
@@ -96,7 +96,7 @@ Load `module-help.csv` from the lens-work module root to get the canonical comma
 
 ━━━ 🔧 Utility ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  /onboard          Bootstrap control repo — detect provider, validate auth
+  /onboard          Bootstrap control repo — detect provider, validate auth, clone repos
                     Usage: /onboard
 
   /help             Show this command reference

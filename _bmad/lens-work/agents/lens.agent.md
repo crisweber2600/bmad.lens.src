@@ -105,7 +105,7 @@ Use git-orchestration `create-branch` operation.
 
 | Command | Workflow | Description |
 |---------|----------|-------------|
-| `/onboard` | utility/onboard | Bootstrap profile, auth, governance |
+| `/onboard` | utility/onboard | Bootstrap profile, auth, governance, and TargetProjects clones |
 | `/status` | utility/status | Git-derived state report across all initiatives |
 | `/next` | utility/next | Recommend next action based on lifecycle state |
 | `/switch` | utility/switch | Checkout a different initiative branch |

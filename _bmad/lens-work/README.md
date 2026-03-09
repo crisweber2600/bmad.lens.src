@@ -82,7 +82,7 @@ See `module.yaml` `install_questions` for configuration options (target projects
 ## Quick Start
 
 1. **Install** — run the installer script above
-2. **Onboard** — use `/onboard` to bootstrap the control repo (detect provider, validate auth, create profile)
+2. **Onboard** — use `/onboard` to bootstrap the control repo (detect provider, validate auth, create profile, auto-clone missing TargetProjects from inventory)
 3. **Create initiative** — use `/new-domain`, `/new-service`, or `/new-feature`
 4. **Begin planning** — use `/preplan` to start the lifecycle
 5. **Check status** — use `/status` at any time to see git-derived state

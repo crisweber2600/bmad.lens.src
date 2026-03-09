@@ -281,7 +281,7 @@ You must fully embody this agent's persona and follow all activation instruction
 
   write_file "${prompts_dir}/lens-work.onboard.prompt.md" \
     "$(gh_stub_prompt "lens-work.onboard" \
-       "Bootstrap control repo — detect provider, validate auth, create profile" \
+       "Bootstrap control repo — detect provider, validate auth, create profile, auto-clone TargetProjects" \
        "lens-work.onboard.prompt.md")"
 
   write_file "${prompts_dir}/lens-work.new-initiative.prompt.md" \
@@ -417,7 +417,7 @@ install_cursor() {
 
   write_file "${cursor_dir}/bmad-lens-work-onboard.md" \
     "$(cursor_command "onboard" \
-       "Create profile + run bootstrap" \
+       "Create profile + run bootstrap + auto-clone TargetProjects" \
        "workflows/utility/onboard/workflow.md")"
 
   write_file "${cursor_dir}/bmad-lens-work-init-initiative.md" \
@@ -517,7 +517,7 @@ install_claude() {
 
   write_file "${claude_dir}/bmad-lens-work-onboard.md" \
     "$(claude_command "onboard" \
-       "Create profile + run bootstrap" \
+       "Create profile + run bootstrap + auto-clone TargetProjects" \
        "workflows/utility/onboard/workflow.md")"
 
   write_file "${claude_dir}/bmad-lens-work-init-initiative.md" \
@@ -653,7 +653,7 @@ AGENTSEOF
 
   write_file "${codex_dir}/bmad-lens-work-onboard.md" \
     "$(codex_command "onboard" \
-       "Create profile + run bootstrap" \
+       "Create profile + run bootstrap + auto-clone TargetProjects" \
        "workflows/utility/onboard/workflow.md")"
 
   write_file "${codex_dir}/bmad-lens-work-init-initiative.md" \

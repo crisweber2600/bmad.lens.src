@@ -78,7 +78,7 @@ workflows:
   utility:
     - id: onboard
       path: workflows/utility/onboard/
-      description: "/onboard — profile, auth, governance bootstrap"
+      description: "/onboard — profile, auth, governance bootstrap, TargetProjects auto-clone"
     - id: status
       path: workflows/utility/status/
       description: "/status — git-derived state report"

@@ -95,7 +95,7 @@ Only `{root}` and `{root}-small` are created at init. Higher audience branches a
 
 | Command | Purpose |
 |---------|---------|
-| `/onboard` | Bootstrap control repo — provider auth, governance, profile |
+| `/onboard` | Bootstrap control repo — provider auth, governance clone, profile, and TargetProjects auto-clone |
 | `/status` | Show all initiatives with phases, audiences, and pending actions |
 | `/next` | Recommend the next action based on lifecycle state |
 | `/switch` | Checkout a different initiative's branch |

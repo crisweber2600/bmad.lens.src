@@ -251,7 +251,7 @@ You must fully embody this agent's persona and follow all activation instruction
 
     # -- Stub prompts --
     $prompts = @(
-        @{ File='lens-work.onboard.prompt.md';         Name='lens-work.onboard';         Desc='Bootstrap control repo — detect provider, validate auth, create profile';                    Target='lens-work.onboard.prompt.md' }
+        @{ File='lens-work.onboard.prompt.md';         Name='lens-work.onboard';         Desc='Bootstrap control repo — detect provider, validate auth, create profile, auto-clone TargetProjects'; Target='lens-work.onboard.prompt.md' }
         @{ File='lens-work.new-initiative.prompt.md';   Name='lens-work.new-initiative';   Desc='Create a new initiative (domain, service, or feature)';                                      Target='lens-work.new-initiative.prompt.md' }
         @{ File='lens-work.new-domain.prompt.md';       Name='lens-work.new-domain';       Desc='Create new domain-level initiative with domain-only branch and folder scaffolding';            Target='lens-work.new-initiative.prompt.md'; Extra="`nInvoke with scope: **domain**" }
         @{ File='lens-work.new-service.prompt.md';      Name='lens-work.new-service';      Desc='Create new service-level initiative within a domain';                                         Target='lens-work.new-initiative.prompt.md'; Extra="`nInvoke with scope: **service**" }
@@ -326,7 +326,7 @@ function Install-Cursor {
     Ensure-Directory $cursorDir
 
     $commands = @(
-        @{ File='bmad-lens-work-onboard.md';            Name='onboard';            Desc='Create profile + run bootstrap';                                   WF='workflows/utility/onboard/workflow.md' }
+        @{ File='bmad-lens-work-onboard.md';            Name='onboard';            Desc='Create profile + run bootstrap + auto-clone TargetProjects';      WF='workflows/utility/onboard/workflow.md' }
         @{ File='bmad-lens-work-init-initiative.md';     Name='init-initiative';     Desc='Create new initiative (domain/service/feature) with branch topology'; WF='workflows/router/init-initiative/workflow.md' }
         @{ File='bmad-lens-work-preplan.md';             Name='preplan';             Desc='Launch PrePlan phase (brainstorm/research/product brief)';         WF='workflows/router/preplan/workflow.md' }
         @{ File='bmad-lens-work-businessplan.md';        Name='businessplan';        Desc='Launch BusinessPlan phase (PRD/UX design)';                       WF='workflows/router/businessplan/workflow.md' }
@@ -364,7 +364,7 @@ function Install-Claude {
     Ensure-Directory $claudeDir
 
     $commands = @(
-        @{ File='bmad-lens-work-onboard.md';            Name='onboard';            Desc='Create profile + run bootstrap';                                   WF='workflows/utility/onboard/workflow.md' }
+        @{ File='bmad-lens-work-onboard.md';            Name='onboard';            Desc='Create profile + run bootstrap + auto-clone TargetProjects';      WF='workflows/utility/onboard/workflow.md' }
         @{ File='bmad-lens-work-init-initiative.md';     Name='init-initiative';     Desc='Create new initiative (domain/service/feature) with branch topology'; WF='workflows/router/init-initiative/workflow.md' }
         @{ File='bmad-lens-work-preplan.md';             Name='preplan';             Desc='Launch PrePlan phase (brainstorm/research/product brief)';         WF='workflows/router/preplan/workflow.md' }
         @{ File='bmad-lens-work-businessplan.md';        Name='businessplan';        Desc='Launch BusinessPlan phase (PRD/UX design)';                       WF='workflows/router/businessplan/workflow.md' }
@@ -440,7 +440,7 @@ See `bmad.lens.release/_bmad/lens-work/module-help.csv` for the complete command
     Ensure-Directory $codexDir
 
     $commands = @(
-        @{ File='bmad-lens-work-onboard.md';            Name='onboard';            Desc='Create profile + run bootstrap';                                   WF='workflows/utility/onboard/workflow.md' }
+        @{ File='bmad-lens-work-onboard.md';            Name='onboard';            Desc='Create profile + run bootstrap + auto-clone TargetProjects';      WF='workflows/utility/onboard/workflow.md' }
         @{ File='bmad-lens-work-init-initiative.md';     Name='init-initiative';     Desc='Create new initiative (domain/service/feature) with branch topology'; WF='workflows/router/init-initiative/workflow.md' }
         @{ File='bmad-lens-work-preplan.md';             Name='preplan';             Desc='Launch PrePlan phase (brainstorm/research/product brief)';         WF='workflows/router/preplan/workflow.md' }
         @{ File='bmad-lens-work-businessplan.md';        Name='businessplan';        Desc='Launch BusinessPlan phase (PRD/UX design)';                       WF='workflows/router/businessplan/workflow.md' }

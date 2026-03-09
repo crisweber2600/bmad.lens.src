@@ -47,17 +47,22 @@ If auth fails, guide the user:
 
 ### Step 3: Verify Governance Repo
 
-Check if the governance repo is cloned at the configured path (from `governance-setup.yaml` if it exists, otherwise use defaults from `lifecycle.yaml`).
+Resolve governance configuration from `_bmad-output/lens-work/governance-setup.yaml` when present. If missing, use lifecycle defaults:
 
-If governance repo is missing:
-> Governance repo not found at `{path}`. Clone it with:
-> `git clone {governance_remote_url} {local_path}`
+- `path`: `TargetProjects/lens/lens-governance`
+- `remote_url`: infer from org/provider context or prompt user once if not derivable
 
-Governance repo is a hard prerequisite (Design Axiom A3).
+If the governance repo is missing locally, clone it automatically:
+
+```bash
+git clone {governance_remote_url} {governance_local_path}
+```
+
+Then verify `repo-inventory.yaml` exists in the governance repo root. Governance remains a hard prerequisite (Design Axiom A3).
 
 ### Step 4: Create Profile
 
-Create `_bmad-output/lens-work/profile.yaml` with non-secret user configuration:
+Create `_bmad-output/lens-work/personal/profile.yaml` with non-secret user configuration:
 
 ```yaml
 # profile.yaml — committed, non-secret user profile
@@ -73,7 +78,37 @@ created: {ISO8601}
 
 This file IS committed to git (Domain 1 artifact). It contains NO secrets.
 
-### Step 5: Run Health Check
+### Step 5: Bootstrap Target Project Clones
+
+Read `{governance_local_path}/repo-inventory.yaml` and bootstrap repository clones automatically.
+
+Behavior:
+
+1. Parse inventory entries from common schemas:
+  - list keys: `repositories`, `repos`, or top-level list
+  - remote keys: `remote_url`, `repo_url`, `remote`, or `url`
+  - local path keys: `local_path`, `clone_path`, or `path`
+2. Resolve each local path relative to control repo root.
+3. For each entry:
+  - if `{local_path}/.git` exists: mark as `already-present`
+  - if missing and remote URL present: run `git clone {remote_url} {local_path}`
+  - if missing required fields: mark as `skipped` with reason
+4. Continue processing even if one clone fails; collect per-repo status.
+5. Mirror the inventory file to `_bmad-output/lens-work/repo-inventory.yaml` for local tooling compatibility.
+
+Output a compact result table:
+
+```
+| Repo | Path | Action | Status |
+|------|------|--------|--------|
+| lens-governance | TargetProjects/lens/lens-governance | verify | ✅ present |
+| NorthStarET | TargetProjects/northstar/NorthStarET | clone | ✅ cloned |
+| OldNorthStar | TargetProjects/northstar/OldNorthStar | clone | ⚠️ failed |
+```
+
+Do not defer onboarding completeness to `/reconcile` for repositories listed in the inventory.
+
+### Step 6: Run Health Check
 
 Verify all systems are operational:
 
@@ -81,16 +116,20 @@ Verify all systems are operational:
 |-------|--------|----------|
 | Provider auth | `provider-adapter validate-auth` | authenticated |
 | Governance repo | File system check at configured path | directory exists |
+| Repo inventory | `{governance_local_path}/repo-inventory.yaml` | file exists |
+| TargetProjects bootstrap | Clone status table from Step 5 | no fatal failures |
 | Release module version | Read `module.yaml` version | semver present |
 | Workspace structure | Check `_bmad-output/lens-work/` exists | directory exists |
 
 Report all checks with pass/fail status.
 
-### Step 6: Report Next Command
+### Step 7: Report Next Command
 
 On successful onboarding:
 
 > ✅ Onboarding complete! You're set up as {role} in the {domain} domain.
+> 
+> TargetProjects bootstrap: {cloned_count} cloned, {existing_count} already present, {failed_count} failed.
 > 
 > Run `/next` to see what to work on, or `/status` for the full picture.
 > To create your first initiative, try `/new-domain`.
@@ -114,7 +153,8 @@ On successful onboarding:
 | Git not initialized | "This directory is not a git repo. Run `git init` first." |
 | No remote configured | "No git remote found. Add one with `git remote add origin {url}`." |
 | Provider auth fails | Guide to run `store-github-pat` script (GitHub) or `az login` (Azure DevOps) |
-| Governance repo missing | Provide clone command |
+| Governance repo missing | Auto-clone using configured/default governance remote and path |
+| Repo inventory missing | "`repo-inventory.yaml` not found in governance repo. Add it before onboarding can bootstrap TargetProjects." |
 | Release module not found | "Release module not found at expected path. Verify setup." |
 
 ## Dependencies
