@@ -194,6 +194,13 @@ Using git-orchestration skill:
 
 ### Step 5: Phase Completion
 
+> **⛔ MANDATORY EPILOGUE — NEVER SKIP**
+> Steps 5–8 below MUST execute after artifact generation completes,
+> regardless of how artifacts were produced (interactive, batch, YOLO, or
+> recovery from interruption). Committing artifacts without creating the
+> PR leaves the phase in a broken state. If you have committed and pushed
+> artifacts, you are NOT done — continue executing from this point.
+
 ```yaml
 if all_workflows_complete("preplan"):
   # Push final state to phase branch

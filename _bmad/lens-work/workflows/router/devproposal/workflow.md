@@ -393,6 +393,13 @@ invoke: git-orchestration.finish-workflow
 
 ### 4. Phase Completion — Push Only
 
+> **⛔ MANDATORY EPILOGUE — NEVER SKIP**
+> Steps 4–7 below MUST execute after artifact generation completes,
+> regardless of how artifacts were produced (interactive, batch, YOLO, or
+> recovery from interruption). Committing artifacts without creating the
+> PR leaves the phase in a broken state. If you have committed and pushed
+> artifacts, you are NOT done — continue executing from this point.
+
 ```yaml
 # REQ-7: Never auto-merge. PR created in S1.2.
 if all_workflows_complete("devproposal"):
