@@ -1,5 +1,5 @@
 ---
-model: Sonnet 4.6
+model: Claude Sonnet 4.6 (copilot)
 description: "Bootstrap a new control repo and onboard the user to lens-work v2"
 ---
 
