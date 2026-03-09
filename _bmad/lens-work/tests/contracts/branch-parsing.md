@@ -32,7 +32,9 @@
 |-------------|---------------|-------|
 | `a-small` | `a` | Single-char root |
 | `a-b-c-d-small-techplan` | `a-b-c-d` | Multi-segment root |
-| `payments-small-businessplan` | `payments` | Domain-only initiative |
+| `payments-small-businessplan` | `payments` | Single-segment root (service/feature only — domains never have audiences) |
+| `test-worker-small` | `test-worker` | Service-level initiative |
+| `test-worker-small-techplan` | `test-worker` | Service-level with phase |
 
 ### Slug-Safe Validation
 

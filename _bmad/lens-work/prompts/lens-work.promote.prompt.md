@@ -5,7 +5,7 @@ Promote the current initiative from the current audience tier to the next.
 ## Routing
 
 1. Run preflight before promotion routing:
-	- If current branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
+	- If the `bmad.lens.release` branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
 	- For all other branches, run standard session preflight (daily freshness).
 2. Load `lifecycle.yaml` from the lens-work module
 3. Use `git-state` skill → `current-initiative` to confirm on an initiative branch

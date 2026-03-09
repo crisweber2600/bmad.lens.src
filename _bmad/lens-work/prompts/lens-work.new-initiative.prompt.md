@@ -13,9 +13,9 @@ Routes `/new-domain`, `/new-service`, and `/new-feature` commands to the init-in
 ## Parameters
 
 - **scope**: `domain` | `service` | `feature` (derived from which `/new-*` command was used)
-- **domain**: Domain name (required for all scopes, collected or from context)
-- **service**: Service/repo name (required for all scopes, collected or from context)
-- **feature**: The feature/initiative name (required for all scopes)
+- **domain**: Domain name (collected for domain scope; from context for service/feature)
+- **service**: Service/repo name (collected for service scope; from context for feature scope; not used for domain scope)
+- **feature**: The feature/initiative name (collected for feature scope only)
 - **track**: Lifecycle track
 
 ## Steps
@@ -24,7 +24,7 @@ Routes `/new-domain`, `/new-service`, and `/new-feature` commands to the init-in
 
 Before continuing, run preflight:
 
-- If current branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
+- If the `bmad.lens.release` branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
 - For all other branches, run standard session preflight (daily freshness).
 - If preflight fails for missing authority repos, stop and report the failure.
 
@@ -32,11 +32,11 @@ Before continuing, run preflight:
 
 | Command | Collection Strategy | Initiative Root |
 |---------|---------------------|-----------------|
-| `/new-domain` | Collect: domain → service → feature → track | `{domain}-{service}-{feature}` |
-| `/new-service` | Use context domain, collect: service → feature → track | `{domain}-{service}-{feature}` |
-| `/new-feature` | Use context domain + service, collect: feature → track | `{domain}-{service}-{feature}` |
+| `/new-domain` | Collect: domain name → track | `{domain}` |
+| `/new-service` | Use context domain, collect: service name → track | `{domain}-{service}` |
+| `/new-feature` | Use context domain + service, collect: feature name → track | `{domain}-{service}-{feature}` |
 
-**All initiatives are created at the `{domain}-{service}-{feature}` level.** Domains and services are organizational boundaries.
+**Each scope creates an initiative root with the appropriate number of segments.** Do NOT collect parameters beyond the scope level.
 
 ### Step 2: Execute Workflow
 

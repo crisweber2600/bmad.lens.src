@@ -38,6 +38,7 @@
 | `payments-auth-oauth-small-techplan` | `payments` | `auth` | `oauth` |
 | `payments-auth-small` | `payments` | `auth` | null |
 | `payments-billing-invoices-medium` | `payments` | `billing` | `invoices` |
+| `test-worker-small-preplan` | `test` | `worker` | null |
 
 ## Deduplication
 

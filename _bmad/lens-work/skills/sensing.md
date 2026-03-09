@@ -34,8 +34,9 @@ List all active initiatives and identify overlaps with the current initiative.
 **Input:**
 ```yaml
 current_domain: payments
-current_service: auth        # optional — null for domain-level initiatives
-current_feature: oauth       # optional — null for service or domain-level
+current_service: auth        # null for domain-level initiatives
+current_feature: oauth       # null for service or domain-level initiatives
+current_scope: feature       # domain | service | feature
 ```
 
 **Algorithm:**
@@ -45,8 +46,8 @@ current_feature: oauth       # optional — null for service or domain-level
 3. Parse each branch name to extract:
    - `initiative_root`: everything before the audience token
    - `domain`: first segment of the root
-   - `service`: second segment of the root (if present)
-   - `feature`: third segment of the root (if present)
+   - `service`: second segment of the root (if present; null for domain-only roots)
+   - `feature`: third segment of the root (if present; null for domain or service-level roots)
    - `audience`: the audience token (small/medium/large/base)
    - `phase`: the phase suffix (if present)
 4. Group parsed branches by initiative root (deduplicate — multiple branches per initiative)
@@ -115,19 +116,26 @@ Constitution requires explicit conflict resolution for this domain.
 
 ## Branch Naming Pattern
 
-Sensing relies on the branch naming convention defined in lifecycle.yaml:
+Sensing relies on the branch naming convention defined in lifecycle.yaml. **Initiative roots have variable segment counts depending on scope:**
 
 ```
-{domain}-{service}-{feature}-{audience}[-{phase}]
+{domain}                                   # domain-level root
+{domain}-{service}                         # service-level root
+{domain}-{service}-{feature}               # feature-level root
+{root}-{audience}                          # audience branch
+{root}-{audience}-{phase}                  # phase branch
 ```
 
 Examples:
 ```
-payments-auth-oauth-small-preplan      → domain:payments, service:auth, feature:oauth, audience:small, phase:preplan
-payments-auth-oauth-small              → domain:payments, service:auth, feature:oauth, audience:small, phase:null
-payments-billing-invoicing-medium      → domain:payments, service:billing, feature:invoicing, audience:medium
-infra-cicd-pipeline-small-techplan     → domain:infra, service:cicd, feature:pipeline, audience:small, phase:techplan
+test-worker-small                          → domain:test, service:worker, feature:null, audience:small, phase:null
+test-worker-small-preplan                  → domain:test, service:worker, feature:null, audience:small, phase:preplan
+payments-auth-oauth-small-preplan          → domain:payments, service:auth, feature:oauth, audience:small, phase:preplan
+payments-auth-oauth-small                  → domain:payments, service:auth, feature:oauth, audience:small, phase:null
+payments-billing-invoicing-medium          → domain:payments, service:billing, feature:invoicing, audience:medium
 ```
+
+> **Note:** Domain branches never have audience suffixes. A bare `test` branch is the domain root — it never appears as `test-small`.
 
 ## Error Handling
 

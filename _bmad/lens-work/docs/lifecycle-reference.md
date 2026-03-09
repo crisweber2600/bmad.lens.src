@@ -13,13 +13,13 @@ The LENS Workbench manages software initiatives through a structured lifecycle o
 
 ### Initiatives
 
-An initiative is a unit of work scoped to a domain, service, or feature. Each initiative has its own branch topology in the control repo.
+An initiative is a unit of work scoped to a domain, service, or feature. Each initiative has its own branch topology in the control repo. **Initiative roots have variable segment counts depending on scope.**
 
-| Scope | Example Root | Created By |
-|-------|-------------|-----------|
-| Domain | `payments-auth` | `/new-domain` |
-| Service | `payments-auth-oauth` | `/new-service` |
-| Feature | `payments-auth-oauth-refresh` | `/new-feature` |
+| Scope | Example Root | Created By | Segments |
+|-------|-------------|-----------|----------|
+| Domain | `test` | `/new-domain` | 1 |
+| Service | `test-worker` | `/new-service` | 2 |
+| Feature | `test-worker-oauth` | `/new-feature` | 3 |
 
 ### Phases
 
@@ -43,6 +43,8 @@ Audiences represent levels of review and approval. Initiatives start at `small` 
 | medium | Lead review | Adversarial review (party mode) | devproposal |
 | large | Stakeholder approval | Stakeholder approval | sprintplan |
 | base | Ready for execution | Constitution gate | — (dev happens in target projects) |
+
+> **Note:** Domains never have audience branches. Audiences apply only to service-level and feature-level initiatives. A domain branch is the bare root (e.g., `test`), with no `-small` suffix.
 
 ### Tracks
 

@@ -16,7 +16,7 @@ Routes the `/help` command to the help workflow, which displays all available co
 
 Before continuing, run preflight:
 
-- If current branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
+- If the `bmad.lens.release` branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
 - For all other branches, run standard session preflight (daily freshness).
 - If preflight fails for missing authority repos, stop and report the failure.
 

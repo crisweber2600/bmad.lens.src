@@ -3,7 +3,7 @@
 Route to the preplan phase workflow via the @lens phase router.
 
 1. Run preflight before routing:
-   - If current branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
+   - If the `bmad.lens.release` branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
    - For all other branches, run standard session preflight (daily freshness).
 2. Load `lifecycle.yaml` from the lens-work module
 3. Invoke phase routing for `preplan`:

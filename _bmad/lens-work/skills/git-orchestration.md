@@ -146,6 +146,25 @@ parsed:
   phase: techplan
 ```
 
+Domain-only example (no audience — domains don't have audience branches):
+```yaml
+name: test
+valid: true
+parsed:
+  initiative_root: test
+  scope: domain
+```
+
+Service-level example:
+```yaml
+name: test-worker-small
+valid: true
+parsed:
+  initiative_root: test-worker
+  audience: small
+  phase: null
+```
+
 Invalid example:
 ```yaml
 name: Foo Bar Auth

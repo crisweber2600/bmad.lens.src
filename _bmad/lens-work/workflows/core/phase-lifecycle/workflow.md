@@ -8,7 +8,7 @@
 
 Run preflight before executing this workflow:
 
-- Determine current branch using `git branch --show-current`.
+- Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
 - If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
 - Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
 - If preflight reports missing authority repos: stop and return the preflight failure message.

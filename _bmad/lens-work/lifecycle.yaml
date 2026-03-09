@@ -297,9 +297,12 @@ target_projects:
 initiative:
   scope_levels: [repo, service, domain, org]
   config_schema:
-    required_fields: [initiative, domain, track, created, initiative_root]
-    optional_fields: [service, language]
-    path_pattern: "_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml"
+    required_fields: [initiative, scope, domain, track, created, initiative_root]
+    optional_fields: [service, feature, language]
+    path_patterns:
+      domain: "_bmad-output/lens-work/initiatives/{domain}/initiative.yaml"
+      service: "_bmad-output/lens-work/initiatives/{domain}/{service}/initiative.yaml"
+      feature: "_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml"
 
 # -----------------------------------------------------------------------------
 # CONSTITUTION SCHEMA

@@ -68,7 +68,18 @@ if (-not $ReleaseOrg) { $ReleaseOrg = $Org }
 if (-not $CopilotOrg) { $CopilotOrg = $Org }
 if (-not $GovernanceOrg) { $GovernanceOrg = $Org }
 
-$ProjectRoot = Get-Location
+try {
+    $gitRoot = (git -C (Split-Path -Parent $PSCommandPath) rev-parse --show-toplevel 2>$null).Trim()
+    if (-not $gitRoot -or $LASTEXITCODE -ne 0) {
+        throw "No git root detected"
+    }
+    $ProjectRoot = $gitRoot
+}
+catch {
+    # Fallback: this script lives at _bmad\lens-work\scripts\
+    $scriptDir = Split-Path -Parent $PSCommandPath
+    $ProjectRoot = (Resolve-Path (Join-Path $scriptDir "..\..\..")).Path
+}
 
 # -- Helper Functions -------------------------------------------------------
 
@@ -243,7 +254,7 @@ Write-Host ""
 Write-Host "GitHub Copilot adapter is already installed via the copilot repo (.github/)."
 Write-Host "No further setup is needed if GitHub Copilot is your only IDE."
 Write-Host ""
-Write-Host "For non-Copilot IDEs (cursor, claude, codex), run the module installer:"
-Write-Host "  .\_bmad\lens-work\scripts\install.ps1 -IDE cursor" -ForegroundColor Cyan
-Write-Host "  .\_bmad\lens-work\scripts\install.ps1 -AllIDEs" -ForegroundColor Cyan
+Write-Host 'For non-Copilot IDEs, run the module installer:'
+Write-Host '  .\_bmad\lens-work\scripts\install.ps1 -IDE cursor' -ForegroundColor Cyan
+Write-Host '  .\_bmad\lens-work\scripts\install.ps1 -AllIDEs' -ForegroundColor Cyan
 Write-Host ""

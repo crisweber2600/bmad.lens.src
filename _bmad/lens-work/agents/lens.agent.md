@@ -192,8 +192,8 @@ At session start, @lens verifies all authority domain repos are present and pull
 Preflight uses `_bmad-output/lens-work/.preflight-timestamp` to track the last pull. The file contains a single ISO 8601 date (e.g., `2026-03-09`).
 
 **Algorithm:**
-1. Read current branch with `git branch --show-current`.
-2. If current branch is `alpha` or `beta` → ALWAYS run full preflight (presence + pull), ignoring timestamp cache.
+1. Read the `bmad.lens.release` branch with `git -C bmad.lens.release branch --show-current`.
+2. If the `bmad.lens.release` branch is `alpha` or `beta` → ALWAYS run full preflight (presence + pull), ignoring timestamp cache.
 3. Otherwise, read `.preflight-timestamp`. If the date matches today → skip pulls, run presence checks only.
 4. If the timestamp file is missing or older than today → run full preflight (presence + pull).
 5. After a successful full preflight, write today's date to `.preflight-timestamp`.

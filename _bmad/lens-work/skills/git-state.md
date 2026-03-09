@@ -45,8 +45,17 @@ INITIATIVE_ROOT=$(echo "$BRANCH" | sed -E 's/-(small|medium|large|base)(-.*)?$//
 ```yaml
 initiative_root: foo-bar-auth
 branch: foo-bar-auth-small-techplan
+scope: feature        # derived from config or segment count
 config_path: _bmad-output/lens-work/initiatives/foo/bar/auth.yaml
 ```
+
+**Config path resolution:**
+The config path depends on initiative scope (segment count in root):
+- 1 segment (domain): `_bmad-output/lens-work/initiatives/{domain}/initiative.yaml`
+- 2 segments (service): `_bmad-output/lens-work/initiatives/{domain}/{service}/initiative.yaml`
+- 3 segments (feature): `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`
+
+When the config file exists, read the `scope` field to resolve ambiguity.
 
 **Edge cases:**
 - Root-only branch (no audience suffix): initiative is at root level
@@ -170,10 +179,27 @@ initiatives:
   - root: foo-bar-auth
     domain: foo
     service: bar
+    scope: feature
   - root: foo-car-api
     domain: foo
     service: car
+    scope: feature
+  - root: payments
+    domain: payments
+    service: null
+    scope: domain
+  - root: payments-billing
+    domain: payments
+    service: billing
+    scope: service
 ```
+
+**Segment parsing:**
+- 1 segment: domain-only initiative (scope: domain, service: null)
+- 2 segments: service-level initiative (scope: service)
+- 3+ segments: feature-level initiative (scope: feature)
+
+When config is available, prefer the `scope` field over segment counting.
 
 ---
 
@@ -184,12 +210,16 @@ Read initiative config from a specific branch without switching HEAD.
 **Algorithm:**
 ```bash
 # Read config from the initiative root branch
-git show "${ROOT}:_bmad-output/lens-work/initiatives/${DOMAIN}/${SERVICE}/${FEATURE}.yaml"
+# Path depends on scope — try each pattern or read scope from config
+git show "${ROOT}:_bmad-output/lens-work/initiatives/${DOMAIN}/initiative.yaml"        # domain scope
+git show "${ROOT}:_bmad-output/lens-work/initiatives/${DOMAIN}/${SERVICE}/initiative.yaml"  # service scope
+git show "${ROOT}:_bmad-output/lens-work/initiatives/${DOMAIN}/${SERVICE}/${FEATURE}.yaml"  # feature scope
 ```
 
 **Output:**
 ```yaml
 initiative: auth
+scope: feature
 domain: foo
 service: bar
 track: full

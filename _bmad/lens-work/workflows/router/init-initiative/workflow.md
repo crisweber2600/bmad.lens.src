@@ -16,26 +16,38 @@
 
 Run preflight before executing this workflow:
 
-- Determine current branch using `git branch --show-current`.
+- Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
 - If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
 - Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
 - If preflight reports missing authority repos: stop and return the preflight failure message.
 
 ### Step 1: Determine Scope and Collect Parameters
 
-Read the command to determine scope:
+Read the command to determine scope. Each command ONLY collects the parameters for its scope level — do NOT collect parameters beyond what is listed:
 
-| Command | Scope | Required Parameters |
+| Command | Scope | Collected Parameters |
 |---------|-------|---------------------|
-| `/new-domain` | domain | domain name, service name, feature name, track |
-| `/new-service` | service | domain name (from context), service name, feature name, track |
-| `/new-feature` | feature | domain name (from context), service name (from context), feature name, track |
+| `/new-domain` | domain | domain name, track |
+| `/new-service` | service | service name, track (domain from context or ask) |
+| `/new-feature` | feature | feature name, track (domain + service from context or ask) |
 
-**Collection order for `/new-domain`:**
-1. Domain name (organizational boundary)
-2. Service name (service/repo within domain)
-3. Feature name (specific initiative/feature)
-4. Track (lifecycle track)
+**Collection rules per scope:**
+
+**`/new-domain {name}`:**
+1. Domain name — the provided argument (or ask if missing)
+2. Track — present track options
+3. Do NOT collect service or feature names
+
+**`/new-service {name}`:**
+1. Domain — derive from current branch context, or ask if not on a domain branch
+2. Service name — the provided argument (or ask if missing)
+3. Track — present track options
+4. Do NOT collect a feature name
+
+**`/new-feature {name}`:**
+1. Domain + Service — derive from current branch context, or ask if not available
+2. Feature name — the provided argument (or ask if missing)
+3. Track — present track options
 
 Collect missing parameters from the user. Present track options from `lifecycle.yaml`:
 
@@ -69,15 +81,18 @@ Apply slug-safe validation to all name components (domain, service, feature):
 
 ### Step 3: Derive Initiative Root
 
-All initiatives follow the pattern: `{domain}-{service}-{feature}`
+The initiative root has a variable number of segments depending on scope:
 
-| Scope | Collection | Initiative Root | Config Path |
-|-------|------------|-----------------|-------------|
-| domain | Collects all three (domain, service, feature) | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
-| service | Uses context domain, collects service + feature | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
-| feature | Uses context domain + service, collects feature | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
+| Scope | Initiative Root | Config Path |
+|-------|-----------------|-------------|
+| domain | `{domain}` | `_bmad-output/lens-work/initiatives/{domain}/initiative.yaml` |
+| service | `{domain}-{service}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/initiative.yaml` |
+| feature | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
 
-**IMPORTANT:** All initiatives are created at the service-feature level. Domains and services are organizational boundaries, not features themselves.
+**Examples:**
+- `/new-domain test` → root: `test`, config: `initiatives/test/initiative.yaml`
+- `/new-service worker` (in domain `test`) → root: `test-worker`, config: `initiatives/test/worker/initiative.yaml`
+- `/new-feature oauth` (in service `test-worker`) → root: `test-worker-oauth`, config: `initiatives/test/worker/oauth.yaml`
 
 ### Step 4: Read lifecycle.yaml
 
@@ -97,7 +112,7 @@ Load `lifecycle.yaml` and validate:
 
 2. Parse branch names to find initiatives in the same domain (or service):
    - Same domain: branches starting with `{domain}-`
-   - Same service: branches starting with `{domain}-{service}-`
+   - Same service (when scope is service or feature): branches starting with `{domain}-{service}-`
 
 3. For each overlapping initiative, report:
    ```
@@ -116,20 +131,48 @@ Check governance repo (if available) to verify the selected track is permitted a
 
 ### Step 7: Create Initiative Config
 
-Create the initiative config YAML file:
+Create the initiative config YAML file. Fields vary by scope:
 
+**Domain scope:**
 ```yaml
 # Initiative configuration — committed to git (Domain 1 artifact)
-initiative: {feature}
+initiative: {domain}
+scope: domain
 domain: {domain}
-service: {service}          # omitted for domain scope
 track: {track}
 language: unknown           # auto-detected later or user-specified
 created: {ISO8601}
-initiative_root: {initiative-root}
+initiative_root: {domain}
 ```
 
-Path: `_bmad-output/lens-work/initiatives/{domain}/[{service}/]{feature}.yaml`
+**Service scope:**
+```yaml
+initiative: {service}
+scope: service
+domain: {domain}
+service: {service}
+track: {track}
+language: unknown
+created: {ISO8601}
+initiative_root: {domain}-{service}
+```
+
+**Feature scope:**
+```yaml
+initiative: {feature}
+scope: feature
+domain: {domain}
+service: {service}
+track: {track}
+language: unknown
+created: {ISO8601}
+initiative_root: {domain}-{service}-{feature}
+```
+
+Path (see Step 3 for scope-specific paths):
+- domain: `_bmad-output/lens-work/initiatives/{domain}/initiative.yaml`
+- service: `_bmad-output/lens-work/initiatives/{domain}/{service}/initiative.yaml`
+- feature: `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`
 
 ### Step 8: Create Branch Topology
 
@@ -141,12 +184,14 @@ Using the git-orchestration skill:
    git checkout -b {initiative-root}
    ```
 
-2. Create first audience branch from root:
+2. **Domain scope:** STOP — domains never have audience branches. The root branch is the only branch.
+
+3. **Service / Feature scope:** Create first audience branch from root:
    ```bash
    git checkout -b {initiative-root}-small
    ```
 
-3. **CRITICAL: Do NOT create medium, large, or base branches.** Lazy creation — these are created on-demand at promotion time.
+4. **CRITICAL: Do NOT create medium, large, or base branches.** Lazy creation — these are created on-demand at promotion time.
 
 ### Step 9: Commit and Push
 
@@ -154,21 +199,33 @@ Using the git-orchestration skill:
 
 1. Commit the initiative config:
    ```bash
-   git add _bmad-output/lens-work/initiatives/{path}/{feature}.yaml
+   git add _bmad-output/lens-work/initiatives/{config-path}
    git commit -m "[INIT] {initiative-root} — initiative created (track: {track})"
    ```
 
-2. Push both branches:
-   ```bash
-   git push -u origin {initiative-root}
-   git push -u origin {initiative-root}-small
-   ```
+2. Push branches:
+   - **Domain scope:** Push root only:
+     ```bash
+     git push -u origin {initiative-root}
+     ```
+   - **Service / Feature scope:** Push both:
+     ```bash
+     git push -u origin {initiative-root}
+     git push -u origin {initiative-root}-small
+     ```
 
 ### Step 10: Display Response
 
 Follow the 3-part response format:
 
-**Context Header:**
+**Context Header (domain scope):**
+```
+📂 Domain: {initiative-root}
+🏷️ Track: {track}
+📋 Phases: {phase-list}
+```
+
+**Context Header (service / feature scope):**
 ```
 📂 Initiative: {initiative-root}
 🏷️ Track: {track}
@@ -176,7 +233,18 @@ Follow the 3-part response format:
 📋 Phases: {phase-list}
 ```
 
-**Primary Content:**
+**Primary Content (domain scope):**
+```
+✅ Domain created successfully.
+
+Branch topology:
+- `{initiative-root}` (domain root)
+
+Config committed at:
+  `_bmad-output/lens-work/initiatives/{config-path}`
+```
+
+**Primary Content (service / feature scope):**
 ```
 ✅ Initiative created successfully.
 
@@ -185,7 +253,7 @@ Branch topology:
 - `{initiative-root}-small` (active)
 
 Config committed at:
-  `_bmad-output/lens-work/initiatives/{path}/{feature}.yaml`
+  `_bmad-output/lens-work/initiatives/{config-path}`
 ```
 
 **Next Step:**

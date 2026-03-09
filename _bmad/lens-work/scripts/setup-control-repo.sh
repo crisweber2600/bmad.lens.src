@@ -61,8 +61,14 @@ GOVERNANCE_PATH="TargetProjects/lens/lens-governance"
 BASE_URL="https://github.com"
 DRY_RUN=false
 
-# -- Project root (where this script is run from, or computed) ---------------
-PROJECT_ROOT="$(pwd)"
+# -- Project root (prefer git to avoid cwd-dependent behavior) -----------------
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if GIT_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; then
+  PROJECT_ROOT="$GIT_ROOT"
+else
+  # Fallback: this script lives at _bmad/lens-work/scripts/
+  PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+fi
 
 # -- Parse Arguments --------------------------------------------------------
 show_help() {
