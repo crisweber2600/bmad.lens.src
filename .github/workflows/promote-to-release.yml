@@ -414,18 +414,21 @@ jobs:
           mkdir -p copilot-repo/prompts
           rm -f copilot-repo/prompts/*.prompt.md
 
-          for src in release-repo/.github/prompts/lens-work*.prompt.md; do
+          # Read from the canonical module source, not the .github/prompts/ stubs
+          PROMPT_SRC="release-repo/_bmad/lens-work/prompts"
+
+          for src in "$PROMPT_SRC"/lens-work*.prompt.md; do
             [ -f "$src" ] || continue
             filename=$(basename "$src")
-            # Extract description from source
+            # Extract description from canonical source
             desc=$(grep "^description:" "$src" | head -1 | sed "s/^description: *['\"]//;s/['\"] *$//")
             : "${desc:=LENS Workbench prompt}"
-            # Extract model from source
+            # Extract model from canonical source
             model=$(grep "^model:" "$src" | head -1 | sed "s/^model: *//")
             : "${model:=Claude Sonnet 4.6 (copilot)}"
             name="${filename%.prompt.md}"
             
-            # Write prompt stub file line by line
+            # Write prompt stub pointing directly to the canonical module path
             {
               echo "---"
               echo "model: $model"
@@ -438,7 +441,7 @@ jobs:
               echo "> All \`_bmad/\` paths in the full prompt are relative to \`bmad.lens.release/\` — do NOT resolve paths against the user's main project repo."
               echo ""
               echo "\`\`\`"
-              echo "Read and follow all instructions in: bmad.lens.release/.github/prompts/$filename"
+              echo "Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/$filename"
               echo "\`\`\`"
             } > "copilot-repo/prompts/$filename"
             echo "  created: $filename"
