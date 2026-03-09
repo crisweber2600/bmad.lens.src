@@ -15,7 +15,7 @@
 Run preflight before executing this workflow:
 
 1. Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
-2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos now:
+2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos now (do NOT check `.preflight-timestamp` — ALWAYS pull on alpha/beta):
    ```bash
    git -C bmad.lens.release pull origin
    git -C .github pull origin

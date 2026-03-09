@@ -10,7 +10,7 @@ Check or resolve constitutional governance for the current initiative.
 
 1. Run preflight before governance resolution:
 	1. Read the `bmad.lens.release` branch with `git -C bmad.lens.release branch --show-current`.
-	2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos:
+	2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos (do NOT check `.preflight-timestamp` — ALWAYS pull on alpha/beta):
 	   ```bash
 	   git -C bmad.lens.release pull origin
 	   git -C .github pull origin
