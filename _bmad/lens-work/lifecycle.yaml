@@ -254,7 +254,7 @@ planning_repo:
       type: audience-promotion
       gate: stakeholder-approval
     - source: "{initiative-root}-large"
-      target: base
+      target: "{initiative-root}-base"
       type: audience-promotion
       gate: constitution-gate
   # v2: Lazy audience branch creation

@@ -145,7 +145,7 @@ get_promotion_plan() {
     case "$audience" in
       small)  echo "audience|${root:+$root-}medium"; return 0 ;;
       medium) echo "audience|${root:+$root-}large"; return 0 ;;
-      large)  echo "audience|$root"; return 0 ;;
+      large)  echo "audience|${root:+$root-}base"; return 0 ;;
     esac
   fi
 

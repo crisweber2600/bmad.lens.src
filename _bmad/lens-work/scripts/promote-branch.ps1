@@ -109,7 +109,7 @@ function Get-PromotionPlan {
         switch ($audience) {
             'small'  { return @{ Kind = 'audience'; Target = "$root-medium" } }
             'medium' { return @{ Kind = 'audience'; Target = "$root-large" } }
-            'large'  { return @{ Kind = 'audience'; Target = "$root" } }
+            'large'  { return @{ Kind = 'audience'; Target = "$root-base" } }
         }
     }
 
