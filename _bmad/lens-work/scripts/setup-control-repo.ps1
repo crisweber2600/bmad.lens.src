@@ -11,8 +11,9 @@
 #
 # USAGE:
 #   .\setup-control-repo.ps1 -Org <github-org-or-user>
-#   .\setup-control-repo.ps1 -Org weberbot -GovernancePath TargetProjects\lens\lens-governance
-#   .\setup-control-repo.ps1 -Org weberbot -Branch beta
+#   .\setup-control-repo.ps1 -Org weberbot -ReleaseRepo my-release -CopilotRepo my-copilot
+#   .\setup-control-repo.ps1 -ReleaseOrg myorg -CopilotOrg otherorg -GovernanceOrg governance-team
+#   .\setup-control-repo.ps1 -Org weberbot -BaseUrl https://github.company.com
 #   .\setup-control-repo.ps1 -Help
 #
 # =============================================================================
@@ -21,13 +22,27 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$Org,
 
-    [string]$Branch = "beta",
+    [string]$ReleaseOrg,
 
-    [string]$GovernancePath = "TargetProjects\lens\lens-governance",
+    [string]$ReleaseRepo = "bmad.lens.release",
+
+    [string]$ReleaseBranch = "beta",
+
+    [string]$CopilotOrg,
+
+    [string]$CopilotRepo = "bmad.lens.copilot",
+
+    [string]$CopilotBranch = "beta",
+
+    [string]$GovernanceOrg,
 
     [string]$GovernanceRepo = "lens-governance",
 
-    [string]$Host = "github.com",
+    [string]$GovernanceBranch = "main",
+
+    [string]$GovernancePath = "TargetProjects\lens\lens-governance",
+
+    [string]$BaseUrl = "https://github.com",
 
     [switch]$DryRun,
 
@@ -41,12 +56,17 @@ if ($Help) {
 }
 
 # -- Validate ---------------------------------------------------------------
-if (-not $Org) {
-    Write-Host "Error: -Org is required" -ForegroundColor Red
+if (-not $Org -and -not $ReleaseOrg -and -not $CopilotOrg -and -not $GovernanceOrg) {
+    Write-Host "Error: -Org is required (or specify -ReleaseOrg, -CopilotOrg, -GovernanceOrg individually)" -ForegroundColor Red
     Write-Host ""
     Write-Host "Usage: .\setup-control-repo.ps1 -Org <github-org-or-user>"
     exit 1
 }
+
+# -- Apply fallbacks --------------------------------------------------------
+if (-not $ReleaseOrg) { $ReleaseOrg = $Org }
+if (-not $CopilotOrg) { $CopilotOrg = $Org }
+if (-not $GovernanceOrg) { $GovernanceOrg = $Org }
 
 $ProjectRoot = Get-Location
 
@@ -113,9 +133,8 @@ function Invoke-CloneOrPull {
 Write-Host ""
 Write-Host "LENS Workbench v2 — Control Repo Setup" -ForegroundColor White -NoNewline
 Write-Host ""
-Write-Host "Org:  $Org" -ForegroundColor DarkGray
-Write-Host "Host: $Host" -ForegroundColor DarkGray
-Write-Host "Root: $ProjectRoot" -ForegroundColor DarkGray
+Write-Host "Base URL: $BaseUrl" -ForegroundColor DarkGray
+Write-Host "Root:     $ProjectRoot" -ForegroundColor DarkGray
 Write-Host ""
 
 if ($DryRun) {
@@ -124,19 +143,19 @@ if ($DryRun) {
 }
 
 # -- 1. Release Repo --------------------------------------------------------
-$ReleaseUrl = "https://${Host}/${Org}/bmad.lens.release.git"
-$ReleasePath = Join-Path $ProjectRoot "bmad.lens.release"
-Invoke-CloneOrPull -RemoteUrl $ReleaseUrl -LocalPath $ReleasePath -BranchName $Branch -RepoLabel "bmad.lens.release"
+$ReleaseUrl = "${BaseUrl}/${ReleaseOrg}/${ReleaseRepo}.git"
+$ReleasePath = Join-Path $ProjectRoot $ReleaseRepo
+Invoke-CloneOrPull -RemoteUrl $ReleaseUrl -LocalPath $ReleasePath -BranchName $ReleaseBranch -RepoLabel "${ReleaseOrg}/${ReleaseRepo}"
 
 # -- 2. Copilot Adapter Repo ------------------------------------------------
-$CopilotUrl = "https://${Host}/${Org}/bmad.lens.copilot.git"
+$CopilotUrl = "${BaseUrl}/${CopilotOrg}/${CopilotRepo}.git"
 $CopilotPath = Join-Path $ProjectRoot ".github"
-Invoke-CloneOrPull -RemoteUrl $CopilotUrl -LocalPath $CopilotPath -BranchName $Branch -RepoLabel "bmad.lens.copilot (.github)"
+Invoke-CloneOrPull -RemoteUrl $CopilotUrl -LocalPath $CopilotPath -BranchName $CopilotBranch -RepoLabel "${CopilotOrg}/${CopilotRepo} (.github)"
 
 # -- 3. Governance Repo -----------------------------------------------------
-$GovernanceUrl = "https://${Host}/${Org}/${GovernanceRepo}.git"
+$GovernanceUrl = "${BaseUrl}/${GovernanceOrg}/${GovernanceRepo}.git"
 $GovernanceFullPath = Join-Path $ProjectRoot $GovernancePath
-Invoke-CloneOrPull -RemoteUrl $GovernanceUrl -LocalPath $GovernanceFullPath -BranchName "main" -RepoLabel "lens-governance"
+Invoke-CloneOrPull -RemoteUrl $GovernanceUrl -LocalPath $GovernanceFullPath -BranchName $GovernanceBranch -RepoLabel "${GovernanceOrg}/${GovernanceRepo}"
 
 # -- 4. Output directories --------------------------------------------------
 if (-not $DryRun) {
@@ -159,9 +178,9 @@ else {
 Write-Host ""
 Write-Host "Setup Complete" -ForegroundColor White
 Write-Host ""
-Write-Host "  bmad.lens.release   -> bmad.lens.release\      (branch: $Branch)" -ForegroundColor Green
-Write-Host "  bmad.lens.copilot   -> .github\                (branch: $Branch)" -ForegroundColor Green
-Write-Host "  $GovernanceRepo  -> $GovernancePath\     (branch: main)" -ForegroundColor Green
+Write-Host "  $ReleaseOrg/$ReleaseRepo -> $ReleaseRepo\    (branch: $ReleaseBranch)" -ForegroundColor Green
+Write-Host "  $CopilotOrg/$CopilotRepo -> .github\               (branch: $CopilotBranch)" -ForegroundColor Green
+Write-Host "  $GovernanceOrg/$GovernanceRepo -> $GovernancePath\  (branch: $GovernanceBranch)" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next: Run the module installer to generate IDE-specific adapters:"
 Write-Host "  .\_bmad\lens-work\scripts\install.ps1" -ForegroundColor Cyan

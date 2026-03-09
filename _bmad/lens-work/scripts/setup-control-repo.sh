@@ -12,18 +12,26 @@
 #
 # USAGE:
 #   ./setup-control-repo.sh --org <github-org-or-user>
-#   ./setup-control-repo.sh --org weberbot --governance-path TargetProjects/lens/lens-governance
-#   ./setup-control-repo.sh --org weberbot --branch beta
+#   ./setup-control-repo.sh --org weberbot --release-repo my-release --copilot-repo my-copilot
+#   ./setup-control-repo.sh --release-org myorg --copilot-org otherorg --governance-org governance-team
+#   ./setup-control-repo.sh --org weberbot --base-url https://github.company.com
 #   ./setup-control-repo.sh --help
 #
 # OPTIONS:
-#   --org <name>              GitHub org or user that owns the repos (REQUIRED)
-#   --branch <name>           Branch to checkout for release and copilot repos (default: beta)
-#   --governance-path <path>  Local path for governance repo clone (default: TargetProjects/lens/lens-governance)
-#   --governance-repo <name>  Governance repo name (default: lens-governance)
-#   --host <hostname>         Git host (default: github.com)
-#   --dry-run                 Show what would be done without making changes
-#   -h, --help                Show this help message
+#   --org <name>               Default GitHub org/user for all repos (falls back if specific org not set)
+#   --release-org <name>       Release repo owner (default: uses --org)
+#   --release-repo <name>      Release repo name (default: bmad.lens.release)
+#   --release-branch <name>    Release repo branch (default: beta)
+#   --copilot-org <name>       Copilot repo owner (default: uses --org)
+#   --copilot-repo <name>      Copilot repo name (default: bmad.lens.copilot)
+#   --copilot-branch <name>    Copilot repo branch (default: beta)
+#   --governance-org <name>    Governance repo owner (default: uses --org)
+#   --governance-repo <name>   Governance repo name (default: lens-governance)
+#   --governance-branch <name> Governance repo branch (default: main)
+#   --governance-path <path>   Local path for governance repo clone (default: TargetProjects/lens/lens-governance)
+#   --base-url <url>           Git base URL (default: https://github.com) - supports enterprise GitHub
+#   --dry-run                  Show what would be done without making changes
+#   -h, --help                 Show this help message
 #
 # =============================================================================
 
@@ -40,10 +48,17 @@ RESET='\033[0m'
 
 # -- Defaults ---------------------------------------------------------------
 ORG=""
-BRANCH="beta"
-GOVERNANCE_PATH="TargetProjects/lens/lens-governance"
+RELEASE_ORG=""
+RELEASE_REPO="bmad.lens.release"
+RELEASE_BRANCH="beta"
+COPILOT_ORG=""
+COPILOT_REPO="bmad.lens.copilot"
+COPILOT_BRANCH="beta"
+GOVERNANCE_ORG=""
 GOVERNANCE_REPO="lens-governance"
-HOST="github.com"
+GOVERNANCE_BRANCH="main"
+GOVERNANCE_PATH="TargetProjects/lens/lens-governance"
+BASE_URL="https://github.com"
 DRY_RUN=false
 
 # -- Project root (where this script is run from, or computed) ---------------
@@ -60,21 +75,49 @@ while [[ $# -gt 0 ]]; do
       shift
       ORG="$1"
       ;;
-    --branch)
+    --release-org)
       shift
-      BRANCH="$1"
+      RELEASE_ORG="$1"
       ;;
-    --governance-path)
+    --release-repo)
       shift
-      GOVERNANCE_PATH="$1"
+      RELEASE_REPO="$1"
+      ;;
+    --release-branch)
+      shift
+      RELEASE_BRANCH="$1"
+      ;;
+    --copilot-org)
+      shift
+      COPILOT_ORG="$1"
+      ;;
+    --copilot-repo)
+      shift
+      COPILOT_REPO="$1"
+      ;;
+    --copilot-branch)
+      shift
+      COPILOT_BRANCH="$1"
+      ;;
+    --governance-org)
+      shift
+      GOVERNANCE_ORG="$1"
       ;;
     --governance-repo)
       shift
       GOVERNANCE_REPO="$1"
       ;;
-    --host)
+    --governance-branch)
       shift
-      HOST="$1"
+      GOVERNANCE_BRANCH="$1"
+      ;;
+    --governance-path)
+      shift
+      GOVERNANCE_PATH="$1"
+      ;;
+    --base-url)
+      shift
+      BASE_URL="$1"
       ;;
     --dry-run)
       DRY_RUN=true
@@ -93,12 +136,17 @@ while [[ $# -gt 0 ]]; do
 done
 
 # -- Validate required args --------------------------------------------------
-if [[ -z "$ORG" ]]; then
-  echo -e "${RED}Error: --org is required${RESET}"
+if [[ -z "$ORG" && -z "$RELEASE_ORG" && -z "$COPILOT_ORG" && -z "$GOVERNANCE_ORG" ]]; then
+  echo -e "${RED}Error: --org is required (or specify --release-org, --copilot-org, --governance-org individually)${RESET}"
   echo ""
   show_help
   exit 1
 fi
+
+# -- Apply fallbacks ---------------------------------------------------------
+RELEASE_ORG="${RELEASE_ORG:-$ORG}"
+COPILOT_ORG="${COPILOT_ORG:-$ORG}"
+GOVERNANCE_ORG="${GOVERNANCE_ORG:-$ORG}"
 
 # -- Helper Functions -------------------------------------------------------
 log_info() { echo -e "${CYAN}[INFO]${RESET} $1"; }
@@ -144,9 +192,8 @@ clone_or_pull() {
 
 echo ""
 echo -e "${BOLD}LENS Workbench v2 — Control Repo Setup${RESET}"
-echo -e "${DIM}Org:  ${ORG}${RESET}"
-echo -e "${DIM}Host: ${HOST}${RESET}"
-echo -e "${DIM}Root: ${PROJECT_ROOT}${RESET}"
+echo -e "${DIM}Base URL: ${BASE_URL}${RESET}"
+echo -e "${DIM}Root:     ${PROJECT_ROOT}${RESET}"
 echo ""
 
 if [[ "$DRY_RUN" == true ]]; then
@@ -155,19 +202,19 @@ if [[ "$DRY_RUN" == true ]]; then
 fi
 
 # -- 1. Release Repo --------------------------------------------------------
-RELEASE_URL="https://${HOST}/${ORG}/bmad.lens.release.git"
-RELEASE_PATH="${PROJECT_ROOT}/bmad.lens.release"
-clone_or_pull "$RELEASE_URL" "$RELEASE_PATH" "$BRANCH" "bmad.lens.release"
+RELEASE_URL="${BASE_URL}/${RELEASE_ORG}/${RELEASE_REPO}.git"
+RELEASE_PATH="${PROJECT_ROOT}/${RELEASE_REPO}"
+clone_or_pull "$RELEASE_URL" "$RELEASE_PATH" "$RELEASE_BRANCH" "${RELEASE_ORG}/${RELEASE_REPO}"
 
 # -- 2. Copilot Adapter Repo ------------------------------------------------
-COPILOT_URL="https://${HOST}/${ORG}/bmad.lens.copilot.git"
+COPILOT_URL="${BASE_URL}/${COPILOT_ORG}/${COPILOT_REPO}.git"
 COPILOT_PATH="${PROJECT_ROOT}/.github"
-clone_or_pull "$COPILOT_URL" "$COPILOT_PATH" "$BRANCH" "bmad.lens.copilot (.github)"
+clone_or_pull "$COPILOT_URL" "$COPILOT_PATH" "$COPILOT_BRANCH" "${COPILOT_ORG}/${COPILOT_REPO} (.github)"
 
 # -- 3. Governance Repo -----------------------------------------------------
-GOVERNANCE_URL="https://${HOST}/${ORG}/${GOVERNANCE_REPO}.git"
+GOVERNANCE_URL="${BASE_URL}/${GOVERNANCE_ORG}/${GOVERNANCE_REPO}.git"
 GOVERNANCE_FULL_PATH="${PROJECT_ROOT}/${GOVERNANCE_PATH}"
-clone_or_pull "$GOVERNANCE_URL" "$GOVERNANCE_FULL_PATH" "main" "lens-governance"
+clone_or_pull "$GOVERNANCE_URL" "$GOVERNANCE_FULL_PATH" "$GOVERNANCE_BRANCH" "${GOVERNANCE_ORG}/${GOVERNANCE_REPO}"
 
 # -- 4. Output directories --------------------------------------------------
 if [[ "$DRY_RUN" != true ]]; then
@@ -182,9 +229,9 @@ fi
 echo ""
 echo -e "${BOLD}Setup Complete${RESET}"
 echo ""
-echo -e "  ${GREEN}bmad.lens.release${RESET}   → bmad.lens.release/      (branch: ${BRANCH})"
-echo -e "  ${GREEN}bmad.lens.copilot${RESET}   → .github/                (branch: ${BRANCH})"
-echo -e "  ${GREEN}${GOVERNANCE_REPO}${RESET}  → ${GOVERNANCE_PATH}/     (branch: main)"
+echo -e "  ${GREEN}${RELEASE_ORG}/${RELEASE_REPO}${RESET} → ${RELEASE_REPO}/    (branch: ${RELEASE_BRANCH})"
+echo -e "  ${GREEN}${COPILOT_ORG}/${COPILOT_REPO}${RESET} → .github/               (branch: ${COPILOT_BRANCH})"
+echo -e "  ${GREEN}${GOVERNANCE_ORG}/${GOVERNANCE_REPO}${RESET} → ${GOVERNANCE_PATH}/  (branch: ${GOVERNANCE_BRANCH})"
 echo ""
 echo -e "Next: Run the module installer to generate IDE-specific adapters:"
 echo -e "  ${CYAN}./_bmad/lens-work/scripts/install.sh${RESET}"
