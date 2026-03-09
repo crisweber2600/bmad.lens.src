@@ -1,18 +1,53 @@
-# /preplan Workflow
+---
+name: preplan
+description: Launch PrePlan phase (brainstorm/research/product brief)
+agent: "@lens"
+trigger: /preplan command
+aliases: [/pre-plan]
+category: router
+phase_name: preplan
+display_name: PrePlan
+agent_owner: mary
+agent_role: Analyst
+imports: lifecycle.yaml
+---
 
-**Phase:** Router
-**Purpose:** Execute the preplan phase — produce product briefs, research, and competitive analysis artifacts.
-**Agent:** Mary (Analyst)
-**Audience:** small
+# /preplan — PrePlan Phase Router
 
-## Pre-conditions
+**Purpose:** Guide users through the PrePlan phase, invoking brainstorming, research, and product brief workflows.
 
-- User is authenticated and onboarded
-- Initiative exists with a track that includes `preplan`
-- No predecessor phase required (preplan is the first phase)
-- Current branch is on the initiative's `small` audience
+**Lifecycle:** `preplan` phase, audience `small`, owned by Mary (Analyst).
 
-## Steps
+---
+
+## User Interaction Keywords
+
+This workflow supports special keywords to control prompting behavior:
+
+- **"defaults" / "best defaults"** → Apply defaults to **CURRENT STEP ONLY**; resume normal prompting for subsequent steps
+- **"yolo" / "keep rolling"** → Apply defaults to **ENTIRE REMAINING WORKFLOW**; auto-complete all steps
+- **"all questions" / "batch questions"** → Present **ALL QUESTIONS UPFRONT** → wait for batch answers → follow-up questions → adversarial review → final questions → generate artifacts
+- **"skip"** → Jump to a named optional step (e.g., "skip to product brief")
+- **"pause"** → Halt workflow, save progress, resume later
+- **"back"** → Roll back to previous step, re-answer questions
+
+**Critical Rule:**
+- "defaults" applies only to the current question/step
+- "yolo" applies to all remaining steps in the workflow
+- "all questions" presents comprehensive questionnaire, then iteratively refines with follow-ups and party mode review
+- Other workflows and phases are unaffected
+
+---
+
+## Prerequisites
+
+- [x] Initiative created via `#new-*` command
+- [x] Layer detected with confidence ≥ 75%
+- [x] Initiative file exists at `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`
+
+---
+
+## Execution Sequence
 
 ### Step 0: Run Preflight
 
@@ -29,7 +64,7 @@ Run preflight before executing this workflow:
 3. Otherwise: read `_bmad-output/lens-work/.preflight-timestamp`. If missing or older than today, run the same three `git pull` commands above and update the timestamp. If today's date matches, skip pulls.
 4. If any authority repo directory is missing: stop and return the preflight failure message.
 
-### Step 1: Phase Router Validation
+### Step 1: Phase Router Validation + Branch
 
 Invoke the @lens phase router:
 
@@ -39,7 +74,7 @@ Invoke the @lens phase router:
 4. If valid: create phase branch `{initiative-root}-small-preplan` using git-orchestration
 5. If track doesn't include preplan: report error with valid phases for this track
 
-### Step 2: Prepare Initiative Context
+### Step 2: Load Initiative Context
 
 Load the initiative config from `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`:
 
@@ -47,36 +82,107 @@ Load the initiative config from `_bmad-output/lens-work/initiatives/{domain}/{se
 - Track type and enabled phases
 - Any previous artifacts from earlier sessions
 
-### Step 3: Delegate to Analyst Agent
-
-Delegate artifact production to Mary (analyst agent):
-
-```
-## Product Brief — Generating...
+Derive output path for artifacts:
+```yaml
+output_path = "_bmad-output/lens-work/initiatives/{domain}/{service}/phases/preplan/"
+ensure_directory(output_path)
 ```
 
-**Artifacts to produce:**
+### Step 2a: Execution Mode Selection (Interactive or Batch)
 
-| Artifact | Path | Required |
-|----------|------|----------|
-| Product Brief | `phases/preplan/product-brief.md` | Yes |
-| Research | `phases/preplan/research.md` | Yes |
-| Brainstorm | `phases/preplan/brainstorm.md` | Optional |
+```yaml
+# Allow per-phase override of global question_mode preference
+ask: |
+  📋 Execution Mode Selection
 
-All artifacts are saved to: `_bmad-output/lens-work/initiatives/{domain}/{service}/phases/preplan/`
+  How would you like to proceed with this phase?
 
-### Step 4: Progress Markers (Batch Mode)
+  **[I] Interactive** — Choose workflows and answer step-by-step
+  **[B] Batch**       — Answer all questions at once in a single file
 
-Display batch progress markers per UX spec:
+  Select mode: [I] or [B]
+  (Default: Interactive)
+```
+
+If batch mode selected, invoke batch-process and exit.
+Otherwise continue to Step 3 for interactive workflow selection.
+
+### Step 3: Offer Workflow Options
 
 ```
-## Product Brief — Generating...
-{artifact content}
-## Product Brief — Complete ✅
+🧭 /preplan — PrePlan Phase
 
-## Research Report — Generating...
-{artifact content}
-## Research Report — Complete ✅
+You're starting the Analysis phase. Available workflows:
+
+**[1] Brainstorming** (optional) — Creative exploration with CIS
+**[2] Research** (optional) — Deep dive research with CIS
+**[3] Product Brief** (required) — Define problem, vision, and scope
+
+Recommended path: 1 → 2 → 3 (or skip to 3 if you have clarity)
+
+Select workflow(s) to run: [1] [2] [3] [A]ll [S]kip to Product Brief
+```
+
+### Step 4: Execute Selected Workflows
+
+**⚠️ CRITICAL — Interactive Workflow Rules:**
+Each sub-workflow uses sequential step-file architecture.
+- 🛑 **NEVER** auto-complete or batch-generate content without user input
+- ⏸️ **ALWAYS** STOP and wait for user input/confirmation at each step
+- 🚫 **NEVER** load the next step file until user explicitly confirms (Continue / C)
+- 📋 Back-and-forth dialogue is REQUIRED — you are a facilitator, not a generator
+- 💾 Save/update frontmatter after completing each step before loading the next
+- 🎯 Read the ENTIRE step file before taking any action within it
+
+**Agent:** Adopt Mary (Analyst) persona — load `_bmad/bmm/agents/analyst.md`
+
+#### If Brainstorming selected:
+
+```yaml
+# Read fully and follow this workflow file:
+#   _bmad/core/workflows/brainstorming/workflow.md
+# Uses step-file architecture with steps/ folder — load step-01-session-setup.md first
+# STOP and wait for user at each step — do NOT auto-generate brainstorm content
+read_and_follow: "_bmad/core/workflows/brainstorming/workflow.md"
+params:
+  context: "${initiative.name} at ${initiative.layer} layer"
+```
+
+#### If Research selected:
+
+```yaml
+# Ask user for research type, then follow the correct workflow:
+#   Market:    _bmad/bmm/workflows/1-analysis/research/workflow-market-research.md
+#   Domain:    _bmad/bmm/workflows/1-analysis/research/workflow-domain-research.md
+#   Technical: _bmad/bmm/workflows/1-analysis/research/workflow-technical-research.md
+# Each uses step-file architecture — load steps one at a time, wait for user at each step
+prompt_user: "Which type of research? [M]arket / [D]omain / [T]echnical"
+if research_type == "market":
+  read_and_follow: "_bmad/bmm/workflows/1-analysis/research/workflow-market-research.md"
+elif research_type == "domain":
+  read_and_follow: "_bmad/bmm/workflows/1-analysis/research/workflow-domain-research.md"
+elif research_type == "technical":
+  read_and_follow: "_bmad/bmm/workflows/1-analysis/research/workflow-technical-research.md"
+```
+
+#### Product Brief (always):
+
+```yaml
+# Read fully and follow this workflow file:
+#   _bmad/bmm/workflows/1-analysis/create-product-brief/workflow.md
+# Uses JIT step-file architecture:
+#   1. Load step-01-init.md first
+#   2. Only load next step when directed by the current step
+#   3. NEVER load multiple step files simultaneously
+#   4. ALWAYS halt at menus and wait for user input
+#   5. Output goes to: ${output_path}/product-brief.md
+# Agent persona: Mary (Analyst) — _bmad/bmm/agents/analyst.md
+read_and_follow: "_bmad/bmm/workflows/1-analysis/create-product-brief/workflow.md"
+params:
+  output_path: "${output_path}/"
+  context:
+    brainstorm_notes: "${output_path}/brainstorm-notes.md"   # if exists from step [1]
+    research_summary: "${output_path}/research-summary.md"   # if exists from step [2]
 ```
 
 ### Step 5: Commit Artifacts
@@ -87,20 +193,32 @@ Using git-orchestration skill:
 2. Commit with message: `[PREPLAN] {initiative-root} — preplan artifacts complete`
 3. Push to remote (reviewable checkpoint)
 
-### Step 6: Report Completion
+### Step 6: Phase Completion
 
+```yaml
+if all_workflows_complete("preplan"):
+  # Push final state to phase branch
+  # Create PR for phase merge
+  output: |
+    ✅ /preplan complete
+    ├── Phase: PrePlan (preplan) finished
+    ├── Audience: small
+    ├── Artifacts: product-brief.md (+ brainstorm/research if produced)
+    ├── Branch pushed: {phase_branch}
+    └── Next: Run /businessplan to continue to BusinessPlan phase
 ```
-✅ PrePlan phase complete
 
-## Artifacts Produced
-- product-brief.md ✅
-- research.md ✅
-- brainstorm.md ✅ (if produced)
+---
 
-## Next Step
-The preplan artifacts are committed and pushed. When ready, your PR will be
-created automatically for review. Then run `/businessplan` to continue.
-```
+## Output Artifacts
+
+| Artifact | Location | Required |
+|----------|----------|----------|
+| Product Brief | `phases/preplan/product-brief.md` | Yes |
+| Research Summary | `phases/preplan/research-summary.md` | If research selected |
+| Brainstorm Notes | `phases/preplan/brainstorm-notes.md` | If brainstorming selected |
+
+---
 
 ## Error Handling
 

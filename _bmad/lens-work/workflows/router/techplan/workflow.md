@@ -1,94 +1,385 @@
-# /techplan Workflow
+---
+name: techplan
+description: Architecture and technical design phase
+agent: "@lens"
+trigger: /techplan command
+aliases: [/tech-plan]
+category: router
+phase_name: techplan
+display_name: TechPlan
+agent_owner: winston
+agent_role: Architect
+imports: lifecycle.yaml
+---
 
-**Phase:** Router
-**Purpose:** Execute the techplan phase — produce architecture and technical decision artifacts.
-**Agent:** Winston (Architect)
-**Audience:** small
-**Predecessor:** businessplan (must be complete — PR merged)
+# /techplan — TechPlan Phase Router
 
-## Pre-conditions
+**Purpose:** Guide users through the TechPlan phase — architecture, technical design, API contracts, and technology decisions.
 
-- User is authenticated and onboarded
-- Initiative exists with a track that includes `techplan`
-- Businessplan phase PR is merged (predecessor enforcement)
-- Current branch is on the initiative's `small` audience
+**Lifecycle:** `techplan` phase, audience `small`, owned by Winston (Architect).
 
-## Steps
+---
 
-### Step 0: Run Preflight
+## Role Authorization
 
-Run preflight before executing this workflow:
+**Authorized:** Architect, Tech Lead (phase owner: Winston/Architect)
 
-1. Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
-2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos now (do NOT check `.preflight-timestamp` — ALWAYS pull on alpha/beta):
-   ```bash
-   git -C bmad.lens.release pull origin
-   git -C .github pull origin
-   git -C {governance-repo-path} pull origin   # path from governance-setup.yaml
-   ```
-   Then write today's date to `_bmad-output/lens-work/.preflight-timestamp`.
-3. Otherwise: read `_bmad-output/lens-work/.preflight-timestamp`. If missing or older than today, run the same three `git pull` commands above and update the timestamp. If today's date matches, skip pulls.
-4. If any authority repo directory is missing: stop and return the preflight failure message.
+---
 
-### Step 1: Phase Router Validation
+## Prerequisites
 
-Invoke the @lens phase router:
+- [x] `/businessplan` complete (businessplan phase merged into small audience branch)
+- [x] PRD exists
+- [x] state.yaml + initiatives/{id} config exist
+- [x] businessplan gate passed (BusinessPlan artifacts committed)
 
-1. Read `lifecycle.yaml` to confirm `techplan` is valid for this track
-2. Derive current initiative and audience from branch via git-state
-3. Check predecessor: businessplan PR is merged (via provider-adapter `query-pr`)
-4. If businessplan not complete:
-   ```
-   ❌ Phase `techplan` requires `businessplan` to be complete.
-      Run `/businessplan` first, then create a PR to merge it.
-   ```
-5. If valid: create phase branch `{initiative-root}-small-techplan` using git-orchestration
+---
 
-### Step 2: Load Business Artifacts
-
-Load businessplan artifacts from `phases/businessplan/` as input context:
-
-- `prd.md` — requirements driving the architecture
-- `ux-design.md` — UX constraints on technical decisions
-
-### Step 3: Delegate to Architect Agent
-
-Delegate architecture production to Winston (architect agent).
+## Gate Chain Position
 
 ```
-## Architecture — Generating...
+(none) → preplan → businessplan → [techplan] → devproposal → sprintplan → dev
 ```
 
-| Artifact | Path | Required |
-|----------|------|----------|
-| Architecture | `phases/techplan/architecture.md` | Yes |
+---
 
-All artifacts saved to: `_bmad-output/lens-work/initiatives/{domain}/{service}/phases/techplan/`
+## Execution Sequence
 
-### Step 4: Commit Artifacts
+### 0. Pre-Flight [REQ-9]
 
-Using git-orchestration skill:
+```yaml
+# PRE-FLIGHT (mandatory, never skip) [REQ-9]
+# 1. Verify working directory is clean
+# 2. Load two-file state (state.yaml + initiative config)
+# 3. Check previous phase status (businessplan must be complete)
+# 4. Determine correct phase branch: {initiative_root}-{audience}-{phase_name}
+# 5. Create phase branch if it doesn't exist
+# 6. Checkout phase branch
+# 7. Confirm to user: "Now on branch: {branch_name}"
+# GATE: All steps must pass before proceeding to artifact work
+# NOTE: techplan is in the SAME audience (small) as businessplan — no cascade merge needed
 
-1. Stage all artifacts in `phases/techplan/`
-2. Commit: `[TECHPLAN] {initiative-root} — architecture document complete`
-3. Push to remote
+# Verify working directory is clean
+invoke: git-orchestration.verify-clean-state
 
-### Step 5: Report Completion
+# Load two-file state
+state = load("_bmad-output/lens-work/state.yaml")
+initiative = load("_bmad-output/lens-work/initiatives/${state.active_initiative}.yaml")
 
+# Load lifecycle contract for phase → audience mapping
+lifecycle = load("lifecycle.yaml")
+
+# Read initiative config
+size = initiative.size
+domain_prefix = initiative.domain_prefix
+docs_path = initiative.docs.path
+output_path = docs_path
+ensure_directory(output_path)
+
+# Derive audience from lifecycle contract (techplan → small)
+current_phase = "techplan"
+audience = lifecycle.phases[current_phase].audience    # "small"
+initiative_root = initiative.initiative_root
+audience_branch = "${initiative_root}-${audience}"     # {initiative_root}-small
+
+# REQ-7/REQ-9: Validate previous phase PR merged [S1.5]
+# Previous phase: businessplan (same audience — small)
+prev_phase = "businessplan"
+prev_phase_branch = "${initiative_root}-${audience}-businessplan"
+
+if initiative.phase_status[prev_phase] exists:
+  if initiative.phase_status[prev_phase].status == "pr_pending":
+    # Check if the audience branch contains the phase commits (merged via PR)
+    result = git-orchestration.exec("git merge-base --is-ancestor origin/${prev_phase_branch} origin/${audience_branch}")
+
+    if result.exit_code == 0:
+      # PR was merged! Auto-update status
+      invoke: state-management.update-initiative
+      params:
+        initiative_id: ${initiative.id}
+        updates:
+          phase_status:
+            businessplan:
+              status: "complete"
+              completed_at: "${ISO_TIMESTAMP}"
+      output: "✅ Previous phase (businessplan) PR merged — status updated to complete"
+    else:
+      # PR not merged yet — warn but allow proceeding
+      pr_url = initiative.phase_status[prev_phase].pr_url || "(no PR URL recorded)"
+      output: |
+        ⚠️  Previous phase (businessplan) PR not yet merged
+        ├── Status: pr_pending
+        ├── PR: ${pr_url}
+        └── You may continue, but phase artifacts may not be on the audience branch
+
+      ask: "Continue anyway? [Y]es / [N]o"
+      if no:
+        exit: 0  # User chose to wait for merge
+
+# Determine phase branch [REQ-9]
+# techplan is in small audience — NO cascade merge needed (same audience as businessplan)
+phase_branch = "${initiative_root}-${audience}-techplan"
+
+# Step 5: Create phase branch if it doesn't exist [REQ-9]
+if not branch_exists(phase_branch):
+  invoke: git-orchestration.start-phase
+  params:
+    phase_name: "techplan"
+    display_name: "TechPlan"
+    initiative_id: ${initiative.id}
+    audience: ${audience}
+    initiative_root: ${initiative_root}
+    parent_branch: ${audience_branch}
+  if start_phase.exit_code != 0:
+    FAIL("❌ Pre-flight failed: Could not create branch ${phase_branch}")
+
+# Step 6: Checkout phase branch
+invoke: git-orchestration.checkout-branch
+params:
+  branch: ${phase_branch}
+invoke: git-orchestration.pull-latest
+
+# Step 7: Confirm to user
+output: |
+  📋 Pre-flight complete [REQ-9]
+  ├── Initiative: ${initiative.name} (${initiative.id})
+  ├── Phase: TechPlan (techplan)
+  ├── Audience: small
+  ├── Branch: ${phase_branch}
+  └── Working directory: clean ✅
 ```
-✅ TechPlan phase complete
 
-## Artifacts Produced
-- architecture.md ✅
+### 1. Validate Prerequisites & Gate Check
 
-## Next Step
-TechPlan is the LAST phase in the small audience. Your PR will be created
-automatically. After it merges, run `/promote` to advance to medium audience,
-then `/devproposal` to continue.
+```yaml
+# Gate check — verify businessplan phase artifacts exist
+if not gate_passed("businessplan"):
+  error: "BusinessPlan phase not complete. Run /businessplan first or merge pending PRs."
+  exit: 1
+
+# Verify businessplan artifacts exist
+required_artifacts:
+  - "${docs_path}/prd.md"
+
+for artifact in required_artifacts:
+  if not file_exists(artifact):
+    warning: "Required artifact not found: ${artifact}. Proceeding but techplan quality may suffer."
 ```
 
-## Notes
+### 2. Branch Verification (consolidated into Pre-Flight)
 
-- techplan is the LAST phase in small audience before promotion to medium
-- After techplan PR merges → user runs `/promote` to advance to medium
-- Architecture artifacts inform the devproposal phase (next audience)
+```yaml
+# Branch creation handled in Step 0 Pre-Flight [REQ-9]
+# Phase branch ${phase_branch} is already checked out at this point.
+assert: current_branch == phase_branch
+```
+
+### 3. Execution Mode Selection (Interactive or Batch)
+
+```yaml
+# Allow per-phase override of global question_mode preference
+ask: |
+  📋 Execution Mode Selection
+  
+  How would you like to proceed with this phase?
+  
+  **[I] Interactive** — Choose workflows and answer step-by-step
+  **[B] Batch**     — Answer all questions at once in a single file
+  
+  Select mode: [I] or [B]
+  (Default: ${initiative.question_mode})
+
+raw_choice = user_input
+normalized_choice = null
+
+if raw_choice:
+  upper_choice = raw_choice.upper()
+  if upper_choice == "B" or upper_choice == "BATCH":
+    normalized_choice = "batch"
+  elif upper_choice == "I" or upper_choice == "INTERACTIVE":
+    normalized_choice = "interactive"
+
+session.execution_mode = normalized_choice || initiative.question_mode
+session.mode_switched = (session.execution_mode != initiative.question_mode) ? true : false
+session.mode_switch_point = "entry"
+
+log_event:
+  type: "execution_mode_selected"
+  phase: "techplan"
+  mode: "${session.execution_mode}"
+  global_default: "${initiative.question_mode}"
+  override: ${session.mode_switched}
+  timestamp: "${ISO_TIMESTAMP}"
+
+if session.execution_mode == "batch":
+  invoke: lens-work.batch-process
+  params:
+    phase_name: "techplan"
+    display_name: "TechPlan"
+    template_path: "templates/techplan-questions.template.md"
+    output_filename: "techplan-questions.md"
+    scope: "phase"
+  exit: 0
+```
+
+### 4. Architecture Design
+
+**⚠️ CRITICAL — Interactive Workflow Rules:**
+Each sub-workflow uses sequential step-file architecture.
+- 🛑 **NEVER** auto-complete or batch-generate content without user input
+- ⏸️ **ALWAYS** STOP and wait for user input/confirmation at each step
+- 🚫 **NEVER** load the next step file until user explicitly confirms (Continue / C)
+- 📋 Back-and-forth dialogue is REQUIRED — you are a facilitator, not a generator
+- 💾 Save/update frontmatter after completing each step before loading the next
+- 🎯 Read the ENTIRE step file before taking any action within it
+
+**Agent:** Adopt Winston (Architect) persona — load `_bmad/bmm/agents/architect.md`
+
+```yaml
+# Load context from previous phases
+product_brief = load_file("${docs_path}/product-brief.md")
+prd = load_file("${docs_path}/prd.md")
+epics = load_if_exists("${docs_path}/epics.md")
+
+output: |
+  🏗️ TechPlan Phase
+
+  We'll now design the technical architecture based on:
+  - Product Brief (from preplan)
+  - PRD (from businessplan)
+  
+  This phase produces:
+  1. Architecture document
+  2. Technology decisions log
+  3. API contracts (if applicable)
+  4. Data model specification (if applicable)
+
+# RESOLVED: workflow-step architecture-design → Read fully and follow:
+#   _bmad/bmm/workflows/3-solutioning/create-architecture/workflow.md
+# Agent persona: Winston (Architect) — _bmad/bmm/agents/architect.md
+# Context: pass existing architecture.md as baseline for refinement
+# Uses step-file architecture with steps/ folder — load steps one at a time
+# NEVER load multiple step files simultaneously
+# ALWAYS halt at menus and wait for user input before proceeding
+agent_persona: "_bmad/bmm/agents/architect.md"
+read_and_follow: "_bmad/bmm/workflows/3-solutioning/create-architecture/workflow.md"
+params:
+  context: { product_brief, prd, epics }
+  output_file: "${docs_path}/architecture.md"
+
+# Tech decisions — inline workflow (continue as Winston)
+invoke: workflow-step
+params:
+  step: tech-decisions
+  context: { product_brief, prd }
+  output_file: "${docs_path}/tech-decisions.md"
+
+# Optional: API contracts
+ask: "Does this initiative involve API contracts? [Y/n]"
+if answer == "Y":
+  invoke: workflow-step
+  params:
+    step: api-contracts
+    context: { architecture }
+    output_file: "${docs_path}/api-contracts.md"
+
+# RESOLVED: Implementation readiness check → Read fully and follow:
+#   _bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md
+# Validate architecture is buildable and stories can be derived from it
+read_and_follow: "_bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md"
+params:
+  architecture: "${docs_path}/architecture.md"
+  prd: "${docs_path}/prd.md"
+  tech_decisions: "${docs_path}/tech-decisions.md"
+```
+
+### 5. Commit & Gate
+
+```yaml
+# REQ-7: Never auto-merge. PR created in S1.2.
+invoke: git-orchestration.targeted-commit
+params:
+  branch: ${phase_branch}
+  files:
+    - "${docs_path}/architecture.md"
+    - "${docs_path}/tech-decisions.md"
+    - "${docs_path}/api-contracts.md"  # if created
+  message: "[lens-work] techplan: architecture and technical design"
+
+# REQ-8: Create PR for phase merge
+invoke: git-orchestration.create-pr
+params:
+  head: ${phase_branch}
+  base: ${audience_branch}
+  title: "[techplan] TechPlan: ${initiative.name}"
+  body: "TechPlan phase complete for ${initiative.id}.\n\nArtifacts: architecture.md, tech-decisions.md, api-contracts.md"
+capture: pr_result
+
+# REQ-7/REQ-8: Phase enters pr_pending after PR creation
+invoke: state-management.update-initiative
+params:
+  initiative_id: ${initiative.id}
+  updates:
+    phase_status:
+      techplan:
+        status: "pr_pending"
+        pr_url: "${pr_result.url}"
+        pr_number: ${pr_result.number}
+if pr_result.fallback:
+  invoke: state-management.update-initiative
+  params:
+    initiative_id: ${initiative.id}
+    updates:
+      phase_status:
+        techplan:
+          status: "pr_pending"
+          pr_url: null
+          pr_number: null
+
+# Update state — dual-write
+state.current_phase = "techplan"
+state.workflow_status = "pr_pending"
+save(state)
+
+initiative.current_phase = "techplan"
+initiative.phase_status.techplan.status = "pr_pending"
+save(initiative)
+
+output: |
+  ✅ TechPlan phase complete!
+
+  Artifacts:
+  - Architecture: ${docs_path}/architecture.md
+  - Tech decisions: ${docs_path}/tech-decisions.md
+
+  Audience: small
+  Branch pushed: ${phase_branch}
+  PR: ${pr_result}
+  Status: pr_pending (awaiting merge)
+  Remaining on: ${phase_branch}
+
+  Next: Once all small-audience phases are merged, run @lens next (or /devproposal).
+        If promotion is required, it is auto-triggered.
+```
+
+---
+
+## Error Handling
+
+| Error | Action |
+|-------|--------|
+| BusinessPlan gate not passed | Block, suggest /businessplan |
+| Previous phase PR not merged | Warn, allow override |
+| Architecture doc empty | Warn, allow re-run |
+| State write failure | Log to background_errors[] |
+
+---
+
+## Post-Conditions
+
+- [ ] Working directory clean (all changes committed)
+- [ ] On phase branch: `{initiative_root}-small-techplan` (REQ-7: no auto-merge)
+- [ ] state.yaml updated with phase techplan
+- [ ] initiatives/{id}.yaml phase_status.techplan updated
+- [ ] Architecture artifacts written to `${docs_path}/`
+- [ ] All changes pushed to origin
