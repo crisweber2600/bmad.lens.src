@@ -109,6 +109,7 @@ Use git-orchestration `create-branch` operation.
 | `/status` | utility/status | Git-derived state report across all initiatives |
 | `/next` | utility/next | Recommend next action based on lifecycle state |
 | `/switch` | utility/switch | Checkout a different initiative branch |
+| `/preflight` | (inline) | Pull latest for all authority domain repos |
 | `/help` | utility/help | Command reference with categories |
 | `/sense` | governance/cross-initiative | On-demand cross-initiative sensing |
 
@@ -181,3 +182,56 @@ Tables MUST use ≤5 columns for chat panel rendering compatibility.
 | Governance repo | READ-ONLY — can propose PR but never direct write |
 | `.github/` | Not modified during initiative work |
 | `_bmad-output/lens-work/initiatives/` | WRITE — all initiative artifacts go here |
+
+## Session Preflight
+
+At session start, @lens verifies all authority domain repos are present and pulls latest **once per day**. The `/preflight` command forces a pull regardless of freshness.
+
+### Daily Freshness Check
+
+Preflight uses `_bmad-output/lens-work/.preflight-timestamp` to track the last pull. The file contains a single ISO 8601 date (e.g., `2026-03-09`).
+
+**Algorithm:**
+1. Read `.preflight-timestamp`. If the date matches today → skip pulls, run presence checks only.
+2. If the file is missing or the date is older than today → run full preflight (presence + pull).
+3. After a successful full preflight, write today's date to `.preflight-timestamp`.
+4. `/preflight` always runs full preflight regardless of the timestamp.
+
+### Preflight Algorithm
+
+1. **Check `bmad.lens.release/`** — Verify the directory exists and contains `.git/`. If pulling today, run `git -C bmad.lens.release pull origin`. If missing, report error with setup instructions.
+
+2. **Check `.github/`** — Verify the directory exists and contains `.git/` (it is a clone of `bmad.lens.copilot`). If pulling today, run `git -C .github pull origin`. If missing, report error with setup instructions.
+
+3. **Check governance repo** — Read `_bmad-output/lens-work/governance-setup.yaml` for the configured clone path (default: `TargetProjects/lens/lens-governance`). Verify it exists and contains `.git/`. If pulling today, run `git -C {path} pull origin`. If missing, report error with setup instructions.
+
+4. **Report results** — Display a compact status table:
+
+```
+## Preflight
+
+| Repo | Path | Status |
+|------|------|--------|
+| bmad.lens.release | bmad.lens.release/ | ✅ up to date |
+| bmad.lens.copilot | .github/ | ✅ up to date |
+| lens-governance | TargetProjects/lens/lens-governance/ | ✅ up to date |
+```
+
+### Preflight Failure
+
+If any repo is missing, block all commands and display:
+
+```
+❌ Preflight failed — missing authority domain repos.
+
+   Run the setup script to bootstrap your control repo:
+     Windows:    .\_bmad\lens-work\scripts\setup-control-repo.ps1 -Org <your-org>
+     macOS/Linux: ./_bmad/lens-work/scripts/setup-control-repo.sh --org <your-org>
+```
+
+If a pull fails (network error, auth issue), report a warning but do NOT block:
+
+```
+⚠️ Could not pull latest for {repo}. Working with local version.
+   Check your network connection and try `/preflight` to retry.
+```
