@@ -410,69 +410,45 @@ jobs:
 
       # ── 8. Generate prompt stubs pointing to bmad.lens.release ───────
       - name: Generate prompt stubs for all lens-work prompts
-        shell: node {0}
         run: |
-          const fs = require('fs');
-          const path = require('path');
-          
-          const promptsDir = 'copilot-repo/prompts';
-          fs.mkdirSync(promptsDir, { recursive: true });
-          
-          // Clean existing prompts
-          if (fs.existsSync(promptsDir)) {
-            fs.readdirSync(promptsDir)
-              .filter(f => f.endsWith('.prompt.md'))
-              .forEach(f => fs.unlinkSync(path.join(promptsDir, f)));
-          }
-          
-          const srcDir = 'release-repo/.github/prompts';
-          let created = 0;
-          
-          if (!fs.existsSync(srcDir)) {
-            console.log('ℹ️ No source prompts directory found');
-            process.exit(0);
-          }
-          
-          fs.readdirSync(srcDir)
-            .filter(f => f.match(/^lens-work.*\.prompt\.md$/))
-            .forEach(filename => {
-              const srcPath = path.join(srcDir, filename);
-              const content = fs.readFileSync(srcPath, 'utf8');
-              
-              // Extract description
-              let desc = 'LENS Workbench prompt';
-              const descMatch = content.match(/^description:\s*['"]?(.+?)['"]?\s*$/m);
-              if (descMatch) desc = descMatch[1];
-              
-              // Extract model
-              let model = 'Claude Sonnet 4.6 (copilot)';
-              const modelMatch = content.match(/^model:\s*(.+?)\s*$/m);
-              if (modelMatch) model = modelMatch[1];
-              
-              const name = filename.replace(/\.prompt\.md$/, '');
-              
-              // Create stub
-              const stub = `---
-model: ${model}
-description: '${desc}'
----
+          mkdir -p copilot-repo/prompts
+          rm -f copilot-repo/prompts/*.prompt.md
 
-# ${name} (Stub)
+          for src in release-repo/.github/prompts/lens-work*.prompt.md; do
+            [ -f "$src" ] || continue
+            filename=$(basename "$src")
+            # Extract description from source
+            desc=$(grep "^description:" "$src" | head -1 | sed "s/^description: *['\"]//;s/['\"] *$//")
+            : "${desc:=LENS Workbench prompt}"
+            # Extract model from source
+            model=$(grep "^model:" "$src" | head -1 | sed "s/^model: *//")
+            : "${model:=Claude Sonnet 4.6 (copilot)}"
+            name="${filename%.prompt.md}"
+            
+            # Write prompt stub file line by line
+            {
+              echo "---"
+              echo "model: $model"
+              echo "description: '$desc'"
+              echo "---"
+              echo ""
+              echo "# $name (Stub)"
+              echo ""
+              echo "> **This is a stub.** Load and execute the full prompt from the release module."
+              echo "> All \`_bmad/\` paths in the full prompt are relative to \`bmad.lens.release/\` — do NOT resolve paths against the user's main project repo."
+              echo ""
+              echo "\`\`\`"
+              echo "Read and follow all instructions in: bmad.lens.release/.github/prompts/$filename"
+              echo "\`\`\`"
+            } > "copilot-repo/prompts/$filename"
+            echo "  created: $filename"
+          done
 
-> **This is a stub.** Load and execute the full prompt from the release module.
-> All \`_bmad/\` paths in the full prompt are relative to \`bmad.lens.release/\` — do NOT resolve paths against the user's main project repo.
+          # Defensive cleanup if legacy files are still present.
+          find copilot-repo/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' -delete
 
-\`\`\`
-Read and follow all instructions in: bmad.lens.release/.github/prompts/${filename}
-\`\`\`
-`;
-              
-              fs.writeFileSync(path.join(promptsDir, filename), stub);
-              console.log(`  created: ${filename}`);
-              created++;
-            });
-          
-          console.log(`✅ Generated ${created} prompt stubs`);
+          PROMPT_COUNT=$(ls copilot-repo/prompts/*.prompt.md 2>/dev/null | wc -l)
+          echo "✅ Generated $PROMPT_COUNT prompt stubs"
 
       # ── 9. Copy instruction files from release ───────────────────────
       - name: Copy instruction files
