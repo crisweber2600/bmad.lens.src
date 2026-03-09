@@ -414,21 +414,21 @@ jobs:
           mkdir -p copilot-repo/prompts
           rm -f copilot-repo/prompts/*.prompt.md
 
-          # Read from the canonical module source, not the .github/prompts/ stubs
-          PROMPT_SRC="release-repo/_bmad/lens-work/prompts"
+          # Helper: create a stub from a source prompt file
+          make_stub() {
+            local src="$1" redirect="$2"
+            local filename=$(basename "$src")
+            local desc model name extra
 
-          for src in "$PROMPT_SRC"/lens-work*.prompt.md; do
-            [ -f "$src" ] || continue
-            filename=$(basename "$src")
-            # Extract description from canonical source
             desc=$(grep "^description:" "$src" | head -1 | sed "s/^description: *['\"]//;s/['\"] *$//")
             : "${desc:=LENS Workbench prompt}"
-            # Extract model from canonical source
             model=$(grep "^model:" "$src" | head -1 | sed "s/^model: *//")
             : "${model:=Claude Sonnet 4.6 (copilot)}"
             name="${filename%.prompt.md}"
-            
-            # Write prompt stub pointing directly to the canonical module path
+
+            # Preserve any trailing content after the code fence (e.g. scope annotations)
+            extra=$(sed -n '/^```$/,$ { /^```$/d; p; }' "$src" | tail -n +1)
+
             {
               echo "---"
               echo "model: $model"
@@ -441,10 +441,29 @@ jobs:
               echo "> All \`_bmad/\` paths in the full prompt are relative to \`bmad.lens.release/\` — do NOT resolve paths against the user's main project repo."
               echo ""
               echo "\`\`\`"
-              echo "Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/$filename"
+              echo "Read and follow all instructions in: $redirect"
               echo "\`\`\`"
+              [ -n "$extra" ] && echo "" && echo "$extra"
             } > "copilot-repo/prompts/$filename"
             echo "  created: $filename"
+          }
+
+          # Pass 1: Canonical module source prompts
+          for src in release-repo/_bmad/lens-work/prompts/lens-work*.prompt.md; do
+            [ -f "$src" ] || continue
+            filename=$(basename "$src")
+            make_stub "$src" "bmad.lens.release/_bmad/lens-work/prompts/$filename"
+          done
+
+          # Pass 2: Installer-generated prompts (e.g. new-domain, new-service, new-feature)
+          # These are scope-specific wrappers created by the installer — copy them as-is
+          for src in release-repo/.github/prompts/lens-work*.prompt.md; do
+            [ -f "$src" ] || continue
+            filename=$(basename "$src")
+            # Skip if already created from the canonical source
+            [ -f "copilot-repo/prompts/$filename" ] && continue
+            cp "$src" "copilot-repo/prompts/$filename"
+            echo "  copied: $filename (installer-generated)"
           done
 
           # Defensive cleanup if legacy files are still present.
