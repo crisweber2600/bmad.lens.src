@@ -13,19 +13,22 @@ Routes `/new-domain`, `/new-service`, and `/new-feature` commands to the init-in
 ## Parameters
 
 - **scope**: `domain` | `service` | `feature` (derived from which `/new-*` command was used)
-- **domain**: Required for all scopes
-- **service**: Required for `service` and `feature` scopes
-- **feature**: The feature/initiative name
+- **domain**: Domain name (required for all scopes, collected or from context)
+- **service**: Service/repo name (required for all scopes, collected or from context)
+- **feature**: The feature/initiative name (required for all scopes)
+- **track**: Lifecycle track
 
 ## Steps
 
-### Step 1: Determine Scope
+### Step 1: Determine Scope and Collect Parameters
 
-| Command | Scope | Initiative Root |
-|---------|-------|-----------------|
-| `/new-domain` | domain | `{domain}-{feature}` |
-| `/new-service` | service | `{domain}-{service}-{feature}` |
-| `/new-feature` | feature | `{domain}-{service}-{feature}` |
+| Command | Collection Strategy | Initiative Root |
+|---------|---------------------|-----------------|
+| `/new-domain` | Collect: domain → service → feature → track | `{domain}-{service}-{feature}` |
+| `/new-service` | Use context domain, collect: service → feature → track | `{domain}-{service}-{feature}` |
+| `/new-feature` | Use context domain + service, collect: feature → track | `{domain}-{service}-{feature}` |
+
+**All initiatives are created at the `{domain}-{service}-{feature}` level.** Domains and services are organizational boundaries.
 
 ### Step 2: Execute Workflow
 

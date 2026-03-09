@@ -18,9 +18,15 @@ Read the command to determine scope:
 
 | Command | Scope | Required Parameters |
 |---------|-------|---------------------|
-| `/new-domain` | domain | domain name, feature name, track |
-| `/new-service` | service | domain name, service name, feature name, track |
-| `/new-feature` | feature | domain name, service name, feature name, track |
+| `/new-domain` | domain | domain name, service name, feature name, track |
+| `/new-service` | service | domain name (from context), service name, feature name, track |
+| `/new-feature` | feature | domain name (from context), service name (from context), feature name, track |
+
+**Collection order for `/new-domain`:**
+1. Domain name (organizational boundary)
+2. Service name (service/repo within domain)
+3. Feature name (specific initiative/feature)
+4. Track (lifecycle track)
 
 Collect missing parameters from the user. Present track options from `lifecycle.yaml`:
 
@@ -54,11 +60,15 @@ Apply slug-safe validation to all name components (domain, service, feature):
 
 ### Step 3: Derive Initiative Root
 
-| Scope | Initiative Root | Config Path |
-|-------|-----------------|-------------|
-| domain | `{domain}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{feature}.yaml` |
-| service | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
-| feature | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
+All initiatives follow the pattern: `{domain}-{service}-{feature}`
+
+| Scope | Collection | Initiative Root | Config Path |
+|-------|------------|-----------------|-------------|
+| domain | Collects all three (domain, service, feature) | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
+| service | Uses context domain, collects service + feature | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
+| feature | Uses context domain + service, collects feature | `{domain}-{service}-{feature}` | `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml` |
+
+**IMPORTANT:** All initiatives are created at the service-feature level. Domains and services are organizational boundaries, not features themselves.
 
 ### Step 4: Read lifecycle.yaml
 
