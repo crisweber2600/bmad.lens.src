@@ -179,7 +179,24 @@ Path (see Step 3 for scope-specific paths):
 - service: `_bmad-output/lens-work/initiatives/{domain}/{service}/initiative.yaml`
 - feature: `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`
 
-### Step 8: Create Branch Topology
+### Step 8: Scaffold TargetProjects Folder
+
+**Domain and service scopes only.** Feature scope skips this step.
+
+Read `target_projects_path` from `bmadconfig.yaml` (default: `TargetProjects`) or from the user's `profile.yaml`.
+
+Create the corresponding folder in the TargetProjects tree:
+
+- **Domain scope:** `{target_projects_path}/{domain}/`
+- **Service scope:** `{target_projects_path}/{domain}/{service}/`
+
+```bash
+mkdir -p {target_projects_path}/{folder-path}
+```
+
+This creates the organizational placeholder so that future repo clones and `/new-service` or `/new-feature` operations have a home. The folder is NOT committed to git (TargetProjects is gitignored) — it is a local workspace scaffold only.
+
+### Step 9: Create Branch Topology
 
 Using the git-orchestration skill:
 
@@ -200,7 +217,7 @@ Using the git-orchestration skill:
 
 5. **CRITICAL: Do NOT create medium, large, or base branches.** Lazy creation — these are created on-demand at promotion time.
 
-### Step 9: Commit and Push
+### Step 10: Commit and Push
 
 Using the git-orchestration skill:
 
@@ -227,7 +244,7 @@ Using the git-orchestration skill:
      git push -u origin {initiative-root}-small
      ```
 
-### Step 10: Display Response
+### Step 11: Display Response
 
 Follow the 3-part response format:
 
@@ -256,6 +273,9 @@ Follow the 3-part response format:
 Branch topology:
 - `{initiative-root}` (domain root)
 
+TargetProjects folder:
+  `{target_projects_path}/{domain}/`
+
 Config committed at:
   `_bmad-output/lens-work/initiatives/{config-path}`
 ```
@@ -266,6 +286,9 @@ Config committed at:
 
 Branch topology:
 - `{initiative-root}` (service root)
+
+TargetProjects folder:
+  `{target_projects_path}/{domain}/{service}/`
 
 Config committed at:
   `_bmad-output/lens-work/initiatives/{config-path}`
