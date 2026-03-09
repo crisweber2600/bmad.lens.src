@@ -24,10 +24,16 @@ Promote an initiative from the current audience tier to the next audience in the
 
 Run preflight before executing this workflow:
 
-- Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
-- If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
-- Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
-- If preflight reports missing authority repos: stop and return the preflight failure message.
+1. Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
+2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos now:
+   ```bash
+   git -C bmad.lens.release pull origin
+   git -C .github pull origin
+   git -C {governance-repo-path} pull origin   # path from governance-setup.yaml
+   ```
+   Then write today's date to `_bmad-output/lens-work/.preflight-timestamp`.
+3. Otherwise: read `_bmad-output/lens-work/.preflight-timestamp`. If missing or older than today, run the same three `git pull` commands above and update the timestamp. If today's date matches, skip pulls.
+4. If any authority repo directory is missing: stop and return the preflight failure message.
 
 ### Step 1: Determine Current and Next Audience
 
