@@ -128,7 +128,7 @@ function New-GHStubPrompt {
 
     return @"
 ---
-model: Sonnet 4.6
+model: Claude Sonnet 4.6 (copilot)
 description: '$Description'
 ---
 

@@ -1,5 +1,5 @@
 ---
-model: Sonnet 4.6
+model: Claude Sonnet 4.6 (copilot)
 description: 'Create new feature-level initiative within a service'
 ---
 

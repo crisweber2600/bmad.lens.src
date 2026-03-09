@@ -1,5 +1,5 @@
 ---
-model: Sonnet 4.6
+model: Claude Sonnet 4.6 (copilot)
 description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM, small audience)'
 ---
 

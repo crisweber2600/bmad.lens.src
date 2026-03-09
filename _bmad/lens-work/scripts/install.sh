@@ -157,7 +157,7 @@ gh_stub_prompt() {
 
   cat <<EOF
 ---
-model: Sonnet 4.6
+model: Claude Sonnet 4.6 (copilot)
 description: '${description}'
 ---
 

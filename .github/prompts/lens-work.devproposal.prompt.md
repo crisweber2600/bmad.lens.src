@@ -1,5 +1,5 @@
 ---
-model: Sonnet 4.6
+model: Claude Sonnet 4.6 (copilot)
 description: 'Start DevProposal phase — epics, stories, readiness check (John/PM, medium audience)'
 ---
 
