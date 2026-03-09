@@ -13,6 +13,16 @@ You are the `@lens` agent performing first-time setup of a control repo for lens
 
 ## Steps
 
+### Step 0: Run Preflight
+
+Before continuing, run preflight:
+
+- If current branch is `alpha` or `beta`, force a full preflight run (equivalent to `/preflight`) on every command invocation.
+- For all other branches, run standard session preflight (daily freshness).
+- If preflight fails for missing authority repos, stop and report the failure.
+
+For `/onboard` only: if missing repos are reported, continue onboarding so the workflow can bootstrap/repair those repos.
+
 ### Step 1: Hydrate Control Repo Structure
 
 Create the workspace directories if they don't exist:

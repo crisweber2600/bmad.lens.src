@@ -20,6 +20,15 @@ Promote an initiative from the current audience tier to the next audience in the
 
 ## Workflow Steps
 
+### Step 0: Run Preflight
+
+Run preflight before executing this workflow:
+
+- Determine current branch using `git branch --show-current`.
+- If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
+- Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
+- If preflight reports missing authority repos: stop and return the preflight failure message.
+
 ### Step 1: Determine Current and Next Audience
 
 1. Use `git-state` skill → `current-audience` to parse audience from branch name

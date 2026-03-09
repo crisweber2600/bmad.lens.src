@@ -10,6 +10,17 @@
 
 ## Steps
 
+### Step 0: Run Preflight
+
+Run preflight before executing this workflow:
+
+- Determine current branch using `git branch --show-current`.
+- If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
+- Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
+- If preflight reports missing authority repos: stop and return the preflight failure message.
+
+For `/onboard` only: if missing repos are reported, treat them as bootstrap tasks and continue onboarding so this workflow can clone/repair required repos.
+
 ### Step 1: Detect PR Provider
 
 Use the provider-adapter skill to detect the configured PR provider from the git remote URL.

@@ -4,6 +4,15 @@
 **Purpose:** Manage phase completion, automatic PR creation, and branch cleanup.
 **Trigger:** Automatically invoked at the end of each phase routing workflow.
 
+## Preflight Gate
+
+Run preflight before executing this workflow:
+
+- Determine current branch using `git branch --show-current`.
+- If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
+- Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
+- If preflight reports missing authority repos: stop and return the preflight failure message.
+
 ## Overview
 
 This core workflow handles the lifecycle of a phase branch:

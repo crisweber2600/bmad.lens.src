@@ -10,6 +10,15 @@
 
 Combined workflow for module version checking and self-service updates. Reports the currently installed lens-work module version, checks for available updates, and guides the user through updating when a newer version is available.
 
+## Preflight Gate
+
+Run preflight before executing this workflow:
+
+- Determine current branch using `git branch --show-current`.
+- If branch is `alpha` or `beta`: run full preflight (same behavior as `/preflight`) and ignore daily freshness cache.
+- Otherwise: run standard session preflight (daily freshness using `_bmad-output/lens-work/.preflight-timestamp`).
+- If preflight reports missing authority repos: stop and return the preflight failure message.
+
 ## Part 1: Version Check
 
 ### Step 1: Read Local Version
