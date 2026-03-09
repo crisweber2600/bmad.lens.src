@@ -197,14 +197,106 @@ Using git-orchestration skill:
 ```yaml
 if all_workflows_complete("preplan"):
   # Push final state to phase branch
-  # Create PR for phase merge
+  invoke: git-orchestration.commit-and-push
+  params:
+    branch: ${phase_branch}
+    message: "[${initiative.id}] PrePlan complete"
+  # Phase branch remains alive — PR handles merge to audience branch
+
+  # REQ-8: Create PR for phase merge
+  invoke: git-orchestration.create-pr
+  params:
+    head: ${phase_branch}
+    base: ${audience_branch}
+    title: "[preplan] PrePlan: ${initiative.name}"
+    body: "PrePlan phase complete for ${initiative.id}.\n\nArtifacts: product-brief.md"
+  capture: pr_result  # { url, number } or fallback message
+
+  # REQ-7/REQ-8: Phase enters pr_pending after PR creation
+  invoke: state-management.update-initiative
+  params:
+    initiative_id: ${initiative.id}
+    updates:
+      phase_status:
+        preplan:
+          status: "pr_pending"
+          pr_url: "${pr_result.url}"
+          pr_number: ${pr_result.number}
+  # If manual fallback (no PAT), still set pr_pending with null PR info
+  if pr_result.fallback:
+    invoke: state-management.update-initiative
+    params:
+      initiative_id: ${initiative.id}
+      updates:
+        phase_status:
+          preplan:
+            status: "pr_pending"
+            pr_url: null
+            pr_number: null
+
   output: |
     ✅ /preplan complete
     ├── Phase: PrePlan (preplan) finished
     ├── Audience: small
     ├── Artifacts: product-brief.md (+ brainstorm/research if produced)
-    ├── Branch pushed: {phase_branch}
+    ├── Branch pushed: ${phase_branch}
+    ├── PR: ${pr_result}
+    ├── Status: pr_pending (awaiting merge)
+    ├── Remaining on: ${phase_branch}
     └── Next: Run /businessplan to continue to BusinessPlan phase
+```
+
+### Step 6: Update State Files
+
+```yaml
+# Update initiative file: _bmad-output/lens-work/initiatives/${initiative.id}.yaml
+invoke: state-management.update-initiative
+params:
+  initiative_id: ${initiative.id}
+  updates:
+    current_phase: "preplan"
+    phase_status:
+      preplan:
+        status: "in_progress"
+        started_at: "${ISO_TIMESTAMP}"
+
+# Update state.yaml
+invoke: state-management.update-state
+params:
+  updates:
+    current_phase: "preplan"
+    workflow_status: "pr_pending"
+    active_branch: "${phase_branch}"
+```
+
+### Step 7: Commit State Changes
+
+```yaml
+invoke: git-orchestration.commit-and-push
+params:
+  paths:
+    - "_bmad-output/lens-work/state.yaml"
+    - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
+    - "_bmad-output/lens-work/event-log.jsonl"
+    - "${output_path}/"
+  message: "[lens-work] /preplan: PrePlan — ${initiative.id}"
+  branch: "${phase_branch}"
+```
+
+### Step 8: Log Event
+
+```json
+{"ts":"${ISO_TIMESTAMP}","event":"preplan","id":"${initiative.id}","phase":"preplan","audience":"small","workflow":"preplan","status":"complete"}
+```
+
+### Step 9: Offer Next Step
+
+```
+Ready to continue?
+
+**[C]** Continue to /businessplan (BusinessPlan phase)
+**[P]** Pause here (resume later with @lens /businessplan)
+**[S]** Show status (@lens ST)
 ```
 
 ---
@@ -216,6 +308,7 @@ if all_workflows_complete("preplan"):
 | Product Brief | `phases/preplan/product-brief.md` | Yes |
 | Research Summary | `phases/preplan/research-summary.md` | If research selected |
 | Brainstorm Notes | `phases/preplan/brainstorm-notes.md` | If brainstorming selected |
+| Initiative State | `_bmad-output/lens-work/initiatives/${id}.yaml` | Yes |
 
 ---
 
@@ -226,3 +319,21 @@ if all_workflows_complete("preplan"):
 | Track doesn't include preplan | `❌ Track '{track}' does not include preplan. Valid phases: {phases}` |
 | Not on initiative branch | `❌ Not on an initiative branch. Use /switch or /new-domain first.` |
 | Already on a phase branch | `⚠️ Already on phase branch {branch}. Complete current phase first.` |
+| Dirty working directory | Prompt to stash or commit changes first |
+| Branch creation failed | Check remote connectivity, retry with backoff |
+| State file write failed | Retry (max 3 attempts), then fail with save instructions |
+| PR creation failed | `❌ HARD GATE: PR creation failed. Fix the issue and re-run.` |
+
+---
+
+## Post-Conditions
+
+- [ ] Working directory clean (all changes committed)
+- [ ] Phase branch `{initiative_root}-small-preplan` pushed to origin (REQ-7: no auto-merge)
+- [ ] PR created from phase branch to audience branch
+- [ ] Remaining on phase branch: `{initiative_root}-small-preplan`
+- [ ] state.yaml updated with phase preplan
+- [ ] initiatives/{id}.yaml phase_status.preplan updated
+- [ ] event-log.jsonl entry appended
+- [ ] Planning artifacts written to `${output_path}/` (at minimum product-brief.md)
+- [ ] All changes pushed to origin

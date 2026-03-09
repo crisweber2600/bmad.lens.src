@@ -293,7 +293,7 @@ params:
   tech_decisions: "${docs_path}/tech-decisions.md"
 ```
 
-### 5. Commit & Gate
+### 5. Commit Artifacts
 
 ```yaml
 # REQ-7: Never auto-merge. PR created in S1.2.
@@ -305,27 +305,28 @@ params:
     - "${docs_path}/tech-decisions.md"
     - "${docs_path}/api-contracts.md"  # if created
   message: "[lens-work] techplan: architecture and technical design"
+```
 
-# REQ-8: Create PR for phase merge
-invoke: git-orchestration.create-pr
-params:
-  head: ${phase_branch}
-  base: ${audience_branch}
-  title: "[techplan] TechPlan: ${initiative.name}"
-  body: "TechPlan phase complete for ${initiative.id}.\n\nArtifacts: architecture.md, tech-decisions.md, api-contracts.md"
-capture: pr_result
+### 6. Phase Completion
 
-# REQ-7/REQ-8: Phase enters pr_pending after PR creation
-invoke: state-management.update-initiative
-params:
-  initiative_id: ${initiative.id}
-  updates:
-    phase_status:
-      techplan:
-        status: "pr_pending"
-        pr_url: "${pr_result.url}"
-        pr_number: ${pr_result.number}
-if pr_result.fallback:
+```yaml
+if all_workflows_complete("techplan"):
+  # Push final state to phase branch
+  invoke: git-orchestration.commit-and-push
+  params:
+    branch: ${phase_branch}
+    message: "[${initiative.id}] TechPlan complete"
+
+  # REQ-8: Create PR for phase merge
+  invoke: git-orchestration.create-pr
+  params:
+    head: ${phase_branch}
+    base: ${audience_branch}
+    title: "[techplan] TechPlan: ${initiative.name}"
+    body: "TechPlan phase complete for ${initiative.id}.\n\nArtifacts: architecture.md, tech-decisions.md, api-contracts.md"
+  capture: pr_result
+
+  # REQ-7/REQ-8: Phase enters pr_pending after PR creation
   invoke: state-management.update-initiative
   params:
     initiative_id: ${initiative.id}
@@ -333,33 +334,81 @@ if pr_result.fallback:
       phase_status:
         techplan:
           status: "pr_pending"
-          pr_url: null
-          pr_number: null
+          pr_url: "${pr_result.url}"
+          pr_number: ${pr_result.number}
+  # If manual fallback (no PAT), still set pr_pending with null PR info
+  if pr_result.fallback:
+    invoke: state-management.update-initiative
+    params:
+      initiative_id: ${initiative.id}
+      updates:
+        phase_status:
+          techplan:
+            status: "pr_pending"
+            pr_url: null
+            pr_number: null
 
-# Update state — dual-write
-state.current_phase = "techplan"
-state.workflow_status = "pr_pending"
-save(state)
+  output: |
+    ✅ /techplan complete
+    ├── Phase: TechPlan (techplan) finished
+    ├── Audience: small
+    ├── Artifacts: architecture.md, tech-decisions.md, api-contracts.md
+    ├── Branch pushed: ${phase_branch}
+    ├── PR: ${pr_result}
+    ├── Status: pr_pending (awaiting merge)
+    ├── Remaining on: ${phase_branch}
+    └── Next: Once all small-audience phases are merged, run @lens next (or /devproposal).
+```
 
-initiative.current_phase = "techplan"
-initiative.phase_status.techplan.status = "pr_pending"
-save(initiative)
+### 7. Update State Files
 
-output: |
-  ✅ TechPlan phase complete!
+```yaml
+invoke: state-management.update-initiative
+params:
+  initiative_id: ${initiative.id}
+  updates:
+    current_phase: "techplan"
+    phase_status:
+      techplan:
+        status: "in_progress"
+        started_at: "${ISO_TIMESTAMP}"
 
-  Artifacts:
-  - Architecture: ${docs_path}/architecture.md
-  - Tech decisions: ${docs_path}/tech-decisions.md
+invoke: state-management.update-state
+params:
+  updates:
+    current_phase: "techplan"
+    workflow_status: "pr_pending"
+    active_branch: "${phase_branch}"
+```
 
-  Audience: small
-  Branch pushed: ${phase_branch}
-  PR: ${pr_result}
-  Status: pr_pending (awaiting merge)
-  Remaining on: ${phase_branch}
+### 8. Commit State Changes
 
-  Next: Once all small-audience phases are merged, run @lens next (or /devproposal).
-        If promotion is required, it is auto-triggered.
+```yaml
+invoke: git-orchestration.commit-and-push
+params:
+  paths:
+    - "_bmad-output/lens-work/state.yaml"
+    - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
+    - "_bmad-output/lens-work/event-log.jsonl"
+    - "${docs_path}/"
+  message: "[lens-work] /techplan: TechPlan — ${initiative.id}"
+  branch: "${phase_branch}"
+```
+
+### 9. Log Event
+
+```json
+{"ts":"${ISO_TIMESTAMP}","event":"techplan","id":"${initiative.id}","phase":"techplan","audience":"small","workflow":"techplan","status":"complete"}
+```
+
+### 10. Offer Next Step
+
+```
+Ready to continue?
+
+**[C]** Continue to /devproposal (DevProposal phase)
+**[P]** Pause here (resume later with @lens /devproposal)
+**[S]** Show status (@lens ST)
 ```
 
 ---
@@ -371,15 +420,20 @@ output: |
 | BusinessPlan gate not passed | Block, suggest /businessplan |
 | Previous phase PR not merged | Warn, allow override |
 | Architecture doc empty | Warn, allow re-run |
-| State write failure | Log to background_errors[] |
+| State write failure | Retry (max 3 attempts), then fail with save instructions |
+| Dirty working directory | Prompt to stash or commit changes first |
+| PR creation failed | `❌ HARD GATE: PR creation failed. Fix the issue and re-run.` |
 
 ---
 
 ## Post-Conditions
 
 - [ ] Working directory clean (all changes committed)
-- [ ] On phase branch: `{initiative_root}-small-techplan` (REQ-7: no auto-merge)
+- [ ] Phase branch `{initiative_root}-small-techplan` pushed to origin (REQ-7: no auto-merge)
+- [ ] PR created from phase branch to audience branch
+- [ ] Remaining on phase branch: `{initiative_root}-small-techplan`
 - [ ] state.yaml updated with phase techplan
 - [ ] initiatives/{id}.yaml phase_status.techplan updated
+- [ ] event-log.jsonl entry appended
 - [ ] Architecture artifacts written to `${docs_path}/`
 - [ ] All changes pushed to origin
