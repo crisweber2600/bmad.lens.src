@@ -27,29 +27,29 @@ Read the command to determine scope. Each command ONLY collects the parameters f
 
 | Command | Scope | Collected Parameters |
 |---------|-------|---------------------|
-| `/new-domain` | domain | domain name, track |
-| `/new-service` | service | service name, track (domain from context or ask) |
+| `/new-domain` | domain | domain name |
+| `/new-service` | service | service name (domain from context or ask) |
 | `/new-feature` | feature | feature name, track (domain + service from context or ask) |
 
 **Collection rules per scope:**
 
 **`/new-domain {name}`:**
 1. Domain name — the provided argument (or ask if missing)
-2. Track — present track options
-3. Do NOT collect service or feature names
+2. Do NOT collect track, service, or feature names
+3. Domains are organizational containers with no lifecycle phases — track does not apply
 
 **`/new-service {name}`:**
 1. Domain — derive from current branch context, or ask if not on a domain branch
 2. Service name — the provided argument (or ask if missing)
-3. Track — present track options
-4. Do NOT collect a feature name
+3. Do NOT collect track or feature name
+4. Services are organizational containers with no lifecycle phases — track does not apply
 
 **`/new-feature {name}`:**
 1. Domain + Service — derive from current branch context, or ask if not available
 2. Feature name — the provided argument (or ask if missing)
 3. Track — present track options
 
-Collect missing parameters from the user. Present track options from `lifecycle.yaml`:
+Collect missing parameters from the user. **Track selection applies only to feature scope** (domain and service scopes skip this). Present track options from `lifecycle.yaml` for feature scope:
 
 | Track | Description | Phases |
 |-------|-------------|--------|
@@ -99,6 +99,8 @@ The initiative root has a variable number of segments depending on scope:
 
 ### Step 4: Read lifecycle.yaml
 
+**Feature scope only.** Domain and service scopes skip this step (they have no track, phases, or audiences).
+
 Load `lifecycle.yaml` and validate:
 - The selected track exists in the `tracks:` section
 - Extract the phases and audiences enabled by this track
@@ -130,6 +132,8 @@ Load `lifecycle.yaml` and validate:
 
 ### Step 6: Verify Track Permissions
 
+**Feature scope only.** Domain and service scopes skip this step.
+
 Check governance repo (if available) to verify the selected track is permitted at this LENS hierarchy level. If governance repo is not accessible, proceed with a warning.
 
 ### Step 7: Create Initiative Config
@@ -142,7 +146,6 @@ Create the initiative config YAML file. Fields vary by scope:
 initiative: {domain}
 scope: domain
 domain: {domain}
-track: {track}
 language: unknown           # auto-detected later or user-specified
 created: {ISO8601}
 initiative_root: {domain}
@@ -154,7 +157,6 @@ initiative: {service}
 scope: service
 domain: {domain}
 service: {service}
-track: {track}
 language: unknown
 created: {ISO8601}
 initiative_root: {domain}-{service}
@@ -203,10 +205,16 @@ Using the git-orchestration skill:
 Using the git-orchestration skill:
 
 1. Commit the initiative config:
-   ```bash
-   git add _bmad-output/lens-work/initiatives/{config-path}
-   git commit -m "[INIT] {initiative-root} — initiative created (track: {track})"
-   ```
+   - **Domain / Service scope:**
+     ```bash
+     git add _bmad-output/lens-work/initiatives/{config-path}
+     git commit -m "[INIT] {initiative-root} — {scope} created"
+     ```
+   - **Feature scope:**
+     ```bash
+     git add _bmad-output/lens-work/initiatives/{config-path}
+     git commit -m "[INIT] {initiative-root} — initiative created (track: {track})"
+     ```
 
 2. Push branches:
    - **Domain / Service scope:** Push root only:
@@ -226,15 +234,11 @@ Follow the 3-part response format:
 **Context Header (domain scope):**
 ```
 📂 Domain: {initiative-root}
-🏷️ Track: {track}
-📋 Phases: {phase-list}
 ```
 
 **Context Header (service scope):**
 ```
 📂 Service: {initiative-root}
-🏷️ Track: {track}
-📋 Phases: {phase-list}
 ```
 
 **Context Header (feature scope):**
@@ -301,7 +305,7 @@ Config committed at:
 
 | Error | Response |
 |-------|----------|
-| Invalid track | "Track `{input}` not found. Available tracks: full, feature, tech-change, hotfix, spike, quickdev." |
+| Invalid track (feature scope only) | "Track `{input}` not found. Available tracks: full, feature, tech-change, hotfix, spike, quickdev." |
 | Slug-unsafe name | Reject with explanation and suggested correction |
 | Initiative already exists | "Initiative `{root}` already exists. Use `/switch {root}` to resume." |
 | Not authenticated | "Run `/onboard` first to authenticate." |

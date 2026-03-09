@@ -17,7 +17,7 @@ Routes `/new-domain`, `/new-service`, and `/new-feature` commands to the init-in
 - **domain**: Domain name (collected for domain scope; from context for service/feature)
 - **service**: Service/repo name (collected for service scope; from context for feature scope; not used for domain scope)
 - **feature**: The feature/initiative name (collected for feature scope only)
-- **track**: Lifecycle track
+- **track**: Lifecycle track (feature scope only — domain/service scopes do not use track)
 
 ## Steps
 
@@ -33,8 +33,8 @@ Before continuing, run preflight:
 
 | Command | Collection Strategy | Initiative Root |
 |---------|---------------------|-----------------|
-| `/new-domain` | Collect: domain name → track | `{domain}` |
-| `/new-service` | Use context domain, collect: service name → track | `{domain}-{service}` |
+| `/new-domain` | Collect: domain name (no track — containers only) | `{domain}` |
+| `/new-service` | Use context domain, collect: service name (no track — containers only) | `{domain}-{service}` |
 | `/new-feature` | Use context domain + service, collect: feature name → track | `{domain}-{service}-{feature}` |
 
 **Each scope creates an initiative root with the appropriate number of segments.** Do NOT collect parameters beyond the scope level.
@@ -45,9 +45,9 @@ Run the init-initiative workflow at `_bmad/lens-work/workflows/router/init-initi
 
 The workflow handles:
 - Slug-safe name validation
-- Track selection and lifecycle.yaml validation
+- Track selection and lifecycle.yaml validation (feature scope only — domain/service skip track)
 - Cross-initiative sensing (pre-creation)
-- Branch topology creation (root + small only)
+- Branch topology creation (domain/service: root only; feature: root + small)
 - Initiative config creation and commit
 - Response formatting (Context Header → Primary Content → Next Step)
 
