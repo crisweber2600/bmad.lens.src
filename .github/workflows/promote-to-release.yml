@@ -376,8 +376,37 @@ jobs:
 
             SKILL_COUNT=$(find copilot-repo/skills -type f -name 'SKILL.md' | wc -l)
             echo "✅ Copied $SKILL_COUNT skills"
+          elif compgen -G "release-repo/_bmad/lens-work/skills/*.md" > /dev/null; then
+            mkdir -p copilot-repo/skills
+            rm -rf copilot-repo/skills/*
+
+            for src in release-repo/_bmad/lens-work/skills/*.md; do
+              [ -f "$src" ] || continue
+              base=$(basename "$src" .md)
+              skill_dir="copilot-repo/skills/lens-work-$base"
+              mkdir -p "$skill_dir"
+
+              cat > "$skill_dir/SKILL.md" <<EOF
+---
+name: lens-work-$base
+description: "LENS Workbench skill '$base' wrapper. Use when lifecycle and orchestration guidance from lens-work is needed."
+---
+
+# lens-work-$base
+
+Read and follow all instructions in:
+
+
+\`\`\`
+bmad.lens.release/_bmad/lens-work/skills/$base.md
+\`\`\`
+EOF
+            done
+
+            SKILL_COUNT=$(find copilot-repo/skills -type f -name 'SKILL.md' | wc -l)
+            echo "✅ Generated $SKILL_COUNT skills from release-repo/_bmad/lens-work/skills"
           else
-            echo "ℹ️ No .github/skills directory in release payload; skipping"
+            echo "ℹ️ No skills source found in release payload; skipping"
           fi
 
       # ── 8. Generate prompt stubs pointing to bmad.lens.release ───────
@@ -463,7 +492,7 @@ jobs:
               "https://api.github.com/repos/${{ github.repository_owner }}/bmad.lens.copilot/pulls" \
               -d "$(jq -n \
                 --arg title "[PROMOTE] lens-work v${{ steps.version.outputs.version }} — Copilot adapter" \
-                --arg body "Automated Copilot adapter promotion.\n\n**Version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Includes:**\n- Root-layout adapter payload (no nested .github)\n- All BMAD + lens-work agent stubs\n- Skills copied when present → bmad.lens.release/.github/skills/\n- lens-work prompt stubs only → bmad.lens.release/.github/prompts/\n- copilot-instructions.md + lens-work-instructions.md" \
+                --arg body "Automated Copilot adapter promotion.\n\n**Version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Includes:**\n- Root-layout adapter payload (no nested .github)\n- All BMAD + lens-work agent stubs\n- Skills copied from .github/skills when present, otherwise generated from bmad.lens.release/_bmad/lens-work/skills/\n- lens-work prompt stubs only → bmad.lens.release/.github/prompts/\n- copilot-instructions.md + lens-work-instructions.md" \
                 --arg head "alpha" \
                 --arg base "beta" \
                 '{title: $title, body: $body, head: $head, base: $base}')")
