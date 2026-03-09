@@ -263,10 +263,15 @@ if session.execution_mode == "batch":
     template_path: "templates/businessplan-questions.template.md"
     output_filename: "businessplan-questions.md"
     scope: "phase"
-  exit: 0
+  output: |
+    ✅ Batch responses processed for BusinessPlan
+    ├── Questionnaire updated: ${docs_path}/businessplan-questions.md
+    └── Continuing to phase completion (commit, push, and PR creation)
 ```
 
-### 3. Offer Workflow Options
+### 3. Offer Workflow Options (Interactive Mode Only)
+
+Skip this section when `session.execution_mode == "batch"`.
 
 ```
 🧭 /businessplan — BusinessPlan Phase
@@ -280,7 +285,9 @@ You're starting the Planning phase. Workflows:
 Select workflow(s): [1] [2] [3] [A]ll
 ```
 
-### 4. Execute Workflows
+### 4. Execute Workflows (Interactive Mode Only)
+
+Skip this section when `session.execution_mode == "batch"`.
 
 **⚠️ CRITICAL — Interactive Workflow Rules:**
 Each sub-workflow uses sequential step-file architecture.
@@ -367,11 +374,19 @@ params:
 invoke: git-orchestration.finish-workflow
 ```
 
-### 5. Phase Completion — Push Only
+### 5. Phase Completion — Commit, Push, and PR
 
 ```yaml
 # REQ-7: Never auto-merge. PR created in S1.2.
-if all_workflows_complete("businessplan"):
+# Batch mode must continue here after questionnaire processing (no early exit).
+has_prd = file_exists("${docs_path}/prd.md")
+has_ux_design = file_exists("${docs_path}/ux-design.md")
+has_ux_design_spec = file_exists("${docs_path}/ux-design-specification.md")
+businessplan_ready = has_prd && (has_ux_design || has_ux_design_spec)
+
+if businessplan_ready:
+  ux_artifact_name = has_ux_design ? "ux-design.md" : "ux-design-specification.md"
+
   invoke: git-orchestration.commit-and-push
   params:
     branch: ${phase_branch}
@@ -383,7 +398,7 @@ if all_workflows_complete("businessplan"):
     head: ${phase_branch}
     base: ${audience_branch}
     title: "[businessplan] BusinessPlan: ${initiative.name}"
-    body: "BusinessPlan phase complete for ${initiative.id}.\n\nArtifacts: prd.md, ux-design.md"
+    body: "BusinessPlan phase complete for ${initiative.id}.\n\nArtifacts: prd.md, ${ux_artifact_name}"
   capture: pr_result
 
   # REQ-7/REQ-8: Phase enters pr_pending after PR creation
@@ -416,6 +431,13 @@ if all_workflows_complete("businessplan"):
     ├── Status: pr_pending (awaiting merge)
     ├── Remaining on: ${phase_branch}
     └── Next: Run /techplan to continue to TechPlan phase
+else:
+  missing = []
+  if not has_prd:
+    missing.push("prd.md")
+  if not (has_ux_design || has_ux_design_spec):
+    missing.push("ux-design.md (or ux-design-specification.md)")
+  FAIL("❌ BusinessPlan phase incomplete. Missing required artifacts: ${missing.join(', ')}")
 ```
 
 ### 6. Update State Files
@@ -428,8 +450,7 @@ params:
     current_phase: "businessplan"
     phase_status:
       businessplan:
-        status: "in_progress"
-        started_at: "${ISO_TIMESTAMP}"
+        status: "pr_pending"
       preplan:
         status: "complete"
 
@@ -468,7 +489,7 @@ params:
 | Artifact | Location |
 |----------|----------|
 | PRD | `${docs_path}/prd.md` |
-| UX Design | `${docs_path}/ux-design.md` |
+| UX Design | `${docs_path}/ux-design.md` or `${docs_path}/ux-design-specification.md` |
 | Architecture | `${docs_path}/architecture.md` |
 | Initiative State | `_bmad-output/lens-work/initiatives/${id}.yaml` |
 

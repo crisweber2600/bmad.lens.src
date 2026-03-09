@@ -39,7 +39,7 @@ A phase is complete when all required artifacts exist for that phase.
 | Phase | Required Artifacts |
 |-------|--------------------|
 | preplan | product-brief.md, research.md |
-| businessplan | prd.md, ux-design.md |
+| businessplan | prd.md, ux-design.md (or ux-design-specification.md) |
 | techplan | architecture.md |
 | devproposal | epics.md |
 | sprintplan | sprint-status.yaml |

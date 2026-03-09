@@ -63,7 +63,7 @@ Generate the compliance section for the PR description:
 | Requirement | Status | Details |
 |-------------|--------|---------|
 | PRD required | ✅ PASS | prd.md exists and is non-empty |
-| UX design required | ✅ PASS | ux-design.md exists and is non-empty |
+| UX design required | ✅ PASS | ux-design.md (or ux-design-specification.md) exists and is non-empty |
 | Architecture required | ⬜ N/A | Not required for this phase |
 
 **Overall:** ✅ PASS — All requirements satisfied
@@ -78,7 +78,7 @@ If any hard-gate requirement fails, the PR is BLOCKED:
 
 ## Hard Gate Failures
 - **PRD required:** prd.md is missing from phases/businessplan/
-- **UX design required:** ux-design.md is empty
+- **UX design required:** ux-design.md (or ux-design-specification.md) is missing or empty
 
 Fix these issues and try again. Hard gate failures must be resolved
 before the PR can be created.

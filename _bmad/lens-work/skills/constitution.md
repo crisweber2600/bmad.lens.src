@@ -127,7 +127,7 @@ compliance_result:
       details: "prd.md exists and is non-empty"
     - requirement: "UX design required for businessplan"
       status: PASS
-      details: "ux-design.md exists and is non-empty"
+      details: "ux-design.md (or ux-design-specification.md) exists and is non-empty"
   hard_gate_failures: []
   informational_failures: []
   not_applicable: []
