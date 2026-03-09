@@ -100,7 +100,7 @@ If all gates pass (with possible informational warnings): proceed to Step 4.
 ### Step 4: Create Next Audience Branch (Lazy)
 
 1. Check if `{root}-{next-audience}` branch exists
-2. If not: use `git-orchestration` skill → `create-branch` to create `{root}-{next-audience}` from `{root}-{current-audience}`
+2. If not: use `git-orchestration` skill → `create-branch` to create `{root}-{next-audience}` from `{root}` (the initiative root branch, NOT from the current audience branch)
 3. If already exists: proceed (promotion was previously attempted or branch was pre-created)
 
 ### Step 5: Create Promotion PR

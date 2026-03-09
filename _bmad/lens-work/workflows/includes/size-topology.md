@@ -68,7 +68,7 @@ PR created automatically at phase end. Merged = phase complete.
 {root}-large   →  {root}-base      (constitution gate)
 ```
 
-Target audience branch created lazily at promotion time if it doesn't exist.
+Target audience branch created lazily at promotion time from `{root}` (initiative root branch) if it doesn't exist.
 
 ## Audience Branch Existence as Signal
 
