@@ -479,16 +479,22 @@ PROMPT
             echo "has_changes=false" >> "$GITHUB_ENV"
           else
             git commit -m "[PROMOTE] lens-work v${{ steps.version.outputs.version }} — Copilot adapter (root layout + lens-work prompts)"
-            git push origin alpha
+            PUSH_OUTPUT=$(git push origin alpha 2>&1)
             echo "has_changes=true" >> "$GITHUB_ENV"
             echo "✅ Committed and pushed to alpha"
             echo ""
             echo "=== Git Commit Verification ==="
-            git log -1 --oneline
-            git log -1 --stat
+            git log -1 --oneline || echo "⚠️ Could not retrieve commit log"
+            git log -1 --stat || echo "⚠️ Could not retrieve commit stats"
             echo ""
-            echo "=== Sample Prompt Content (lens-work.help.prompt.md) ==="
-            head -5 prompts/lens-work.help.prompt.md
+            echo "=== Sample Prompt Content ==="
+            if [ -f "prompts/lens-work.help.prompt.md" ]; then
+              echo "✅ lens-work.help.prompt.md exists"
+              head -10 prompts/lens-work.help.prompt.md || echo "⚠️ Could not read file"
+            else
+              echo "⚠️ lens-work.help.prompt.md not found"
+              ls -la prompts/ || echo "⚠️ Could not list prompts directory"
+            fi
           fi
 
       # ── 11. Create PR alpha → beta ─────────────────────────────────
