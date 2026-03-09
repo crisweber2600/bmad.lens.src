@@ -31,6 +31,20 @@ Execute the status workflow internally (no output to user) to derive:
 
 Read `lifecycle.yaml` to determine phase ordering for the current track. Apply rules in priority order:
 
+**Rule 0a — On a domain branch (no audience, no phase):**
+If the current branch is a domain root (scope: domain, no audience/phase suffix):
+```
+▶️ Run `/new-service` to create a service under domain `{domain}`.
+   Domain `{domain}` is an organizational container — services hold features, features hold phases.
+```
+
+**Rule 0b — On a service branch (no audience, no phase):**
+If the current branch is a service root (scope: service, no audience/phase suffix):
+```
+▶️ Run `/new-feature` to create a feature under service `{service}`.
+   Service `{service}` is an organizational container — features hold lifecycle phases.
+```
+
 **Rule 1 — Phase in progress, not complete:**
 If current phase branch exists and no PR created yet:
 ```

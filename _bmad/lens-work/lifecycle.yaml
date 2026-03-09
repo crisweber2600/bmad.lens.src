@@ -296,6 +296,30 @@ target_projects:
 # -----------------------------------------------------------------------------
 initiative:
   scope_levels: [repo, service, domain, org]
+
+  # Scope hierarchy — each level's containment and next-step behavior:
+  #   domain  → contains services  → next step: /new-service
+  #   service → contains features  → next step: /new-feature
+  #   feature → has phases/audiences → next step: /{start_phase}
+  # Only feature-level initiatives have audience branches and lifecycle phases.
+  # Domain and service scopes are organizational containers.
+  scope_hierarchy:
+    domain:
+      contains: service
+      next_command: /new-service
+      has_phases: false
+      has_audiences: false
+    service:
+      contains: feature
+      next_command: /new-feature
+      has_phases: false
+      has_audiences: false
+    feature:
+      contains: null
+      next_command: null  # determined by track start_phase
+      has_phases: true
+      has_audiences: true
+
   config_schema:
     required_fields: [initiative, scope, domain, track, created, initiative_root]
     optional_fields: [service, feature, language]

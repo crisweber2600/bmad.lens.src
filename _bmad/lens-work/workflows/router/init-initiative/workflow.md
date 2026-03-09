@@ -186,12 +186,14 @@ Using the git-orchestration skill:
 
 2. **Domain scope:** STOP — domains never have audience branches. The root branch is the only branch.
 
-3. **Service / Feature scope:** Create first audience branch from root:
+3. **Service scope:** STOP — services never have audience branches. The root branch is the only branch. Services are organizational containers for features.
+
+4. **Feature scope:** Create first audience branch from root:
    ```bash
    git checkout -b {initiative-root}-small
    ```
 
-4. **CRITICAL: Do NOT create medium, large, or base branches.** Lazy creation — these are created on-demand at promotion time.
+5. **CRITICAL: Do NOT create medium, large, or base branches.** Lazy creation — these are created on-demand at promotion time.
 
 ### Step 9: Commit and Push
 
@@ -204,11 +206,11 @@ Using the git-orchestration skill:
    ```
 
 2. Push branches:
-   - **Domain scope:** Push root only:
+   - **Domain / Service scope:** Push root only:
      ```bash
      git push -u origin {initiative-root}
      ```
-   - **Service / Feature scope:** Push both:
+   - **Feature scope:** Push both:
      ```bash
      git push -u origin {initiative-root}
      git push -u origin {initiative-root}-small
@@ -225,7 +227,14 @@ Follow the 3-part response format:
 📋 Phases: {phase-list}
 ```
 
-**Context Header (service / feature scope):**
+**Context Header (service scope):**
+```
+📂 Service: {initiative-root}
+🏷️ Track: {track}
+📋 Phases: {phase-list}
+```
+
+**Context Header (feature scope):**
 ```
 📂 Initiative: {initiative-root}
 🏷️ Track: {track}
@@ -244,9 +253,20 @@ Config committed at:
   `_bmad-output/lens-work/initiatives/{config-path}`
 ```
 
-**Primary Content (service / feature scope):**
+**Primary Content (service scope):**
 ```
-✅ Initiative created successfully.
+✅ Service created successfully.
+
+Branch topology:
+- `{initiative-root}` (service root)
+
+Config committed at:
+  `_bmad-output/lens-work/initiatives/{config-path}`
+```
+
+**Primary Content (feature scope):**
+```
+✅ Feature initiative created successfully.
 
 Branch topology:
 - `{initiative-root}` (root)
@@ -256,12 +276,23 @@ Config committed at:
   `_bmad-output/lens-work/initiatives/{config-path}`
 ```
 
-**Next Step:**
-```
-▶️ Run `/{start-phase}` to begin the first phase.
-```
+**Next Step (scope-dependent):**
 
-Where `{start-phase}` is the track's `start_phase` from lifecycle.yaml.
+- **Domain scope:**
+  ```
+  ▶️ Run `/new-service` to create a service under this domain.
+  ```
+
+- **Service scope:**
+  ```
+  ▶️ Run `/new-feature` to create a feature under this service.
+  ```
+
+- **Feature scope:**
+  ```
+  ▶️ Run `/{start-phase}` to begin the first phase.
+  ```
+  Where `{start-phase}` is the track's `start_phase` from lifecycle.yaml.
 
 ## Error Handling
 
