@@ -512,6 +512,24 @@ story_branch = "feature/${epic_key}-${story_key}"
 target_path = session.target_path
 target_repo = session.target_repo
 
+# --- Fresh Pull: Sync target repo default branch before any branching ---
+# Always pull the latest from the default/integration branch so epic and story
+# branches are created from (or rebased onto) the most recent upstream state.
+cd "${target_path}"
+git fetch origin
+default_branch_check = exec("git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo ''")
+if default_branch_check == '':
+  # Fallback: try develop, main, master
+  for candidate in ["develop", "main", "master"]:
+    if exec("git rev-parse --verify origin/${candidate} 2>/dev/null").exit_code == 0:
+      default_branch_check = candidate
+      break
+git checkout "${default_branch_check}"
+git pull origin "${default_branch_check}"
+output: |
+  🔄 Target repo synced — pulled latest from ${default_branch_check}
+  └── Path: ${target_path}
+
 # --- Epic Branch: Ensure parent epic branch exists ---
 invoke: git-orchestration.ensure-epic-branch
 params:

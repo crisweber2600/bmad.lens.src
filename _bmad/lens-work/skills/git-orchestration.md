@@ -686,6 +686,10 @@ else
       break
     fi
   done
+  # Pull latest on epic branch to pick up any previously merged story PRs
+  git checkout "${epic_branch}"
+  git pull origin "${epic_branch}"
+  echo "✅ Epic branch synced: ${epic_branch}"
 fi
 ```
 
