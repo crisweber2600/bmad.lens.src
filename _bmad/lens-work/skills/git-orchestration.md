@@ -660,10 +660,17 @@ story_branch: "feature/epic-1-1-1-user-authentication"
 ### Task Auto-Commit
 
 Every completed task MUST be committed and pushed immediately.
+All git operations MUST run from inside `session.target_path` — never from the control repo or workspace root.
 
 **Algorithm:**
 ```bash
-cd "${target_repo_path}"
+# Ensure we are inside the target repo — HARD ERROR if not
+cd "${target_repo_path}" || FAIL("❌ Cannot cd to target repo: ${target_repo_path}")
+actual_dir=$(pwd)
+if [[ "${actual_dir}" != *"${target_repo_path}"* ]]; then
+  FAIL("❌ Working directory mismatch — expected inside ${target_repo_path}, got ${actual_dir}")
+fi
+
 git add -A
 git commit -m "feat(${story_key}): ${task_description}
 
@@ -771,6 +778,7 @@ Before ANY write operation (commit, file creation, file modification), validate 
 | Governance repo path | Blocked except governance PR proposals | `❌ BLOCK — governance lives in its own repo. Propose changes via governance PR.` |
 | `.github/` | Not modified during initiative work | `❌ BLOCK — adapter layer is not modified during initiative work.` |
 | Outside `_bmad-output/lens-work/initiatives/` | Blocked for initiative workflow writes | `❌ BLOCK — initiative artifacts must be written to _bmad-output/lens-work/initiatives/{path}/` |
+| Outside `session.target_path` during `/dev` | Blocked — dev writes scoped to target repo only | `❌ BLOCK — /dev writes MUST be within target repo: {session.target_path}. Attempted: {path}` |
 
 ### Validation Algorithm
 
@@ -784,8 +792,33 @@ function validate_write_target(path, context):
   if context == "initiative-workflow":
     if path not within "_bmad-output/lens-work/initiatives/":
       HARD ERROR — initiative artifacts must be in initiative directory
+  # Dev Write Guard: /dev phase scopes ALL file writes to the target repo
+  if context == "dev-implementation":
+    target_abs = resolve_absolute(session.target_path)
+    file_abs = resolve_absolute(path)
+    if file_abs is NOT under target_abs:
+      HARD ERROR — /dev writes MUST be within target repo
+        ├── Allowed scope: ${session.target_path}
+        ├── Attempted path: ${path}
+        └── Domain/service: ${initiative.docs.domain}/${initiative.docs.service}
   return ALLOWED
 ```
+
+### Dev Write Guard — `/dev` Phase Scope Enforcement
+
+During the `/dev` phase, **ALL implementation file writes** (file creation, modification, deletion,
+`git add`, `git commit`) are restricted to the target repo folder at `session.target_path`.
+
+This path is resolved from `initiative.target_repos[0].local_path` during Pre-Flight.
+
+**Allowed during `/dev`:**
+- File writes inside `session.target_path` (the target repo)
+- Control repo state updates in `_bmad-output/` (sprint-status, state.yaml, initiative config)
+
+**Blocked during `/dev`:**
+- Writes to any repo folder other than `session.target_path`
+- Writes to `bmad.lens.release/`, governance repo, `.github/`
+- Writes to other target repos not selected for this initiative
 
 ### Exception: Governance PR Proposals
 

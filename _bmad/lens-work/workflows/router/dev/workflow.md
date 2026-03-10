@@ -532,6 +532,34 @@ output: |
   └── Auto-PR: ON (PR created only after code review gate passes)
 ```
 
+#### 3.Nc. Verify Working Directory — Dev Write Guard
+
+```yaml
+# HARD GATE: Verify we are inside the target repo before implementation begins.
+# The dev-write-guard in git-orchestration.md enforces that ALL /dev writes
+# are scoped to session.target_path. This step ensures the working directory
+# is set correctly before the agent starts implementing tasks.
+
+cd "${session.target_path}"
+actual_dir = exec("pwd").stdout.trim()
+
+# Canonicalize paths for comparison (resolve symlinks, normalize separators)
+target_canonical = canonicalize(session.target_path)
+actual_canonical = canonicalize(actual_dir)
+
+if actual_canonical does not start with target_canonical:
+  FAIL: |
+    ❌ Dev Write Guard — Working directory mismatch
+    ├── Expected: ${session.target_path}
+    ├── Actual: ${actual_dir}
+    └── All /dev implementation writes MUST be inside the target repo.
+
+output: |
+  🔒 Dev Write Guard — PASSED
+  ├── Working directory: ${actual_dir}
+  └── Scoped to target repo: ${session.target_path}
+```
+
 #### 4.N. Implementation Guidance + Constitutional Context + Special Instructions
 
 ```yaml

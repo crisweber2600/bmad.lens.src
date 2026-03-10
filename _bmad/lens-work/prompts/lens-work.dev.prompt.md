@@ -33,6 +33,12 @@ Orchestrates the full implementation cycle for an epic: iterates all stories, im
    - `epic_number`: the epic number provided by the user
    - `special_instructions`: the optional special instructions provided by the user (empty string if none)
 
+## Write Scope — Target Repo Only
+
+During `/dev`, ALL implementation writes (file creation, modification, commits) are **strictly scoped to the target repo folder** resolved from the initiative config. The agent MUST NOT modify files in the control repo (bmad.lens.bmad), release repo (bmad.lens.release), governance repo, or any other repo. Only state tracking writes in `_bmad-output/` (sprint-status, state.yaml) are allowed in the control repo.
+
+Before implementing any task, the workflow verifies the working directory is inside the target repo. If the verification fails, implementation is blocked.
+
 ## Epic-Level Story Loop
 
 The dev workflow will:
