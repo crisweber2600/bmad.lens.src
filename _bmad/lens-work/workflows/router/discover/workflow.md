@@ -1,6 +1,6 @@
 ---
 name: discover
-description: "Discover cloned repos under TargetProjects, inspect for BMAD config, update governance inventory, create /switch branches"
+description: "Discover cloned repos under TargetProjects, inspect for BMAD config, update governance inventory, create /switch branches, and report results"
 agent: "@lens"
 trigger: /discover command
 aliases: [/disc]
@@ -12,9 +12,11 @@ imports: lifecycle.yaml
 
 # /discover — Repo Discovery Workflow
 
-**Purpose:** Given an active initiative, resolve the scan path from the initiative's domain and service, enumerate all cloned git repos under that path, inspect each for BMAD configuration presence, update the governance repo's `repo-inventory.yaml`, create `/switch` branches in the control repo, and yield a structured per-repo result set for downstream processing (ReportRenderer).
+**Purpose:** Given an active initiative, resolve the scan path from the initiative's domain and service, enumerate all cloned git repos under that path, inspect each for BMAD configuration presence, update the governance repo's `repo-inventory.yaml`, create `/switch` branches in the control repo, and produce a human-readable discovery report.
 
 **Covers:** `/discover`
+
+**Processing model:** Sequential per-repo processing. Rationale (TD-006 / AR-4): with ≤10 repos at agent-interactive pace, parallel processing never approaches the 1-hour session budget (NFR-1). Sequential flow yields simpler error isolation, deterministic output ordering, and easier debugging — the performance cost is negligible for the expected workload.
 
 ---
 
@@ -457,7 +459,7 @@ git -C {control_repo_path} rev-parse --is-inside-work-tree
 ```
 - Set ALL repos to `branch_status: "❌ No Control Repo"`
 - Skip remaining branch operations
-- Continue to pipeline completion
+- Continue to Step 6 (DiscoveryReport)
 
 ### 5b. Resolve Initiative Root Branch
 
@@ -487,7 +489,7 @@ git -C {control_repo_path} branch "{initiative_root_branch}" "origin/{initiative
 ```
 - Set ALL repos to `branch_status: "❌ Root Branch Missing"`
 - Skip remaining branch operations
-- Continue to pipeline completion
+- Continue to Step 6 (DiscoveryReport)
 
 ### 5c. Create Branches Per Repo (Per-Repo Isolation)
 
@@ -565,17 +567,104 @@ After processing all repos:
    Failed:   {failed_count}
 ```
 
-**SC-3 Validation:** After Step 5 completes, the `/switch` command should successfully resolve all discovered repos via the created branches.
+---
+
+## Step 6: DiscoveryReport
+
+**Epic:** E4 — Workflow Completion & Module Integration. Produce a human-readable summary table of all discovery results.
+
+After all per-repo processing is complete (Steps 1–5), render a consolidated discovery report table and provide navigation guidance.
+
+### 6a. Build Report Table
+
+Construct a markdown table from the accumulated `repo_results`:
+
+```markdown
+## 📋 Discovery Report
+
+| Repo | Language | BMAD | Governance | Branch |
+|------|----------|------|------------|--------|
+```
+
+For each `repo_result` in `repo_results`:
+
+```
+for each repo in repo_results:
+    # Determine row prefix — error rows get ⚠️
+    prefix = ""
+    if repo.error != null or repo.governance_status starts with "❌" or repo.branch_status starts with "❌":
+        prefix = "⚠️ "
+
+    # Format BMAD column
+    bmad_display = repo.has_bmad ? "✅" : "❌"
+
+    # Format Governance column
+    governance_display = format_governance_status(repo.governance_status)
+
+    # Format Branch column
+    branch_display = format_branch_status(repo)
+
+    # Emit row
+    output: "| {prefix}{repo.repo_name} | {repo.language} | {bmad_display} | {governance_display} | {branch_display} |"
+```
+
+**Column formatting rules:**
+
+| Column | Values |
+|--------|--------|
+| Repo | Repo name; prefixed with ⚠️ if any error exists |
+| Language | `unknown` at MVP; enriched by E5 LanguageDetector |
+| BMAD | ✅ if `.bmad/` present, ❌ otherwise |
+| Governance | `Updated` / `Skipped` / `Skipped (user)` / `Failed` / `Pull Failed` / `Schema Invalid` / `Push Failed` |
+| Branch | Branch name if created, `Exists` if already present, `Failed` / `Push Failed` if error |
+
+### 6b. Render Summary Counts
+
+Below the table, display aggregate counts:
+
+```
+### Summary
+
+- **Discovered:** {total_count} repo(s)
+- **BMAD configured:** {bmad_count} repo(s)
+- **Governance updated:** {governance_updated_count} / skipped: {governance_skipped_count} / failed: {governance_failed_count}
+- **Branches created:** {branch_created_count} / existing: {branch_existing_count} / failed: {branch_failed_count}
+- **Errors:** {error_count} repo(s) had inspection errors
+```
+
+### 6c. Render Next Steps
+
+After the summary, provide a "What next?" nudge:
+
+```
+### What next?
+
+You can now use `/switch` to navigate to any discovered repo.
+
+Other useful commands:
+- `/status` — see current initiative state
+- `/next` — get recommended next action
+```
+
+### 6d. Handle Empty Results
+
+If `repo_results` is empty (zero repos discovered after Step 2b):
+
+```
+## 📋 Discovery Report
+
+No repos were discovered in TargetProjects/{domain}/{service}/.
+
+Clone your repos and run `/discover` again.
+```
+
+Skip the table and summary counts.
 
 ---
 
 ## Pipeline Data Contract
 
-The result set produced by this workflow is consumed by downstream epics:
-
-| Consumer | Epic | Fields Used |
-|----------|------|-------------|
-| ReportRenderer | E4/E5 | All fields |
+The result set produced by this workflow is the final output — there are no further downstream consumers at MVP.
 
 **RepoResult schema:**
 ```yaml
@@ -584,7 +673,7 @@ path: string              # full path from workspace root
 has_bmad: boolean         # .bmad/ directory present
 language: string          # "unknown" at MVP; enriched by E5
 error: string | null      # null = no error; string = error message
-governance_status: string # "pending" → "Updated" | "Skipped" | "❌ Failed" | "❌ Pull Failed" | "❌ Schema Invalid" | "❌ Push Failed"
+governance_status: string # "pending" → "Updated" | "Skipped" | "Skipped (user)" | "Skipped (inspection error)" | "❌ Failed" | "❌ Pull Failed" | "❌ Schema Invalid" | "❌ Push Failed"
 branch_status: string     # "pending" → "Created" | "Exists" | "Skipped (inspection error)" | "❌ Failed" | "❌ Push Failed" | "❌ No Control Repo" | "❌ Root Branch Missing"
 ```
 
@@ -596,11 +685,16 @@ Running `/discover` twice with the same set of repos produces the same `repo-inv
 
 | Failure Point | Impact | Pipeline Continues? |
 |---------------|--------|---------------------|
+| Initiative config missing | Workflow aborted | No — hard stop |
+| Scan path missing | Workflow aborted | No — hard stop |
+| Governance repo missing | Workflow aborted | No — hard stop |
+| Zero repos found | Clean exit after user prompt | No — exit 0 |
 | Governance pull fails | All governance writes aborted | Yes — skip to Step 5 |
 | Schema validation fails | All governance writes aborted | Yes — skip to Step 5 |
 | Single repo write fails | That repo marked failed | Yes — next repo processed |
-| Commit fails | All repos marked failed | Yes — skip to Step 5 |
-| Control repo not found | All branch creation aborted | Yes — proceed to report |
-| Root branch missing | All branch creation aborted | Yes — proceed to report |
+| Governance commit fails | All repos marked failed | Yes — skip to Step 5 |
+| Governance push fails | All repos marked push-failed | Yes — skip to Step 5 |
+| Control repo not found | All branch creation aborted | Yes — skip to Step 6 |
+| Root branch missing | All branch creation aborted | Yes — skip to Step 6 |
 | Single branch creation fails | That repo marked failed | Yes — next repo processed |
 | Single branch push fails | That repo marked push-failed | Yes — next repo processed |

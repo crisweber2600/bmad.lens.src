@@ -77,7 +77,7 @@ workflows:
       description: "/dev phase workflow"
     - id: discover
       path: workflows/router/discover/
-      description: "/discover — repo discovery, governance integration, /switch branch creation"
+      description: "/discover — repo discovery, governance inventory, branch creation"
   utility:
     - id: onboard
       path: workflows/utility/onboard/
