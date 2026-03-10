@@ -1,6 +1,6 @@
 ---
 name: discover
-description: "Discover cloned repos under TargetProjects, inspect for BMAD config, update governance inventory"
+description: "Discover cloned repos under TargetProjects, inspect for BMAD config, update governance inventory, create /switch branches"
 agent: "@lens"
 trigger: /discover command
 aliases: [/disc]
@@ -12,7 +12,7 @@ imports: lifecycle.yaml
 
 # /discover — Repo Discovery Workflow
 
-**Purpose:** Given an active initiative, resolve the scan path from the initiative's domain and service, enumerate all cloned git repos under that path, inspect each for BMAD configuration presence, update the governance repo's `repo-inventory.yaml`, and yield a structured per-repo result set for downstream processing (GitOrchestrator, ReportRenderer).
+**Purpose:** Given an active initiative, resolve the scan path from the initiative's domain and service, enumerate all cloned git repos under that path, inspect each for BMAD configuration presence, update the governance repo's `repo-inventory.yaml`, create `/switch` branches in the control repo, and yield a structured per-repo result set for downstream processing (ReportRenderer).
 
 **Covers:** `/discover`
 
@@ -227,7 +227,7 @@ for each repo in discovered_repos:
 - Top-level `.bmad/` directory check only — does not recurse into `.bmad/`
 - `language` field is `"unknown"` at MVP (enriched by E5 LanguageDetector when enabled)
 - **Per-repo error isolation (NFR-4):** An error inspecting one repo must NOT abort inspection of remaining repos. The error is logged to the repo's result record and the pipeline continues.
-- `governance_status` and `branch_status` start as `"pending"` — updated by Step 4 (GovernanceWriter) and E3 (GitOrchestrator) respectively
+- `governance_status` and `branch_status` start as `"pending"` — updated by Step 4 (GovernanceWriter) and Step 5 (GitOrchestrator) respectively
 
 ### 3b. Emit Result Set
 
@@ -257,12 +257,12 @@ git -C {governance_repo_path} pull origin
 **Gate:** If `git pull` fails:
 ```
 ❌ Failed to pull governance repo at {governance_repo_path}.
-   Governance writes aborted — continuing with branch creation (E3).
+   Governance writes aborted — continuing with branch creation (Step 5).
    Run `/discover` again after fixing the governance repo.
 ```
 - Set ALL repos in `repo_results` to `governance_status: "❌ Pull Failed"`
 - **Skip ALL remaining governance operations** (Steps 4b–4f)
-- Continue to E3 (GitOrchestrator) — governance pull failure does NOT abort the entire pipeline
+- Continue to Step 5 (GitOrchestrator) — governance pull failure does NOT abort the entire pipeline
 
 ### 4b. Read Existing Inventory
 
@@ -298,13 +298,13 @@ repos:               # MUST be present (array or object with matched/missing/ext
 ❌ repo-inventory.yaml has invalid schema.
    Expected: top-level `repos` key with array entries (each having `name` field)
    Found: {actual structure description}
-   
+
    Fix the schema manually or back up and recreate the file.
    Governance writes aborted for this run.
 ```
 - Set ALL repos to `governance_status: "❌ Schema Invalid"`
 - Skip remaining governance operations
-- Continue to E3
+- Continue to Step 5
 
 ### 4d. Process Each Repo Entry (Per-Repo Isolation)
 
@@ -320,7 +320,7 @@ for each repo in repo_results:
     try:
         # Normalize inventory access — handle both array and legacy object formats
         existing_entries = normalize_inventory(inventory)
-        
+
         # Check if repo already exists in inventory by name
         existing = find_entry(existing_entries, where: entry.name == repo.repo_name)
 
@@ -328,15 +328,15 @@ for each repo in repo_results:
             # NFR-2: Idempotency — prompt user before overwriting
             ask: |
                 Repo "{repo.repo_name}" already exists in repo-inventory.yaml.
-                
+
                 Existing entry:
                   name: {existing.name}
                   domain: {existing.domain || "N/A"}
                   language: {existing.language || "N/A"}
                   bmad_configured: {existing.bmad_configured || "N/A"}
-                
+
                 Update with new discovery data? [Y/N]
-            
+
             if user_response == "N" or user_response == "no":
                 repo.governance_status = "Skipped"
                 continue
@@ -418,7 +418,7 @@ If `git push` fails:
 ```
 - Set ALL repos processed in this batch to `governance_status: "❌ Push Failed"`
 - Do NOT report success for any repo in this batch
-- Continue to E3 — push failure does not abort the pipeline
+- Continue to Step 5 — push failure does not abort the pipeline
 
 **Push success:**
 ```
@@ -430,13 +430,151 @@ If `git push` fails:
 
 ---
 
+## Step 5: GitOrchestrator
+
+**Epic:** E3 — Control Repo Branch Management. Create a control-repo branch per discovered repo to enable `/switch` navigation.
+
+For each discovered repo, create a branch in the **control repo** (the BMAD.Lens workspace root) that enables the `/switch` command to navigate to that repo. Branch creation is idempotent and per-repo isolated.
+
+### 5a. Resolve Control Repo Path
+
+The control repo is the workspace root directory (the parent of `TargetProjects/`). All branch operations target this repo's git state.
+
+```yaml
+control_repo_path = workspace_root   # the BMAD.Lens directory
+```
+
+Verify the control repo is a valid git repository:
+
+```bash
+git -C {control_repo_path} rev-parse --is-inside-work-tree
+```
+
+**Gate:** If the control repo is not a git repository:
+```
+❌ Control repo at {control_repo_path} is not a git repository.
+   Branch creation aborted — discovery results are still valid.
+```
+- Set ALL repos to `branch_status: "❌ No Control Repo"`
+- Skip remaining branch operations
+- Continue to pipeline completion
+
+### 5b. Resolve Initiative Root Branch
+
+Determine the base branch from which `/switch` branches are created:
+
+```yaml
+initiative_root_branch = resolver_result.initiative_root   # e.g., "bmad-lens-repodiscovery"
+```
+
+Verify the initiative root branch exists:
+
+```bash
+git -C {control_repo_path} rev-parse --verify "refs/heads/{initiative_root_branch}"
+```
+
+If the branch does not exist locally, attempt to fetch and track it:
+
+```bash
+git -C {control_repo_path} fetch origin "{initiative_root_branch}"
+git -C {control_repo_path} branch "{initiative_root_branch}" "origin/{initiative_root_branch}"
+```
+
+**Gate:** If the initiative root branch cannot be resolved:
+```
+❌ Initiative root branch "{initiative_root_branch}" not found locally or on remote.
+   Branch creation aborted — discovery results are still valid.
+```
+- Set ALL repos to `branch_status: "❌ Root Branch Missing"`
+- Skip remaining branch operations
+- Continue to pipeline completion
+
+### 5c. Create Branches Per Repo (Per-Repo Isolation)
+
+For each `repo_result` in `repo_results`:
+
+```
+for each repo in repo_results:
+    if repo.error != null:
+        # Skip repos that failed inspection — do not create branches for errored entries
+        repo.branch_status = "Skipped (inspection error)"
+        continue
+
+    try:
+        # Construct branch name from naming schema
+        branch_name = "{initiative_root_branch}-{domain}-{service}-{repo.repo_name}"
+
+        # Check if branch already exists (local or remote)
+        local_exists = git -C {control_repo_path} rev-parse --verify "refs/heads/{branch_name}" 2>/dev/null
+        remote_exists = git -C {control_repo_path} rev-parse --verify "refs/remotes/origin/{branch_name}" 2>/dev/null
+
+        if local_exists or remote_exists:
+            # Idempotent — branch already exists, skip without error
+            output: "ℹ️ Branch already exists: {branch_name}"
+            repo.branch_status = "Exists"
+            continue
+
+        # Create branch from initiative root
+        git -C {control_repo_path} branch "{branch_name}" "{initiative_root_branch}"
+        output: "✓ Branch created: {branch_name}"
+
+        # Push branch to remote
+        git -C {control_repo_path} push origin "{branch_name}"
+        repo.branch_status = "Created"
+
+    catch (error):
+        # Per-repo error isolation — failure on one repo does NOT abort remaining
+        repo.branch_status = "❌ Failed"
+        log: "⚠️ GitOrchestrator error for {repo.repo_name}: {error.message}"
+        continue
+```
+
+**Branch naming schema:**
+```
+{initiative_root_branch}-{domain}-{service}-{repo_name}
+```
+
+Example: `bmad-lens-repodiscovery-bmad-lens-bmad.lens.src`
+
+**Rules:**
+- Branch is created from `{initiative_root_branch}` — NOT from HEAD, master, or any other ref
+- **Idempotent:** If the branch already exists (locally or on remote), skip with an informational notice — no error raised
+- **Per-repo isolation:** A failure creating or pushing a branch for one repo does NOT abort branch creation for remaining repos
+- Branch name uses hyphens as separators; repo names with dots are preserved as-is (no character substitution)
+
+### 5d. Handle Push Failures (Non-Fatal)
+
+If `git push` fails for a specific branch:
+
+```
+⚠️ Branch created locally but push failed: {branch_name}
+   Run `/discover` again to retry the push.
+```
+- Set that repo's `branch_status` to `"❌ Push Failed"`
+- Continue processing remaining repos — push failure is non-fatal
+
+### 5e. Output Branch Summary
+
+After processing all repos:
+
+```
+✅ /switch branches processed
+   Created: {created_count}
+   Existing: {existing_count}
+   Skipped:  {skipped_count}
+   Failed:   {failed_count}
+```
+
+**SC-3 Validation:** After Step 5 completes, the `/switch` command should successfully resolve all discovered repos via the created branches.
+
+---
+
 ## Pipeline Data Contract
 
 The result set produced by this workflow is consumed by downstream epics:
 
 | Consumer | Epic | Fields Used |
 |----------|------|-------------|
-| GitOrchestrator | E3 | `repo_name`, `initiative_root`, `domain`, `service` |
 | ReportRenderer | E4/E5 | All fields |
 
 **RepoResult schema:**
@@ -447,19 +585,22 @@ has_bmad: boolean         # .bmad/ directory present
 language: string          # "unknown" at MVP; enriched by E5
 error: string | null      # null = no error; string = error message
 governance_status: string # "pending" → "Updated" | "Skipped" | "❌ Failed" | "❌ Pull Failed" | "❌ Schema Invalid" | "❌ Push Failed"
-branch_status: string     # "pending" → "Created" | "Exists" | "❌ Failed"
+branch_status: string     # "pending" → "Created" | "Exists" | "Skipped (inspection error)" | "❌ Failed" | "❌ Push Failed" | "❌ No Control Repo" | "❌ Root Branch Missing"
 ```
 
 ### Idempotency Guarantee (SC-4)
 
-Running `/discover` twice with the same set of repos produces the same `repo-inventory.yaml` state after the user confirms each conflict prompt. No data is silently overwritten, no entries are duplicated, and no entries are lost.
+Running `/discover` twice with the same set of repos produces the same `repo-inventory.yaml` state after the user confirms each conflict prompt. No data is silently overwritten, no entries are duplicated, and no entries are lost. Branch creation is idempotent — existing branches are skipped without error.
 
 ### Error Isolation Summary
 
 | Failure Point | Impact | Pipeline Continues? |
 |---------------|--------|---------------------|
-| Governance pull fails | All governance writes aborted | Yes — skip to E3 |
-| Schema validation fails | All governance writes aborted | Yes — skip to E3 |
+| Governance pull fails | All governance writes aborted | Yes — skip to Step 5 |
+| Schema validation fails | All governance writes aborted | Yes — skip to Step 5 |
 | Single repo write fails | That repo marked failed | Yes — next repo processed |
-| Commit fails | All repos marked failed | Yes — skip to E3 |
-| Push fails | All repos marked push-failed | Yes — skip to E3 |
+| Commit fails | All repos marked failed | Yes — skip to Step 5 |
+| Control repo not found | All branch creation aborted | Yes — proceed to report |
+| Root branch missing | All branch creation aborted | Yes — proceed to report |
+| Single branch creation fails | That repo marked failed | Yes — next repo processed |
+| Single branch push fails | That repo marked push-failed | Yes — next repo processed |
