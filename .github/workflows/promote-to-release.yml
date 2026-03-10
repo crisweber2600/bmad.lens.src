@@ -474,9 +474,14 @@ jobs:
       # ── 9. Copy instruction files from release ───────────────────────
       - name: Copy instruction files
         run: |
-          if [ -f "release-repo/.github/copilot-instructions.md" ]; then
+          # Use the lens-work topology template for copilot-instructions.md
+          TOPOLOGY_SRC="_bmad/lens-work/docs/copilot-repo-instructions.md"
+          if [ -f "$TOPOLOGY_SRC" ]; then
+            cp "$TOPOLOGY_SRC" copilot-repo/copilot-instructions.md
+            echo "✅ copilot-instructions.md copied from lens-work topology template"
+          elif [ -f "release-repo/.github/copilot-instructions.md" ]; then
             cp release-repo/.github/copilot-instructions.md copilot-repo/copilot-instructions.md
-            echo "✅ copilot-instructions.md copied"
+            echo "✅ copilot-instructions.md copied (fallback from release repo)"
           fi
 
           if [ -f "release-repo/.github/lens-work-instructions.md" ]; then
