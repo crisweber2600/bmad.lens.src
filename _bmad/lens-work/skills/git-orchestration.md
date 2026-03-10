@@ -656,28 +656,48 @@ epic_branch="feature/${epic_key}"
 cd "${target_repo_path}"
 git fetch origin
 if ! git rev-parse --verify "origin/${epic_branch}" > /dev/null 2>&1; then
-  # Epic branch does not exist — create from develop (integration branch)
-  integration_branch="develop"
-  # Fallback: if develop doesn't exist, use main
-  if ! git rev-parse --verify "origin/${integration_branch}" > /dev/null 2>&1; then
-    integration_branch="main"
+  # Epic branch does not exist — create from integration branch
+  # Fallback chain: develop → main → master → FAIL
+  integration_branch=""
+  for candidate in develop main master; do
+    if git rev-parse --verify "origin/${candidate}" > /dev/null 2>&1; then
+      integration_branch="${candidate}"
+      break
+    fi
+  done
+  if [[ -z "${integration_branch}" ]]; then
+    echo "❌ FAIL: No integration branch found (tried develop, main, master)"
+    exit 1
   fi
   git checkout "${integration_branch}"
   git pull origin "${integration_branch}"
   git checkout -b "${epic_branch}"
   git push origin "${epic_branch}"
   echo "✅ Created epic branch: ${epic_branch} from ${integration_branch}"
+  # Store resolved integration branch for epic PR targeting
+  echo "${integration_branch}" > .lens-work-integration-branch
 else
   echo "✅ Epic branch exists: ${epic_branch}"
+  # Resolve what integration branch the epic was created from
+  # Check which integration branch exists (same fallback chain)
+  for candidate in develop main master; do
+    if git rev-parse --verify "origin/${candidate}" > /dev/null 2>&1; then
+      echo "${candidate}" > .lens-work-integration-branch
+      break
+    fi
+  done
 fi
 ```
+
+**Output:** Sets `session.resolved_integration_branch` — the actual branch the epic was created from.
+The workflow MUST use this value (not `default_branch`) as the epic PR target.
 
 **Input:**
 ```yaml
 target_repo_path: "${target_path}"
 epic_key: "epic-1"
 epic_branch: "feature/epic-1"
-integration_branch: "develop"   # fallback: main
+integration_branch: "develop"   # fallback: main → master
 ```
 
 ---
@@ -685,6 +705,8 @@ integration_branch: "develop"   # fallback: main
 ### `ensure-story-branch`
 
 Ensure story branch exists in target repo. Creates from epic branch if missing, or resumes if exists.
+**HARD ASSERTION:** After this operation completes, the current branch MUST be the story branch.
+If `git branch --show-current` does not return the story branch name, FAIL immediately.
 
 **Algorithm:**
 ```bash
@@ -705,6 +727,17 @@ else
   git pull origin "${story_branch}"
   echo "✅ Resumed story branch: ${story_branch}"
 fi
+
+# === HARD ASSERTION — Verify checkout succeeded ===
+actual_branch=$(git branch --show-current)
+if [[ "${actual_branch}" != "${story_branch}" ]]; then
+  echo "❌ FAIL: Story branch checkout failed"
+  echo "├── Expected: ${story_branch}"
+  echo "├── Actual:   ${actual_branch}"
+  echo "└── All implementation MUST happen on the story branch, never on epic or integration"
+  exit 1
+fi
+echo "✅ Verified: working on story branch ${story_branch}"
 ```
 
 **Input:**
@@ -723,13 +756,38 @@ story_branch: "feature/epic-1-1-1-user-authentication"
 Every completed task MUST be committed and pushed immediately.
 All git operations MUST run from inside `session.target_path` — never from the control repo or workspace root.
 
+**Pre-Commit Guards (HARD ERRORS):**
+1. Working directory MUST be inside `session.target_path`
+2. Current branch MUST be the story branch — NEVER the epic branch or integration branch
+3. Commits directly to `feature/{epic-key}` (without story suffix) are BLOCKED
+
 **Algorithm:**
 ```bash
-# Ensure we are inside the target repo — HARD ERROR if not
+# Guard 1: Ensure we are inside the target repo — HARD ERROR if not
 cd "${target_repo_path}" || FAIL("❌ Cannot cd to target repo: ${target_repo_path}")
 actual_dir=$(pwd)
 if [[ "${actual_dir}" != *"${target_repo_path}"* ]]; then
   FAIL("❌ Working directory mismatch — expected inside ${target_repo_path}, got ${actual_dir}")
+fi
+
+# Guard 2: Verify current branch is the STORY branch, not epic or integration
+current_branch=$(git branch --show-current)
+if [[ "${current_branch}" != "${story_branch}" ]]; then
+  echo "❌ FAIL: Task commit blocked — wrong branch"
+  echo "├── Expected (story branch): ${story_branch}"
+  echo "├── Actual branch:           ${current_branch}"
+  echo "├── Commits MUST go to the story branch, never epic or integration"
+  echo "└── Run: git checkout ${story_branch}"
+  exit 1
+fi
+
+# Guard 3: Reject commits directly to epic branch pattern
+if [[ "${current_branch}" =~ ^feature/epic-[0-9]+$ ]]; then
+  echo "❌ FAIL: Direct commit to epic branch BLOCKED"
+  echo "├── Current: ${current_branch}"
+  echo "├── Epic branches receive code ONLY via story→epic PR merges"
+  echo "└── Checkout the story branch: git checkout ${story_branch}"
+  exit 1
 fi
 
 git add -A
@@ -753,9 +811,23 @@ echo "✅ Task ${task_number}/${total_tasks} committed and pushed to ${story_bra
 
 When ALL tasks in a story are complete, auto-create a PR from story branch to epic branch.
 
+**Pre-PR Guards (HARD ERRORS):**
+1. Current branch MUST be the story branch
+2. Story branch MUST have commits that differ from epic branch (non-empty diff)
+3. If no diff exists, the PR is meaningless — investigate why commits went to wrong branch
+
 **Algorithm:**
 ```bash
 cd "${target_repo_path}"
+
+# Guard 1: Verify on story branch
+current_branch=$(git branch --show-current)
+if [[ "${current_branch}" != "${story_branch}" ]]; then
+  echo "❌ FAIL: Cannot create story PR — not on story branch"
+  echo "├── Expected: ${story_branch}"
+  echo "├── Actual:   ${current_branch}"
+  exit 1
+fi
 
 # Ensure all changes are committed and pushed
 git add -A
@@ -763,6 +835,22 @@ if ! git diff --cached --quiet; then
   git commit -m "feat(${story_key}): story complete — all tasks done"
   git push origin "${story_branch}"
 fi
+
+# Guard 2: Non-empty diff check — story branch MUST have changes vs epic branch
+diff_count=$(git log "${epic_branch}..${story_branch}" --oneline | wc -l | tr -d ' ')
+if [[ "${diff_count}" -eq 0 ]]; then
+  echo "❌ FAIL: Story branch has NO commits ahead of epic branch"
+  echo "├── Story: ${story_branch}"
+  echo "├── Epic:  ${epic_branch}"
+  echo "├── Diff:  0 commits"
+  echo "├── This means either:"
+  echo "│   1. Tasks were committed to the epic branch directly (WRONG)"
+  echo "│   2. The story branch was never checked out before committing"
+  echo "│   3. A previous merge already included these changes"
+  echo "└── INVESTIGATE: run 'git log --oneline ${epic_branch}' to find misplaced commits"
+  exit 1
+fi
+echo "✅ Story branch has ${diff_count} commit(s) ahead of epic — PR will have content"
 
 # Create PR via create-pr operation
 # See create-pr operation for full details
@@ -781,11 +869,35 @@ When all stories in an epic are complete and merged to the epic branch:
 **Algorithm:**
 ```bash
 epic_branch="feature/${epic_key}"
-integration_branch="develop"  # or main if develop doesn't exist
+
+# Read the resolved integration branch from ensure-epic-branch
+# This file was written when the epic branch was created
+if [[ -f "${target_repo_path}/.lens-work-integration-branch" ]]; then
+  integration_branch=$(cat "${target_repo_path}/.lens-work-integration-branch")
+else
+  # Fallback: same chain as ensure-epic-branch (develop → main → master)
+  integration_branch=""
+  for candidate in develop main master; do
+    if git rev-parse --verify "origin/${candidate}" > /dev/null 2>&1; then
+      integration_branch="${candidate}"
+      break
+    fi
+  done
+  if [[ -z "${integration_branch}" ]]; then
+    echo "❌ FAIL: No integration branch found for epic PR target"
+    exit 1
+  fi
+fi
+
+echo "Epic PR target: ${epic_branch} → ${integration_branch}"
 
 # Create PR from epic branch to integration branch
 # See create-pr operation for full details
 ```
+
+**CRITICAL:** The `base` branch for the epic PR MUST be `session.resolved_integration_branch`
+(the actual branch the epic was created from), NOT a hardcoded `default_branch` value.
+If the target repo uses `master` as its default, the epic PR targets `master`.
 
 **PR Naming Convention:**
 - Title: `feat({epic-key}): Epic complete — {epic-title}`

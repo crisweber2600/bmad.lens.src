@@ -533,15 +533,34 @@ session.epic_key = "${epic_key}"
 session.epic_branch = "${epic_branch}"
 session.story_branch = "${story_branch}"
 
+# Read the resolved integration branch from ensure-epic-branch
+resolved_ib_file = "${target_path}/.lens-work-integration-branch"
+if file_exists(resolved_ib_file):
+  session.resolved_integration_branch = read_file(resolved_ib_file).trim()
+else:
+  session.resolved_integration_branch = target_repo.default_branch || "develop"
+
+# === HARD ASSERTION — Verify agent is on the STORY branch, not epic ===
+actual_branch = exec("git -C ${target_path} branch --show-current").stdout.trim()
+if actual_branch != story_branch:
+  FAIL: |
+    ❌ Branch checkout assertion failed after ensure-story-branch
+    ├── Expected: ${story_branch}
+    ├── Actual:   ${actual_branch}
+    ├── All task commits MUST go to the story branch
+    └── Epic branch receives code ONLY via story→epic PR merges
+
 output: |
   📂 Target Repo Ready — ALL implementation goes here (NOT bmad.lens.release)
   ├── Repo: ${target_repo.name}
   ├── Path: ${target_path}
   ├── Epic Branch: ${epic_branch}
-  ├── Story Branch: ${story_branch} (checked out)
-  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${target_repo.default_branch || 'develop'}
+  ├── Story Branch: ${story_branch} (checked out ✅ VERIFIED)
+  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${session.resolved_integration_branch}
+  ├── Integration Branch: ${session.resolved_integration_branch} (resolved from repo)
   ├── Auto-commit: ON (tasks auto-committed after completion)
   ├── Auto-PR: ON (PR created only after code review gate passes)
+  ├── ⚠️  Commits go to STORY branch only — epic branch is merge-only
   └── ⚠️  bmad.lens.release is READ-ONLY — never write there
 ```
 
@@ -654,6 +673,15 @@ ${endif}
 ═══════════════════════════════
 
 **Per-Task Commit Rule:**
+- BEFORE each commit, verify you are on the STORY branch:
+  ```bash
+  cd "${target_path}"
+  current=$(git branch --show-current)
+  if [[ "$current" != "${story_branch}" ]]; then
+    echo "❌ BLOCKED: On branch $current, expected ${story_branch}"
+    git checkout "${story_branch}"
+  fi
+  ```
 - After completing EACH task/subtask, immediately commit and push:
   ```bash
   git add -A
@@ -662,13 +690,16 @@ ${endif}
   Story: ${story_key}
   Task: {task_number}/{total_tasks}
   Epic: ${epic_key}"
-  git push
+  git push origin "${story_branch}"
   ```
 - Do NOT batch task commits — each task gets its own commit
 - Commit body MUST include Story, Task, and Epic metadata
+- Push target MUST specify `origin "${story_branch}"` — never bare `git push`
+- NEVER commit directly to `${epic_branch}` — epic branch receives code ONLY via merged PRs
 
 **Remember:**
 - ALL file writes go to ${target_path} (the TargetProject repo) — NEVER to bmad.lens.release
+- ALL commits go to the STORY branch — NEVER to the epic or integration branch
 - Follow constitutional articles above during implementation
 - Follow special instructions (if provided) for all implementation decisions
 - Commit after EACH task (not after all tasks)
@@ -983,7 +1014,9 @@ params:
   branch: ${session.epic_branch}
   message: "feat(${session.epic_key}): Epic ${session.epic_number} complete — all stories merged"
 
-target_base_branch = session.target_repo.default_branch || initiative.target_branch || "develop"
+# Use the RESOLVED integration branch — the actual branch the epic was created from.
+# Do NOT use default_branch which may be wrong (e.g., repo uses master but config says develop).
+target_base_branch = session.resolved_integration_branch || session.target_repo.default_branch || "develop"
 
 invoke: git-orchestration.create-pr
 params:

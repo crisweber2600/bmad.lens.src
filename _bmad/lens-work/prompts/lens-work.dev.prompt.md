@@ -57,12 +57,26 @@ The dev workflow will:
 3. Display the story list and confirm before proceeding
 4. For each story:
    - Load story file and run constitution/pre-implementation gates
-   - **Create epic branch** (`feature/{epic-key}`) in target repo if not exists
-   - **Create story branch** (`feature/{epic-key}-{story-key}`) from epic branch
-   - Implement all tasks (each task gets its own commit with multi-line message including Story/Task/Epic metadata)
-   - **Push after every commit** — no local-only commits allowed
+   - **Create epic branch** (`feature/{epic-key}`) in target repo if not exists — resolves the actual integration branch (develop/main/master) via fallback chain
+   - **Create story branch** (`feature/{epic-key}-{story-key}`) from epic branch — **VERIFY checkout succeeded**
+   - **ASSERT current branch is the story branch** before ANY task implementation begins
+   - Implement all tasks — each task gets its own commit with multi-line message (Story/Task/Epic metadata)
+   - **Each commit MUST target the story branch** — commits directly to the epic branch are BLOCKED
+   - **Push after every commit** with explicit `git push origin "{story-branch}"` — no bare `git push`
    - Run adversarial code review
    - If issues found: fix and re-review (max 2 passes)
-   - **Auto-create PR** from story branch → epic branch (only after review gate passes)
+   - **Verify non-empty diff** — story branch MUST have commits ahead of epic branch before PR creation
+   - **Auto-create PR** from story branch → epic branch (only after review gate passes AND diff is non-empty)
+   - **HARD STOP** — wait for story→epic PR to be merged before starting next story
    - Mark story done and commit state
-5. After all stories: run epic completion gate, retrospective, auto-create epic PR → develop/main, update state
+5. After all stories: run epic completion gate, retrospective, auto-create epic PR → resolved integration branch (NOT hardcoded develop), update state
+
+## Branch Discipline — Story-Branch-First
+
+**CRITICAL INVARIANT:** During task implementation, the agent MUST be on the **story branch**, not the epic branch.
+
+- **Epic branch** (`feature/epic-N`) is a **merge-only** branch. Code enters it ONLY via merged story→epic PRs.
+- **Story branch** (`feature/epic-N-{story-key}`) is where ALL task commits go.
+- Before each `git commit`, verify `git branch --show-current` returns the story branch.
+- If on the epic branch, `git checkout {story-branch}` before committing.
+- The **epic PR** targets the **resolved integration branch** (whichever of develop/main/master actually exists in the target repo), NOT a hardcoded value.
