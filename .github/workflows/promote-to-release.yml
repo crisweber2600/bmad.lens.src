@@ -423,7 +423,6 @@ jobs:
             desc=$(grep "^description:" "$src" | head -1 | sed "s/^description: *['\"]//;s/['\"] *$//")
             : "${desc:=LENS Workbench prompt}"
             model=$(grep "^model:" "$src" | head -1 | sed "s/^model: *//")
-            : "${model:=Claude Sonnet 4.6 (copilot)}"
             name="${filename%.prompt.md}"
 
             # Preserve any trailing content after the code fence (e.g. scope annotations)
@@ -431,7 +430,7 @@ jobs:
 
             {
               echo "---"
-              echo "model: $model"
+              [ -n "$model" ] && echo "model: $model"
               echo "description: '$desc'"
               echo "---"
               echo ""
