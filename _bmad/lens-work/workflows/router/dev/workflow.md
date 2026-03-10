@@ -1,16 +1,24 @@
 ---
 name: dev
-description: Implementation loop (dev-story/code-review/retro)
+description: Epic-level implementation loop (story iteration/per-task commits/code-review/retro)
 agent: "@lens"
 trigger: /dev command
 category: router
 phase: dev
 phase_name: Dev
+inputs:
+  epic_number:
+    description: Epic number to implement (required)
+    required: true
+  special_instructions:
+    description: Optional freeform guidance applied to ALL story implementations
+    required: false
+    default: ""
 ---
 
-# /dev — Implementation Phase Router
+# /dev — Implementation Phase Router (Epic-Level Loop)
 
-**Purpose:** Guide developers through implementation, constitution-aware adversarial code review, epic-completion teardown, and retrospective.
+**Purpose:** Iterate all stories in an epic, implementing each with per-task commits, adversarial code review after each story (with fix loop), epic-completion teardown, and retrospective.
 
 ---
 
@@ -23,7 +31,8 @@ phase_name: Dev
 ## Prerequisites
 
 - [x] `/sprintplan` complete (large → base promotion passed)
-- [x] Dev story exists (interactive mode)
+- [x] Dev stories exist for the target epic (created by `/sprintplan`)
+- [x] Epic number provided as input parameter
 - [x] Developer assigned (or self-assigned)
 - [x] state.yaml + initiatives/{id}.yaml exist
 - [x] Constitution gate passed (large → base audience promotion)
@@ -135,9 +144,11 @@ if initiative.phase_status[prev_phase] exists:
           ├── PR: ${pr_url}
           └── Proceeding — verify manually if needed
 
-# Require dev story for interactive mode
-if initiative.question_mode != "batch" and not dev_story_exists():
-  error: "/sprintplan has not produced a dev-ready story. Run /sprintplan first."
+# Dev stories are discovered per-epic in Step 2 — no single story check needed here
+# Batch mode still supported for question-only runs
+if initiative.question_mode == "batch":
+  # handled in Step 1c
+  pass
 
 # Audience validation — verify large→base promotion passed
 if initiative.audience_status.large_to_base not in ["complete", "passed", "passed_with_warnings"]:
@@ -247,44 +258,101 @@ if initiative.question_mode == "batch":
   exit: 0
 ```
 
-### 2. Load Dev Story
+### 2. Epic Story Discovery
 
 ```yaml
-# REQ-10: Read dev story from BmadDocs first, fallback to legacy locations
-if bmad_docs != null and file_exists("${bmad_docs}/dev-story-${id}.md"):
-  dev_story = load("${bmad_docs}/dev-story-${id}.md")
-  dev_story_source = "${bmad_docs}/dev-story-${id}.md"
-else if file_exists("_bmad-output/implementation-artifacts/dev-story-${id}.md"):
-  dev_story = load("_bmad-output/implementation-artifacts/dev-story-${id}.md")
-  dev_story_source = "_bmad-output/implementation-artifacts/dev-story-${id}.md"
-else:
-  candidates = []
-  if bmad_docs != null:
-    candidates += glob("${bmad_docs}/*${id}*.md") + glob("${bmad_docs}/${id}-*.md")
-  candidates += glob("_bmad-output/implementation-artifacts/*${id}*.md") + glob("_bmad-output/implementation-artifacts/${id}-*.md")
-  
-  if candidates.length > 0:
-    dev_story = load(candidates[0])
-    dev_story_source = candidates[0]
-  else:
-    error: "No dev story found for story ${id}. Run /sprintplan to create dev stories."
-    exit: 1
+# Input: epic_number (from prompt parameters)
+epic_number = params.epic_number
+special_instructions = params.special_instructions || ""
+session.special_instructions = special_instructions
+
+# Discover all story files for this epic
+# Search order: BmadDocs first, then legacy location
+story_files = []
+
+if bmad_docs != null:
+  story_files += glob("${bmad_docs}/dev-story-${epic_number}-*.md")
+  story_files += glob("${bmad_docs}/*epic-${epic_number}*.md")
+
+story_files += glob("_bmad-output/implementation-artifacts/dev-story-${epic_number}-*.md")
+story_files += glob("_bmad-output/implementation-artifacts/*epic-${epic_number}*.md")
+
+# Deduplicate (prefer BmadDocs version if same story exists in both)
+story_files = deduplicate_by_story_id(story_files)
+
+# Sort by story number within epic (e.g., 1-1, 1-2, 1-3)
+story_files = sort_by_story_order(story_files)
+
+if story_files.length == 0:
+  error: |
+    ❌ No story files found for epic ${epic_number}.
+    Searched:
+    ├── ${bmad_docs}/dev-story-${epic_number}-*.md
+    ├── ${bmad_docs}/*epic-${epic_number}*.md
+    ├── _bmad-output/implementation-artifacts/dev-story-${epic_number}-*.md
+    └── _bmad-output/implementation-artifacts/*epic-${epic_number}*.md
+    Run /sprintplan to create dev stories first.
+  exit: 1
 
 output: |
-  🚀 /dev — Implementation Phase
+  🚀 /dev — Epic ${epic_number} Implementation
   
-  **Story:** ${dev_story.title}
-  **Source:** ${dev_story_source}
-  **Acceptance Criteria:**
-  ${dev_story.acceptance_criteria}
-  
-  **Technical Notes:**
-  ${dev_story.technical_notes}
-  
-  **Branch:** ${initiative.initiative_root}-dev
+  📋 Stories discovered: ${story_files.length}
+  ${for idx, file in enumerate(story_files)}
+  ${idx + 1}. ${extract_story_title(file)} — ${file}
+  ${endfor}
+
+  ${if special_instructions}
+  📝 Special Instructions (applied to ALL stories):
+  ${special_instructions}
+  ${endif}
+
+ask: "Proceed with implementing all ${story_files.length} stories? [Y]es / [N]o"
+if no:
+  exit: 0
+
+# Track progress across the epic
+session.epic_number = epic_number
+session.story_files = story_files
+session.stories_completed = []
+session.stories_failed = []
 ```
 
-### 2a. Dev Story Constitution Check (Required)
+### 2-LOOP. Story Implementation Loop
+
+**For each story in the epic, execute Steps 2.N through 5.N before moving to the next story.**
+
+```yaml
+for story_idx, story_file in enumerate(session.story_files):
+  story_id = extract_story_id(story_file)
+  
+  output: |
+    ═══════════════════════════════════════════
+    📖 Story ${story_idx + 1}/${session.story_files.length}: ${story_id}
+    ═══════════════════════════════════════════
+```
+
+#### 2.N. Load Story
+
+```yaml
+  # Load the story file for this iteration
+  dev_story = load(story_file)
+  dev_story_source = story_file
+  id = story_id
+
+  output: |
+    🚀 Story: ${dev_story.title}
+    **Source:** ${dev_story_source}
+    **Acceptance Criteria:**
+    ${dev_story.acceptance_criteria}
+    
+    **Technical Notes:**
+    ${dev_story.technical_notes}
+    
+    **Branch:** ${initiative.initiative_root}-dev
+```
+
+#### 2.Na. Story Constitution Check (Required)
 
 ```yaml
 dev_story_path = dev_story_source
@@ -329,7 +397,7 @@ if dev_story_compliance.fail_count > 0 and enforcement_mode == "enforced":
   halt: true
 ```
 
-### 2b. Pre-Implementation Gates (Required)
+#### 2.Nb. Pre-Implementation Gates (Required)
 
 ```yaml
 article_gates = invoke("constitution.generate-article-gates")
@@ -384,12 +452,13 @@ params:
   initiative_id: ${initiative.id}
 ```
 
-### 3. Checkout Target Repo — Epic & Story Branch Management
+#### 3.N. Checkout Target Repo — Epic & Story Branch Management
 
 **IMPORTANT:** This is where we switch from BMAD control repo to TargetProjects.
 
 ```yaml
-epic_num = story_key.split("-")[0]
+story_key = story_id
+epic_num = session.epic_number
 epic_key = "epic-${epic_num}"
 epic_branch = "feature/${epic_key}"
 story_branch = "feature/${epic_key}-${story_key}"
@@ -430,7 +499,7 @@ output: |
   └── Auto-PR: ON (PR created only after code review gate passes)
 ```
 
-### 4. Implementation Guidance + Constitutional Context
+#### 4.N. Implementation Guidance + Constitutional Context + Special Instructions
 
 ```yaml
 articles = constitutional_context.resolved.articles
@@ -445,9 +514,16 @@ override_count = count_entries(complexity_tracking) if complexity_tracking else 
 ```
 
 ```
-🔧 Implementation Mode
+🔧 Implementation Mode — Story ${story_idx + 1}/${session.story_files.length}
 
 You're now working in: ${target_path}
+
+${if session.special_instructions}
+═══ Special Instructions (User-Provided) ═══
+${session.special_instructions}
+══════════════════════════════════════════════
+Apply these instructions to ALL implementation decisions for this story.
+${endif}
 
 ═══ Constitutional Guidance ═══
 
@@ -491,39 +567,45 @@ ${endif}
 
 ═══════════════════════════════
 
+**Per-Task Commit Rule:**
+- After completing EACH task/subtask, immediately commit and push:
+  `git add -A && git commit -m "feat(${story_key}): {task-description}" && git push`
+- Do NOT batch task commits — each task gets its own commit
+
 **Remember:**
 - Follow constitutional articles above during implementation
-- Commit frequently with meaningful messages
-- Return to BMAD directory when ready for code review
-
-**Commands available:**
-- `@lens done` — Signal implementation complete, start code review
-- `@lens ST` — Check status
-- `@lens help` — Show available commands
+- Follow special instructions (if provided) for all implementation decisions
+- Commit after EACH task (not after all tasks)
+- Return to BMAD directory when story implementation is complete
 ```
 
 ```yaml
 if article_gates and article_gates.failed_gates > 0 and enforcement_mode == "enforced":
   halt: true
   output: |
-    ⛔ BLOCKED — Unresolved enforced gate failures detected at Step 4
+    ⛔ BLOCKED — Unresolved enforced gate failures detected at Step 4.N
     ├── ${article_gates.failed_gates} gate(s) still failing
     ├── Resolve violations and re-run /dev
     └── Implementation cannot proceed until all enforced gates pass
 else:
   output: |
-    ✅ No blockers — proceeding with implementation
+    ✅ No blockers — proceeding with story ${story_id} implementation
     ├── All pre-implementation gates passed
     ├── Agent will implement story tasks in the target repo
-    └── Agent will signal @lens done automatically when complete
+    ├── Each task will be committed individually
+    └── Code review will run automatically after all tasks complete
 ```
 
-**Agent Implementation Flow:**
-The agent now proceeds to implement the story tasks in the target repo.
-After all story tasks are implemented and committed, the agent **automatically
-signals `@lens done`** and continues to Step 5 (code review).
+**Agent Implementation Flow (Per-Task Commits):**
+The agent implements each task in the story sequentially.
+After completing EACH task:
+1. `git add -A` in target repo
+2. `git commit -m "feat(${story_key}): {task-description}"`
+3. `git push`
 
-### 5. Adversarial Code Review + Constitutional Gates (when signaled)
+After ALL tasks are implemented and committed, proceed automatically to Step 5.N (code review).
+
+#### 5.N. Adversarial Code Review + Fix Loop (Per Story)
 
 **⚠️ CRITICAL — Workflow Engine Rules:**
 Code review and retrospective use YAML-based workflow.yaml files with the workflow engine.
@@ -625,63 +707,10 @@ params:
 
 if party_mode.status not in ["pass", "complete"]:
   error: |
-    Party mode teardown found unresolved issues.
-    Address _bmad-output/implementation-artifacts/party-mode-review-${story_id}.md and re-run @lens done.
+    Party mode teardown found unresolved issues for story ${story_id}.
+    Address _bmad-output/implementation-artifacts/party-mode-review-${story_id}.md and fix issues.
+  # Fix loop: attempt to resolve and re-review (within max_review_passes)
   halt: true
-```
-
-### 5a. Epic Completion Gate (Mandatory)
-
-**⚠️ MANDATORY — Epic Completion Gate: Do NOT skip this section.**
-**This step MUST execute when the current story completes its parent epic.**
-**Both the adversarial review and party-mode teardown are hard gates — failure halts the workflow.**
-
-```yaml
-current_epic_id = resolve_story_epic_id(
-  "${story_id}",
-  "${docs_path}/stories.md",
-  ${dev_story_path}
-)
-
-if current_epic_id:
-  epic_completion = evaluate_epic_completion(
-    "${current_epic_id}",
-    "${docs_path}/stories.md",
-    "_bmad-output/implementation-artifacts/"
-  )
-
-  if epic_completion.status == "complete":
-    # RESOLVED: bmm.check-implementation-readiness → Read fully and follow:
-    #   _bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md
-    read_and_follow: "_bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md"
-    params:
-      scope: "epic"
-      epic_id: ${current_epic_id}
-      stories: "${docs_path}/stories.md"
-      implementation_artifacts: "_bmad-output/implementation-artifacts/"
-      constitutional_context: ${constitutional_context}
-
-    if epic_adversarial.status in ["blocked", "fail", "failed"]:
-      error: |
-        ⛔ MANDATORY GATE — Epic adversarial review failed for ${current_epic_id}.
-        Resolve implementation-readiness findings and re-run @lens done.
-      halt: true
-
-    # RESOLVED: core.party-mode → Read fully and follow:
-    #   _bmad/core/workflows/party-mode/workflow.md
-    read_and_follow: "_bmad/core/workflows/party-mode/workflow.md"
-    params:
-      input_file: "${docs_path}/epics.md"
-      focus_epic: ${current_epic_id}
-      artifacts_path: ${target_path}
-      output_file: "_bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md"
-      constitutional_context: ${constitutional_context}
-
-    if party_mode.status not in ["pass", "complete"]:
-      error: |
-        ⛔ MANDATORY GATE — Epic party-mode teardown found unresolved issues for ${current_epic_id}.
-        Address _bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md and re-run @lens done.
-      halt: true
 
 # ⚠️ MANDATORY — Review Fix Gate: Story must be status "done" before PR creation.
 reviewed_story = load(${dev_story_path})
@@ -692,7 +721,7 @@ if reviewed_story_status != "done":
     ⛔ PR blocked for ${story_id}
     ├── Post-review story status: ${reviewed_story_status}
     ├── Meaning: review follow-ups or unresolved fixes remain
-    └── Action: resolve review items and re-run @lens done
+    └── Action: resolve review items and re-review
 
   invoke: git-orchestration.finish-workflow
   halt: true
@@ -723,6 +752,83 @@ else:
     ✅ Story PR auto-created
     ├── Branch: ${session.story_branch} → ${session.epic_branch}
     └── URL: ${story_pr_result.url}
+
+# Switch back to Amelia (Developer) for next story
+invoke: git-orchestration.finish-workflow
+
+# Track story completion
+session.stories_completed.append(story_id)
+
+# Commit story completion state to BMAD control repo
+invoke: git-orchestration.commit-and-push
+params:
+  paths:
+    - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
+    - "_bmad-output/implementation-artifacts/"
+  message: "[lens-work] /dev: Story ${story_id} complete — ${story_idx + 1}/${session.story_files.length}"
+  branch: "${initiative.initiative_root}-dev"
+
+output: |
+  ✅ Story ${story_id} complete (${story_idx + 1}/${session.story_files.length})
+  ├── Stories completed: ${session.stories_completed.length}
+  └── Stories remaining: ${session.story_files.length - session.stories_completed.length}
+
+# END STORY LOOP — continue to next story
+endfor
+
+output: |
+  ═══════════════════════════════════════════
+  🎉 All ${session.stories_completed.length} stories in Epic ${session.epic_number} implemented!
+  ═══════════════════════════════════════════
+  ${for sid in session.stories_completed}
+  ✅ ${sid}
+  ${endfor}
+```
+
+### 5a. Epic Completion Gate (Mandatory)
+
+**⚠️ MANDATORY — Epic Completion Gate: Do NOT skip this section.**
+**This step runs after ALL stories in the epic are complete.**
+**Both the adversarial review and party-mode teardown are hard gates — failure halts the workflow.**
+
+```yaml
+current_epic_id = "epic-${session.epic_number}"
+
+# All stories complete — run epic-level adversarial review
+# RESOLVED: bmm.check-implementation-readiness → Read fully and follow:
+#   _bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md
+read_and_follow: "_bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md"
+params:
+  scope: "epic"
+  epic_id: ${current_epic_id}
+  stories: "${docs_path}/stories.md"
+  implementation_artifacts: "_bmad-output/implementation-artifacts/"
+  constitutional_context: ${constitutional_context}
+
+if epic_adversarial.status in ["blocked", "fail", "failed"]:
+  error: |
+    ⛔ MANDATORY GATE — Epic adversarial review failed for ${current_epic_id}.
+    Resolve implementation-readiness findings and re-run /dev.
+  halt: true
+
+# RESOLVED: core.party-mode → Read fully and follow:
+#   _bmad/core/workflows/party-mode/workflow.md
+read_and_follow: "_bmad/core/workflows/party-mode/workflow.md"
+params:
+  input_file: "${docs_path}/epics.md"
+  focus_epic: ${current_epic_id}
+  artifacts_path: ${target_path}
+  output_file: "_bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md"
+  constitutional_context: ${constitutional_context}
+
+if party_mode.status not in ["pass", "complete"]:
+  error: |
+    ⛔ MANDATORY GATE — Epic party-mode teardown found unresolved issues for ${current_epic_id}.
+    Address _bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md and re-run /dev.
+  halt: true
+
+# Auto-PR removed from here — individual story PRs already created in loop
+# After all stories pass: remaining PR is epic branch → develop (Step 5a only)
 
 # After code review: switch back to Amelia (Developer) — _bmad/bmm/agents/dev.md
 invoke: git-orchestration.finish-workflow
@@ -888,16 +994,15 @@ Throughout `/dev`, the user may work in TargetProjects for actual coding, but al
 - [ ] state.yaml updated with phase dev
 - [ ] initiatives/{id}.yaml updated with dev status and gate entries
 - [ ] event-log.jsonl entries appended
-- [ ] Dev story loaded and implementation started
-- [ ] Dev story compliance gate passed (article-specific)
-- [ ] Pre-implementation gates evaluated (article-specific)
-- [ ] Checklist quality gate evaluated
-- [ ] Complexity tracking entries recorded for any overrides
-- [ ] Constitutional guidance surfaced to developer
-- [ ] Target repo feature branch checked out
-- [ ] Adversarial code review executed
-- [ ] Post-review constitutional re-validation passed (refreshed context)
-- [ ] Party mode teardown executed with complexity tracking context
+- [ ] All stories for the epic discovered and implemented
+- [ ] Each story: constitution check passed, pre-implementation gates passed
+- [ ] Each task: individually committed to story branch
+- [ ] Each story: adversarial code review executed with fix loop (max 2 passes)
+- [ ] Each story: party mode teardown passed
+- [ ] Each story: PR created (story branch → epic branch)
+- [ ] Epic completion gate: adversarial review and party-mode teardown passed
+- [ ] Constitutional guidance surfaced with special instructions (if provided)
+- [ ] Target repo feature branches used for implementation
 - [ ] Epic adversarial review executed when epic completion is detected
 - [ ] Epic party-mode teardown executed when epic completion is detected
 - [ ] All state changes pushed to origin
