@@ -114,9 +114,21 @@ Then invoke the entry gate workflow:
 - `stakeholder-approval` → Invoke stakeholder approval workflow.
 - `constitution-gate` → Invoke constitution gate workflow.
 
-4. If the gate artifact DOES exist → gate already completed, proceed to the first phase of the new audience.
+4. If the gate artifact DOES exist:
+   a. Parse the `verdict` field from the report frontmatter
+   b. If verdict is `PASS` or `PASS_WITH_NOTES` → gate completed, proceed to the first phase of the new audience
+   c. If verdict is `PROCEED_WITH_BLOCKERS` or `REJECT`:
 
-**(This is an execution rule — the entry gate runs automatically before advancing.)**
+   ```
+   ⛔ Entry gate `{entry_gate}` completed but found blockers.
+      Report: {gate_artifact_path}
+      Verdict: {verdict}
+      Resolve all blockers in the planning artifacts, then delete the report
+      and run `/next` again to re-run the entry gate.
+   ```
+   **(No execution — this is a hard gate. User must resolve blockers before proceeding.)**
+
+**(This is an execution rule — the entry gate runs automatically before advancing. A non-passing verdict is a hard gate.)**
 
 **Rule 6 — Track fully complete:**
 If the initiative has reached the final audience and all gates are passed:

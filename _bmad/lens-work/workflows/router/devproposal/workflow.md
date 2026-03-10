@@ -142,12 +142,27 @@ if adversarial_review_report == null:
     reviews: ${lifecycle.adversarial_review.reviews}
     output_file: "${output_path}/adversarial-review-report.md"
   
-  # After review completes, commit the report and mark gate as passed
+  # After review completes, commit the report
   invoke: git-orchestration.commit-and-push
   params:
     files: ["${output_path}/adversarial-review-report.md"]
     message: "[${initiative.id}] adversarial-review gate complete"
     branch: ${audience_branch}
+
+# Step 2b: Verify adversarial review verdict allows proceeding
+# The report now exists (either pre-existing or just generated above).
+# Parse the verdict from the report frontmatter.
+adversarial_review_report = load_file("${output_path}/adversarial-review-report.md")
+adversarial_verdict = adversarial_review_report.frontmatter.verdict
+
+if adversarial_verdict != "PASS" and adversarial_verdict != "PASS_WITH_NOTES":
+  output: |
+    ⛔ Adversarial review entry gate completed but verdict blocks proceeding.
+    ├── Report: ${output_path}/adversarial-review-report.md
+    ├── Verdict: ${adversarial_verdict}
+    ├── Blockers must be resolved in the planning artifacts before DevProposal can begin.
+    └── After resolving blockers, delete the report and re-run /devproposal to trigger a new review.
+  FAIL("Entry gate verdict blocks DevProposal: ${adversarial_verdict}")
 
 # Step 3: Mark promotion as complete (both ancestry AND entry gate verified)
 if initiative.audience_status exists:
