@@ -497,29 +497,37 @@ params:
   initiative_id: ${initiative.id}
 ```
 
-#### 3.N. Checkout Target Repo — Epic & Story Branch Management
+#### 3.N. Checkout Target Repo — Iteration, Epic & Story Branch Management
 
 **IMPORTANT:** This is where we switch from BMAD control repo to TargetProjects.
+
+**Branch hierarchy:** `feature/{iterationId}` → `feature/{iterationId}-{epic}` → `feature/{iterationId}-{epic}-{story}`
+**Story chaining:** Story 2 branches off story 1 (not off epic). Story 1 branches off epic.
+**PR flow:** Story PRs are created (story→epic) but execution continues. Hard stop at epic level only.
 
 ```yaml
 story_key = story_id
 epic_num = session.epic_number
 epic_key = "epic-${epic_num}"
-epic_branch = "feature/${epic_key}"
-story_branch = "feature/${epic_key}-${story_key}"
+
+# Resolve iteration_id from initiative config (sprint/iteration identifier)
+iteration_id = initiative.iteration_id || initiative.sprint_id || "iter-1"
+session.iteration_id = iteration_id
+
+# New branch naming convention
+iteration_branch = "feature/${iteration_id}"
+epic_branch = "feature/${iteration_id}-${epic_key}"
+story_branch = "feature/${iteration_id}-${epic_key}-${story_key}"
 
 # target_path resolved during Pre-Flight from initiative.target_repos
 target_path = session.target_path
 target_repo = session.target_repo
 
 # --- Fresh Pull: Sync target repo default branch before any branching ---
-# Always pull the latest from the default/integration branch so epic and story
-# branches are created from (or rebased onto) the most recent upstream state.
 cd "${target_path}"
 git fetch origin
 default_branch_check = exec("git symbolic-ref refs/remotes/origin/HEAD 2>/dev/null | sed 's@^refs/remotes/origin/@@' || echo ''")
 if default_branch_check == '':
-  # Fallback: try develop, main, master
   for candidate in ["develop", "main", "master"]:
     if exec("git rev-parse --verify origin/${candidate} 2>/dev/null").exit_code == 0:
       default_branch_check = candidate
@@ -530,28 +538,46 @@ output: |
   🔄 Target repo synced — pulled latest from ${default_branch_check}
   └── Path: ${target_path}
 
-# --- Epic Branch: Ensure parent epic branch exists ---
+# --- Iteration Branch: Ensure iteration branch exists ---
+invoke: git-orchestration.ensure-iteration-branch
+params:
+  target_repo_path: "${target_path}"
+  iteration_id: "${iteration_id}"
+
+# --- Epic Branch: Ensure epic branch exists (branches from iteration) ---
 invoke: git-orchestration.ensure-epic-branch
 params:
   target_repo_path: "${target_path}"
+  iteration_id: "${iteration_id}"
   epic_key: "${epic_key}"
   epic_branch: "${epic_branch}"
-  integration_branch: "${target_repo.default_branch || 'develop'}"
+  iteration_branch: "${iteration_branch}"
 
-# --- Story Branch: Create or checkout story branch from epic ---
+# --- Story Branch: Create or checkout story branch ---
+# Story chaining: first story branches from epic, subsequent stories branch from previous story
+if story_idx == 0:
+  parent_branch = epic_branch
+else:
+  # Chain: branch from the previous story branch
+  prev_story_id = extract_story_id(session.story_files[story_idx - 1])
+  parent_branch = "feature/${iteration_id}-${epic_key}-${prev_story_id}"
+
 invoke: git-orchestration.ensure-story-branch
 params:
   target_repo_path: "${target_path}"
+  iteration_id: "${iteration_id}"
   epic_key: "${epic_key}"
-  epic_branch: "${epic_branch}" 
   story_key: "${story_key}"
   story_branch: "${story_branch}"
+  parent_branch: "${parent_branch}"
 
+session.iteration_id = "${iteration_id}"
+session.iteration_branch = "${iteration_branch}"
 session.epic_key = "${epic_key}"
 session.epic_branch = "${epic_branch}"
 session.story_branch = "${story_branch}"
 
-# Read the resolved integration branch from ensure-epic-branch
+# Read the resolved integration branch from ensure-iteration-branch
 resolved_ib_file = "${target_path}/.lens-work-integration-branch"
 if file_exists(resolved_ib_file):
   session.resolved_integration_branch = read_file(resolved_ib_file).trim()
@@ -572,12 +598,14 @@ output: |
   📂 Target Repo Ready — ALL implementation goes here (NOT bmad.lens.release)
   ├── Repo: ${target_repo.name}
   ├── Path: ${target_path}
+  ├── Iteration: ${iteration_id}
+  ├── Iteration Branch: ${iteration_branch}
   ├── Epic Branch: ${epic_branch}
   ├── Story Branch: ${story_branch} (checked out ✅ VERIFIED)
-  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${session.resolved_integration_branch}
-  ├── Integration Branch: ${session.resolved_integration_branch} (resolved from repo)
+  ├── Parent Branch: ${parent_branch} (${story_idx == 0 ? 'from epic' : 'chained from prev story'})
+  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${iteration_branch} → ${session.resolved_integration_branch}
   ├── Auto-commit: ON (tasks auto-committed after completion)
-  ├── Auto-PR: ON (PR created only after code review gate passes)
+  ├── Auto-PR: ON (PR created after code review, no wait)
   ├── ⚠️  Commits go to STORY branch only — epic branch is merge-only
   └── ⚠️  bmad.lens.release is READ-ONLY — never write there
 ```
@@ -899,57 +927,21 @@ if story_pr_result.fallback:
     ⚠️ Auto-PR fallback triggered for story ${story_id}.
     Run this in target repo (${target_path}):
     gh pr create --base "${session.epic_branch}" --head "${session.story_branch}" --title "feat(${session.epic_key}): ${story_id}"
-  # Even in fallback, prompt user and wait for merge
-  output: |
-    ⏳ Please create and merge the story PR manually, then confirm.
-    Waiting up to 5 minutes for PR merge...
-  invoke: git-orchestration.wait-for-pr-merge
-  params:
-    repo_path: ${target_path}
-    source_branch: ${session.story_branch}
-    target_branch: ${session.epic_branch}
-    pr_url: "(manual — see instructions above)"
-    timeout_seconds: 300
-  capture: merge_wait_result
 else:
   output: |
     ✅ Story PR auto-created
     ├── Branch: ${session.story_branch} → ${session.epic_branch}
     └── URL: ${story_pr_result.url}
 
-  # === PR Merge Gate — HARD STOP until merged ===
-  # Work stops here. The user MUST merge the story→epic PR before
-  # the next story can begin. This ensures each story is integrated
-  # into the epic branch before subsequent stories build on top of it.
-  output: |
-    ⏳ Story PR Merge Gate
-    ├── PR: ${story_pr_result.url}
-    ├── Branch: ${session.story_branch} → ${session.epic_branch}
-    └── ⚠️  Please merge this PR now. Waiting up to 5 minutes...
-
-  invoke: git-orchestration.wait-for-pr-merge
-  params:
-    repo_path: ${target_path}
-    source_branch: ${session.story_branch}
-    target_branch: ${session.epic_branch}
-    pr_url: ${story_pr_result.url}
-    timeout_seconds: 300
-  capture: merge_wait_result
-
-# === Merge Gate Decision ===
-if merge_wait_result.merged == false:
-  output: |
-    ❌ Story PR not merged within 5 minutes — STOPPING.
-    ├── Story: ${story_id}
-    ├── PR: ${story_pr_result.url || '(manual)'}
-    ├── Action: Merge the PR, then re-run /dev to continue.
-    └── Remaining stories will resume from the next unfinished story.
-  invoke: git-orchestration.finish-workflow
-  halt: true
-
+# === NO PER-STORY HARD STOP — Continue to next story immediately ===
+# Story PRs are created but NOT waited on. The dev loop continues
+# with the next story, which chains off this story's branch.
+# Hard stop only occurs at the EPIC level after all stories complete.
 output: |
-  ✅ Story PR merged — continuing to next story.
-  └── ${story_id} integrated into ${session.epic_branch}
+  📋 Story PR created — continuing to next story (no wait).
+  ├── Story: ${story_id}
+  ├── PR: ${story_pr_result.url || '(manual — see fallback above)'}
+  └── ⚠️  Merge story PRs into epic before epic completion gate.
 
 # Switch back to Amelia (Developer) for next story
 invoke: git-orchestration.finish-workflow
@@ -1025,16 +1017,17 @@ if party_mode.status not in ["pass", "complete"]:
     Address _bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md and re-run /dev.
   halt: true
 
-# Push epic branch and create epic-level PR → develop/main in target repo
+# Push epic branch and create epic-level PR → iteration branch in target repo
 invoke: git-orchestration.commit-and-push
 params:
   repo_path: ${session.target_path}
   branch: ${session.epic_branch}
   message: "feat(${session.epic_key}): Epic ${session.epic_number} complete — all stories merged"
 
-# Use the RESOLVED integration branch — the actual branch the epic was created from.
-# Do NOT use default_branch which may be wrong (e.g., repo uses master but config says develop).
-target_base_branch = session.resolved_integration_branch || session.target_repo.default_branch || "develop"
+# Epic PR targets the ITERATION branch — NOT develop/main/master directly.
+# Epics merge into their iteration branch. The iteration branch is merged
+# into the integration branch separately (after all epics in the iteration complete).
+target_base_branch = session.iteration_branch
 
 invoke: git-orchestration.create-pr
 params:
@@ -1054,6 +1047,8 @@ params:
     Target branch: ${target_base_branch}
 
     This PR was auto-created by /dev after all stories passed code review and epic-level gates.
+    
+    ⚠️ All story→epic PRs should be merged before merging this epic→iteration PR.
 capture: epic_pr_result
 
 if epic_pr_result.fallback:
@@ -1066,6 +1061,39 @@ else:
     ✅ Epic PR auto-created
     ├── Branch: ${session.epic_branch} → ${target_base_branch}
     └── URL: ${epic_pr_result.url}
+
+# === EPIC PR MERGE GATE — HARD STOP ===
+# This is the per-epic hard stop. All story PRs should be merged into the epic
+# branch before this point. Now wait for the epic→iteration PR to be merged.
+output: |
+  ⏳ Epic PR Merge Gate — HARD STOP
+  ├── PR: ${epic_pr_result.url || '(manual — see fallback above)'}
+  ├── Branch: ${session.epic_branch} → ${target_base_branch}
+  ├── ⚠️  Ensure all story→epic PRs are merged first
+  └── ⚠️  Please merge this epic PR now. Waiting up to 10 minutes...
+
+invoke: git-orchestration.wait-for-pr-merge
+params:
+  repo_path: ${session.target_path}
+  source_branch: ${session.epic_branch}
+  target_branch: ${target_base_branch}
+  pr_url: ${epic_pr_result.url || "(manual)"}
+  timeout_seconds: 600
+capture: epic_merge_wait_result
+
+if epic_merge_wait_result.merged == false:
+  output: |
+    ❌ Epic PR not merged within 10 minutes — STOPPING.
+    ├── Epic: ${session.epic_key}
+    ├── PR: ${epic_pr_result.url || '(manual)'}
+    ├── Action: Merge all story PRs into epic, then merge epic PR into iteration.
+    └── Re-run /dev to continue with post-epic steps.
+  invoke: git-orchestration.finish-workflow
+  halt: true
+
+output: |
+  ✅ Epic PR merged into iteration branch.
+  └── ${session.epic_key} integrated into ${target_base_branch}
 
 # After epic PR: switch back to Amelia (Developer) — _bmad/bmm/agents/dev.md
 invoke: git-orchestration.finish-workflow

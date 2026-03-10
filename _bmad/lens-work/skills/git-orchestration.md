@@ -637,26 +637,33 @@ for epic branches, story branches, task auto-commits, and story-completion PRs.
 # Epic branch:  feature/{epic-key}
 # Story branch: feature/{epic-key}-{story-key}
 #
-# Examples:
-#   Epic:   feature/epic-1
-#   Story:  feature/epic-1-1-1-user-authentication
+# Branch Hierarchy:
+#   Iteration: feature/{iteration_id}
+#   Epic:      feature/{iteration_id}-{epic_key}
+#   Story:     feature/{iteration_id}-{epic_key}-{story_key}
 #
-# {epic-key}  — from sprint-status.yaml (e.g., "epic-1", "epic-2")
-# {story-key} — from sprint-status.yaml (e.g., "1-1-user-authentication")
+# Stories chain: story-2 branches off story-1 (not off epic).
+# PRs are created per story (story→epic) but execution continues without waiting.
+# Hard stop occurs per EPIC (epic→iteration PR merge gate).
+#
+# {iteration_id} — from initiative config (e.g., "sprint-1", "iter-2")
+# {epic_key}     — from sprint-status.yaml (e.g., "epic-1", "epic-2")
+# {story_key}    — from sprint-status.yaml (e.g., "1-1-user-authentication")
 ```
 
-### `ensure-epic-branch`
+### `ensure-iteration-branch`
 
-Ensure parent epic branch exists in target repo. Creates from integration branch if missing.
+Ensure the iteration branch exists in target repo. Creates from integration branch if missing.
+The iteration branch is the merge target for all epic branches in this iteration.
 
 **Algorithm:**
 ```bash
-epic_branch="feature/${epic_key}"
+iteration_branch="feature/${iteration_id}"
 
 cd "${target_repo_path}"
 git fetch origin
-if ! git rev-parse --verify "origin/${epic_branch}" > /dev/null 2>&1; then
-  # Epic branch does not exist — create from integration branch
+if ! git rev-parse --verify "origin/${iteration_branch}" > /dev/null 2>&1; then
+  # Iteration branch does not exist — create from integration branch
   # Fallback chain: develop → main → master → FAIL
   integration_branch=""
   for candidate in develop main master; do
@@ -671,21 +678,54 @@ if ! git rev-parse --verify "origin/${epic_branch}" > /dev/null 2>&1; then
   fi
   git checkout "${integration_branch}"
   git pull origin "${integration_branch}"
-  git checkout -b "${epic_branch}"
-  git push origin "${epic_branch}"
-  echo "✅ Created epic branch: ${epic_branch} from ${integration_branch}"
-  # Store resolved integration branch for epic PR targeting
+  git checkout -b "${iteration_branch}"
+  git push origin "${iteration_branch}"
+  echo "✅ Created iteration branch: ${iteration_branch} from ${integration_branch}"
+  # Store resolved integration branch for iteration→integration PR targeting
   echo "${integration_branch}" > .lens-work-integration-branch
 else
-  echo "✅ Epic branch exists: ${epic_branch}"
-  # Resolve what integration branch the epic was created from
-  # Check which integration branch exists (same fallback chain)
+  echo "✅ Iteration branch exists: ${iteration_branch}"
+  # Resolve what integration branch the iteration was created from
   for candidate in develop main master; do
     if git rev-parse --verify "origin/${candidate}" > /dev/null 2>&1; then
       echo "${candidate}" > .lens-work-integration-branch
       break
     fi
   done
+  git checkout "${iteration_branch}"
+  git pull origin "${iteration_branch}"
+  echo "✅ Iteration branch synced: ${iteration_branch}"
+fi
+```
+
+**Input:**
+```yaml
+target_repo_path: "${target_path}"
+iteration_id: "sprint-1"
+```
+
+---
+
+### `ensure-epic-branch`
+
+Ensure parent epic branch exists in target repo. Creates from the **iteration branch** (not directly from integration).
+
+**Algorithm:**
+```bash
+epic_branch="feature/${iteration_id}-${epic_key}"
+iteration_branch="feature/${iteration_id}"
+
+cd "${target_repo_path}"
+git fetch origin
+if ! git rev-parse --verify "origin/${epic_branch}" > /dev/null 2>&1; then
+  # Epic branch does not exist — create from iteration branch
+  git checkout "${iteration_branch}"
+  git pull origin "${iteration_branch}"
+  git checkout -b "${epic_branch}"
+  git push origin "${epic_branch}"
+  echo "✅ Created epic branch: ${epic_branch} from ${iteration_branch}"
+else
+  echo "✅ Epic branch exists: ${epic_branch}"
   # Pull latest on epic branch to pick up any previously merged story PRs
   git checkout "${epic_branch}"
   git pull origin "${epic_branch}"
@@ -693,38 +733,39 @@ else
 fi
 ```
 
-**Output:** Sets `session.resolved_integration_branch` — the actual branch the epic was created from.
-The workflow MUST use this value (not `default_branch`) as the epic PR target.
-
 **Input:**
 ```yaml
 target_repo_path: "${target_path}"
+iteration_id: "sprint-1"
 epic_key: "epic-1"
-epic_branch: "feature/epic-1"
-integration_branch: "develop"   # fallback: main → master
+epic_branch: "feature/sprint-1-epic-1"
+iteration_branch: "feature/sprint-1"
 ```
 
 ---
 
 ### `ensure-story-branch`
 
-Ensure story branch exists in target repo. Creates from epic branch if missing, or resumes if exists.
+Ensure story branch exists in target repo.
+**Chaining:** The FIRST story in an epic branches from the epic branch.
+Subsequent stories branch from the PREVIOUS story branch (story chaining).
 **HARD ASSERTION:** After this operation completes, the current branch MUST be the story branch.
 If `git branch --show-current` does not return the story branch name, FAIL immediately.
 
 **Algorithm:**
 ```bash
-story_branch="feature/${epic_key}-${story_key}"
+story_branch="feature/${iteration_id}-${epic_key}-${story_key}"
 
 cd "${target_repo_path}"
 git fetch origin
 if ! git rev-parse --verify "origin/${story_branch}" > /dev/null 2>&1; then
-  # Story branch does not exist — create from epic branch
-  git checkout "${epic_branch}"
-  git pull origin "${epic_branch}"
+  # Story branch does not exist — create from parent branch
+  # parent_branch is either the epic branch (first story) or previous story branch (chained)
+  git checkout "${parent_branch}"
+  git pull origin "${parent_branch}"
   git checkout -b "${story_branch}"
   git push origin "${story_branch}"
-  echo "✅ Created story branch: ${story_branch} from ${epic_branch}"
+  echo "✅ Created story branch: ${story_branch} from ${parent_branch}"
 else
   # Story branch already exists — checkout and pull latest
   git checkout "${story_branch}"
@@ -744,13 +785,24 @@ fi
 echo "✅ Verified: working on story branch ${story_branch}"
 ```
 
-**Input:**
+**Input (first story):**
 ```yaml
 target_repo_path: "${target_path}"
+iteration_id: "sprint-1"
 epic_key: "epic-1"
-epic_branch: "feature/epic-1"
 story_key: "1-1-user-authentication"
-story_branch: "feature/epic-1-1-1-user-authentication"
+story_branch: "feature/sprint-1-epic-1-1-1-user-authentication"
+parent_branch: "feature/sprint-1-epic-1"   # first story → branches from epic
+```
+
+**Input (chained story):**
+```yaml
+target_repo_path: "${target_path}"
+iteration_id: "sprint-1"
+epic_key: "epic-1"
+story_key: "1-2-profile-management"
+story_branch: "feature/sprint-1-epic-1-1-2-profile-management"
+parent_branch: "feature/sprint-1-epic-1-1-1-user-authentication"   # chains off story 1
 ```
 
 ---
@@ -785,8 +837,8 @@ if [[ "${current_branch}" != "${story_branch}" ]]; then
   exit 1
 fi
 
-# Guard 3: Reject commits directly to epic branch pattern
-if [[ "${current_branch}" =~ ^feature/epic-[0-9]+$ ]]; then
+# Guard 3: Reject commits directly to epic branch pattern (feature/{iterationId}-epic-N without story suffix)
+if [[ "${current_branch}" =~ ^feature/[a-zA-Z0-9_-]+-epic-[0-9]+$ ]]; then
   echo "❌ FAIL: Direct commit to epic branch BLOCKED"
   echo "├── Current: ${current_branch}"
   echo "├── Epic branches receive code ONLY via story→epic PR merges"
@@ -868,19 +920,38 @@ echo "✅ Story branch has ${diff_count} commit(s) ahead of epic — PR will hav
 
 ### Epic Completion PR
 
-When all stories in an epic are complete and merged to the epic branch:
+When all stories in an epic are complete, auto-create a PR from epic branch → **iteration branch**.
+The epic does NOT merge into develop/main/master directly — it merges into the iteration branch.
 
 **Algorithm:**
 ```bash
-epic_branch="feature/${epic_key}"
+epic_branch="feature/${iteration_id}-${epic_key}"
+iteration_branch="feature/${iteration_id}"
 
-# Read the resolved integration branch from ensure-epic-branch
-# This file was written when the epic branch was created
-if [[ -f "${target_repo_path}/.lens-work-integration-branch" ]]; then
-  integration_branch=$(cat "${target_repo_path}/.lens-work-integration-branch")
+cd "${target_repo_path}"
+echo "Epic PR target: ${epic_branch} → ${iteration_branch}"
+
+# Create PR from epic branch to iteration branch
+# See create-pr operation for full details
+```
+
+---
+
+### Iteration Completion PR (Optional)
+
+When all epics in an iteration are complete, create PR from iteration branch → integration branch.
+This is typically triggered manually or by a higher-level workflow after all epics are merged.
+
+**Algorithm:**
+```bash
+iteration_branch="feature/${iteration_id}"
+
+cd "${target_repo_path}"
+
+# Read the resolved integration branch
+if [[ -f .lens-work-integration-branch ]]; then
+  integration_branch=$(cat .lens-work-integration-branch)
 else
-  # Fallback: same chain as ensure-epic-branch (develop → main → master)
-  integration_branch=""
   for candidate in develop main master; do
     if git rev-parse --verify "origin/${candidate}" > /dev/null 2>&1; then
       integration_branch="${candidate}"
@@ -888,15 +959,13 @@ else
     fi
   done
   if [[ -z "${integration_branch}" ]]; then
-    echo "❌ FAIL: No integration branch found for epic PR target"
+    echo "❌ FAIL: No integration branch found for iteration PR target"
     exit 1
   fi
 fi
 
-echo "Epic PR target: ${epic_branch} → ${integration_branch}"
-
-# Create PR from epic branch to integration branch
-# See create-pr operation for full details
+echo "Iteration PR target: ${iteration_branch} → ${integration_branch}"
+# Create PR from iteration branch to integration branch
 ```
 
 **CRITICAL:** The `base` branch for the epic PR MUST be `session.resolved_integration_branch`
