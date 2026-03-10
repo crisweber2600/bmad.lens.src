@@ -827,10 +827,45 @@ if party_mode.status not in ["pass", "complete"]:
     Address _bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md and re-run /dev.
   halt: true
 
-# Auto-PR removed from here — individual story PRs already created in loop
-# After all stories pass: remaining PR is epic branch → develop (Step 5a only)
+# Push epic branch and create epic-level PR → develop/main in target repo
+invoke: git-orchestration.commit-and-push
+params:
+  repo_path: ${target_path}
+  branch: ${session.epic_branch}
+  message: "feat(${session.epic_key}): Epic ${session.epic_number} complete — all stories merged"
 
-# After code review: switch back to Amelia (Developer) — _bmad/bmm/agents/dev.md
+invoke: git-orchestration.create-pr
+params:
+  repo_path: ${target_path}
+  head: ${session.epic_branch}
+  base: ${initiative.target_branch || "develop"}
+  title: "feat(${session.epic_key}): Epic ${session.epic_number}"
+  body: |
+    Epic ${session.epic_number} — all ${session.stories_completed.length} stories implemented and reviewed.
+
+    Stories completed:
+    ${for sid in session.stories_completed}
+    - ✅ ${sid}
+    ${endfor}
+
+    Source branch: ${session.epic_branch}
+    Target branch: ${initiative.target_branch || "develop"}
+
+    This PR was auto-created by /dev after all stories passed code review and epic-level gates.
+capture: epic_pr_result
+
+if epic_pr_result.fallback:
+  warning: |
+    ⚠️ Auto-PR fallback for epic ${session.epic_number}.
+    Run this in target repo (${target_path}):
+    gh pr create --base "${initiative.target_branch || 'develop'}" --head "${session.epic_branch}" --title "feat(${session.epic_key}): Epic ${session.epic_number}"
+else:
+  output: |
+    ✅ Epic PR auto-created
+    ├── Branch: ${session.epic_branch} → ${initiative.target_branch || "develop"}
+    └── URL: ${epic_pr_result.url}
+
+# After epic PR: switch back to Amelia (Developer) — _bmad/bmm/agents/dev.md
 invoke: git-orchestration.finish-workflow
 ```
 
