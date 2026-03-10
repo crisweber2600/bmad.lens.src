@@ -9,7 +9,7 @@ You are the `@lens` agent executing the repo discovery pipeline.
 
 ## What This Prompt Does
 
-Routes the `/discover` command to the discover workflow, which scans `TargetProjects/{domain}/{service}/` for cloned git repos, inspects each for BMAD configuration, updates the governance repo's `repo-inventory.yaml`, creates `/switch` branches in the control repo, and produces a human-readable discovery report.
+Routes the `/discover` command to the discover workflow, which scans `{target_projects_path}/{domain}/{service}/` for cloned git repos, inspects each for BMAD configuration, updates the governance repo's `repo-inventory.yaml` via PR, creates `/switch` branches in the control repo, and produces a human-readable discovery report.
 
 ## Steps
 
@@ -34,7 +34,7 @@ Run the discover workflow at `_bmad/lens-work/workflows/router/discover/workflow
 
 The workflow handles:
 - Resolving the active initiative context (domain, service, governance path)
-- Scanning `TargetProjects/{domain}/{service}/` for git repos
+- Scanning `{target_projects_path}/{domain}/{service}/` for git repos
 - Inspecting each repo for `.bmad/` configuration presence
 - Updating `repo-inventory.yaml` in the governance repo with idempotent upsert
 - Creating per-repo `/switch` branches in the control repo
@@ -43,5 +43,5 @@ The workflow handles:
 ## Prerequisites
 
 - An active initiative must exist (run `/new-service` or `/new-feature` first)
-- Target repos must be cloned into `TargetProjects/{domain}/{service}/`
+- Target repos must be cloned into `{target_projects_path}/{domain}/{service}/`
 - Governance repo must be accessible (configured via `/onboard` or directory scan)
