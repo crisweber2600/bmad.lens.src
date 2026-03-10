@@ -1,5 +1,4 @@
 ---
-model: Claude Sonnet 4.6 (copilot)
 ---
 
 # /promote Prompt

@@ -1,5 +1,4 @@
 ---
-model: Claude Sonnet 4.6 (copilot)
 description: "Determine and execute the next actionable task based on lifecycle state"
 ---
 

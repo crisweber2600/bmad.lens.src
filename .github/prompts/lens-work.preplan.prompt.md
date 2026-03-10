@@ -1,5 +1,4 @@
 ---
-model: Claude Sonnet 4.6 (copilot)
 description: 'Start PrePlan phase — brainstorm, research, product brief (Mary/Analyst, small audience)'
 ---
 

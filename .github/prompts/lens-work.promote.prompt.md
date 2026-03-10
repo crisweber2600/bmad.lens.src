@@ -1,5 +1,4 @@
 ---
-model: Claude Sonnet 4.6 (copilot)
 description: 'Promote the active initiative to the next audience level — runs gate checks and creates a promotion PR'
 ---
 

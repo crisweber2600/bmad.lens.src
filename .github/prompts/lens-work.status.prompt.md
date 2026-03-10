@@ -1,5 +1,4 @@
 ---
-model: Claude Sonnet 4.6 (copilot)
 description: 'Show consolidated status report across all active initiatives'
 ---
 
