@@ -95,6 +95,29 @@ If a promotion PR is open:
 ```
 **(No execution — hard gate.)**
 
+**Rule 5b — Promotion merged, entry gate pending:**
+If a promotion PR is merged AND the target audience has an `entry_gate` in lifecycle.yaml (e.g., `adversarial-review`, `stakeholder-approval`, `constitution-gate`) AND the entry gate has NOT been completed:
+
+1. Read the target audience's `entry_gate` and `entry_gate_mode` from lifecycle.yaml
+2. Check if the entry gate was executed by looking for the gate artifact:
+   - For `adversarial-review`: check if `{docs_path}/adversarial-review-report.md` exists on the target audience branch
+   - For other gates: check for the corresponding gate artifact
+3. If the gate artifact does NOT exist → the entry gate was skipped. Execute it now:
+
+```
+✅ Promotion `{audience}` → `{next-audience}` merged.
+⚠️ Entry gate `{entry_gate}` has not been completed.
+▶️ Executing entry gate: {entry_gate} ({entry_gate_mode} mode)...
+```
+Then invoke the entry gate workflow:
+- `adversarial-review` → Run adversarial review in party mode on all planning artifacts committed to the target audience branch. The review covers: product-brief, prd, ux-design, architecture (per lifecycle.yaml `adversarial_review.reviews`). Save the review report to `{docs_path}/adversarial-review-report.md`, commit to the target audience branch, and proceed.
+- `stakeholder-approval` → Invoke stakeholder approval workflow.
+- `constitution-gate` → Invoke constitution gate workflow.
+
+4. If the gate artifact DOES exist → gate already completed, proceed to the first phase of the new audience.
+
+**(This is an execution rule — the entry gate runs automatically before advancing.)**
+
 **Rule 6 — Track fully complete:**
 If the initiative has reached the final audience and all gates are passed:
 ```

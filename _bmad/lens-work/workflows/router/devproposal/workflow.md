@@ -104,27 +104,61 @@ else:
 prev_audience = "small"
 prev_audience_branch = "${initiative_root}-small"
 
+# Step 1: Verify git ancestry (branch merge happened)
+result = git-orchestration.exec("git merge-base --is-ancestor origin/${prev_audience_branch} origin/${audience_branch}")
+
+if result.exit_code != 0:
+  output: |
+    ❌ Audience promotion (small → medium) not complete
+    ├── Gate: adversarial-review (party mode)
+    ├── All small-audience phases (preplan, businessplan, techplan) must be complete
+    └── Auto-triggering audience promotion now
+  invoke_command: "@lens promote"
+  exit: 0
+
+# Step 2: Verify the adversarial review entry gate was actually executed
+# Git ancestry alone is NOT sufficient — the adversarial review must have produced
+# its report artifact on the audience branch
+adversarial_review_report = load_if_exists("${output_path}/adversarial-review-report.md")
+
+if adversarial_review_report == null:
+  output: |
+    ❌ Audience promotion (small → medium) merge detected, but adversarial review entry gate was NOT completed.
+    ├── Gate: adversarial-review (party mode) — MISSING
+    ├── Required artifact: adversarial-review-report.md
+    └── The adversarial review must be run before devproposal can begin.
+  
+  # Look up entry gate config from lifecycle.yaml
+  entry_gate = lifecycle.audiences.medium.entry_gate          # "adversarial-review"
+  entry_gate_mode = lifecycle.audiences.medium.entry_gate_mode # "party"
+  
+  output: "▶️ Executing entry gate: ${entry_gate} (${entry_gate_mode} mode)..."
+  
+  # Run adversarial review on all planning artifacts per lifecycle.yaml adversarial_review.reviews
+  invoke: adversarial-review
+  params:
+    mode: ${entry_gate_mode}
+    artifacts_path: ${output_path}
+    reviews: ${lifecycle.adversarial_review.reviews}
+    output_file: "${output_path}/adversarial-review-report.md"
+  
+  # After review completes, commit the report and mark gate as passed
+  invoke: git-orchestration.commit-and-push
+  params:
+    files: ["${output_path}/adversarial-review-report.md"]
+    message: "[${initiative.id}] adversarial-review gate complete"
+    branch: ${audience_branch}
+
+# Step 3: Mark promotion as complete (both ancestry AND entry gate verified)
 if initiative.audience_status exists:
   if initiative.audience_status.small_to_medium != "complete":
-    result = git-orchestration.exec("git merge-base --is-ancestor origin/${prev_audience_branch} origin/${audience_branch}")
-
-    if result.exit_code == 0:
-      invoke: state-management.update-initiative
-      params:
-        initiative_id: ${initiative.id}
-        updates:
-          audience_status:
-            small_to_medium: "complete"
-      output: "✅ Audience promotion (small → medium) complete — adversarial review gate passed"
-    else:
-      output: |
-        ❌ Audience promotion (small → medium) not complete
-        ├── Gate: adversarial-review (party mode)
-        ├── All small-audience phases (preplan, businessplan, techplan) must be complete
-        └── Auto-triggering audience promotion now
-
-      invoke_command: "@lens promote"
-      exit: 0
+    invoke: state-management.update-initiative
+    params:
+      initiative_id: ${initiative.id}
+      updates:
+        audience_status:
+          small_to_medium: "complete"
+    output: "✅ Audience promotion (small → medium) complete — adversarial review gate verified"
 else:
   warning: "⚠️ No audience_status in initiative config — legacy format detected"
 
