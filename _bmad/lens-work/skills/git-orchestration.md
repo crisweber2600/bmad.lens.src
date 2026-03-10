@@ -498,6 +498,67 @@ merged_at: "2026-03-08T15:30:00Z"   # null if not merged
 
 ---
 
+### `wait-for-pr-merge`
+
+Block workflow execution until a story PR is merged. Prompts the user to merge,
+then polls for merge status. Stops the workflow if the PR is not merged within the timeout.
+
+**Algorithm:**
+```bash
+# Inputs: repo_path, source_branch, target_branch, pr_url, timeout_seconds (default: 300)
+
+output: |
+  ⏳ Story PR Merge Gate
+  ├── PR: ${pr_url}
+  ├── Branch: ${source_branch} → ${target_branch}
+  └── ⚠️  Please merge this PR now. Waiting up to 5 minutes...
+
+# Poll every 30 seconds for merge status
+elapsed=0
+interval=30
+while [ $elapsed -lt ${timeout_seconds} ]; do
+  pr_status=$(invoke: git-orchestration.query-pr-status
+    params:
+      source_branch: "${source_branch}"
+      target_branch: "${target_branch}"
+      repo_path: "${repo_path}")
+
+  if pr_status.state == "merged":
+    output: |
+      ✅ Story PR merged!
+      ├── PR: ${pr_url}
+      ├── Merged at: ${pr_status.merged_at}
+      └── Continuing to next story...
+    return { merged: true, merged_at: pr_status.merged_at }
+
+  sleep ${interval}
+  elapsed=$((elapsed + interval))
+  remaining=$((timeout_seconds - elapsed))
+  output: "⏳ PR not yet merged. ${remaining}s remaining..."
+done
+
+# Timeout reached — PR not merged
+output: |
+  ❌ PR Merge Timeout
+  ├── PR: ${pr_url}
+  ├── Waited: ${timeout_seconds}s
+  └── STOPPING — merge the PR and re-run /dev to continue.
+return { merged: false, timed_out: true }
+```
+
+**Input:**
+```yaml
+repo_path: "${target_path}"
+source_branch: "feature/epic-1-1-1-user-auth"
+target_branch: "feature/epic-1"
+pr_url: "https://github.com/org/repo/pull/42"
+timeout_seconds: 300
+```
+
+**Output:** `{ merged: boolean, merged_at: string | null, timed_out: boolean }`
+
+---
+
 ### `list-prs`
 
 List pull requests filtered by branch pattern and state.

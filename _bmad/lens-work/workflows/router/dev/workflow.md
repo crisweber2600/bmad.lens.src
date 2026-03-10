@@ -824,11 +824,57 @@ if story_pr_result.fallback:
     ⚠️ Auto-PR fallback triggered for story ${story_id}.
     Run this in target repo (${target_path}):
     gh pr create --base "${session.epic_branch}" --head "${session.story_branch}" --title "feat(${session.epic_key}): ${story_id}"
+  # Even in fallback, prompt user and wait for merge
+  output: |
+    ⏳ Please create and merge the story PR manually, then confirm.
+    Waiting up to 5 minutes for PR merge...
+  invoke: git-orchestration.wait-for-pr-merge
+  params:
+    repo_path: ${target_path}
+    source_branch: ${session.story_branch}
+    target_branch: ${session.epic_branch}
+    pr_url: "(manual — see instructions above)"
+    timeout_seconds: 300
+  capture: merge_wait_result
 else:
   output: |
     ✅ Story PR auto-created
     ├── Branch: ${session.story_branch} → ${session.epic_branch}
     └── URL: ${story_pr_result.url}
+
+  # === PR Merge Gate — HARD STOP until merged ===
+  # Work stops here. The user MUST merge the story→epic PR before
+  # the next story can begin. This ensures each story is integrated
+  # into the epic branch before subsequent stories build on top of it.
+  output: |
+    ⏳ Story PR Merge Gate
+    ├── PR: ${story_pr_result.url}
+    ├── Branch: ${session.story_branch} → ${session.epic_branch}
+    └── ⚠️  Please merge this PR now. Waiting up to 5 minutes...
+
+  invoke: git-orchestration.wait-for-pr-merge
+  params:
+    repo_path: ${target_path}
+    source_branch: ${session.story_branch}
+    target_branch: ${session.epic_branch}
+    pr_url: ${story_pr_result.url}
+    timeout_seconds: 300
+  capture: merge_wait_result
+
+# === Merge Gate Decision ===
+if merge_wait_result.merged == false:
+  output: |
+    ❌ Story PR not merged within 5 minutes — STOPPING.
+    ├── Story: ${story_id}
+    ├── PR: ${story_pr_result.url || '(manual)'}
+    ├── Action: Merge the PR, then re-run /dev to continue.
+    └── Remaining stories will resume from the next unfinished story.
+  invoke: git-orchestration.finish-workflow
+  halt: true
+
+output: |
+  ✅ Story PR merged — continuing to next story.
+  └── ${story_id} integrated into ${session.epic_branch}
 
 # Switch back to Amelia (Developer) for next story
 invoke: git-orchestration.finish-workflow
