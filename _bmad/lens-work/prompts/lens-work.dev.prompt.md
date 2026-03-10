@@ -6,6 +6,12 @@
 Route to the dev phase workflow via the @lens phase router.
 Orchestrates the full implementation cycle for an epic: iterates all stories, implements each with per-task commits, runs adversarial review after each story, fixes issues, then continues to the next story.
 
+## Implementation Target — NOT bmad.lens.release
+
+**⚠️ CRITICAL:** `bmad.lens.release` is a **READ-ONLY authority repo**. It contains BMAD framework code (agents, workflows, lifecycle definitions). It is **NEVER** the implementation target.
+
+The implementation target is the **TargetProject repo** — resolved from `initiative.target_repos[0].local_path` in the initiative config. All code changes, file creation, commits, and PRs go to the TargetProject repo. If you find yourself writing files inside `bmad.lens.release/`, STOP — you are in the wrong repo.
+
 ## Inputs
 
 - **Epic number** (required): The epic to implement (e.g., `1`, `2`). All stories belonging to this epic will be discovered and implemented in order.
@@ -13,9 +19,9 @@ Orchestrates the full implementation cycle for an epic: iterates all stories, im
 
 ## Execution
 
-1. Run preflight before routing:
-   1. Read the `bmad.lens.release` branch with `git -C bmad.lens.release branch --show-current`.
-   2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos (do NOT check `.preflight-timestamp` — ALWAYS pull on alpha/beta):
+1. **Authority Repo Health Check** (read-only — NO writes to these repos):
+   1. Read the `bmad.lens.release` branch with `git -C bmad.lens.release branch --show-current`. This is a health check only — `bmad.lens.release` is NOT the implementation target.
+   2. If branch is `alpha` or `beta`: pull ALL authority repos to refresh cached framework code (do NOT check `.preflight-timestamp` — ALWAYS pull on alpha/beta):
       ```bash
       git -C bmad.lens.release pull origin
       git -C .github pull origin
@@ -24,7 +30,7 @@ Orchestrates the full implementation cycle for an epic: iterates all stories, im
       Then write today's date to `_bmad-output/lens-work/.preflight-timestamp`.
    3. Otherwise: read `_bmad-output/lens-work/.preflight-timestamp`. If missing or older than today, run the same pulls and update timestamp. If today's date matches, skip pulls.
    4. If any authority repo directory is missing: stop and report the failure.
-2. Load `lifecycle.yaml` from the lens-work module
+2. Load `lifecycle.yaml` from the lens-work module (read from `bmad.lens.release` — read-only)
 3. Invoke phase routing for `dev`:
    - Validate predecessor `sprintplan` PR is merged
    - Validate audience level is `base` (promotion from large required)
@@ -33,11 +39,15 @@ Orchestrates the full implementation cycle for an epic: iterates all stories, im
    - `epic_number`: the epic number provided by the user
    - `special_instructions`: the optional special instructions provided by the user (empty string if none)
 
-## Write Scope — Target Repo Only
+## Write Scope — Target Repo Only (NOT bmad.lens.release)
 
-During `/dev`, ALL implementation writes (file creation, modification, commits) are **strictly scoped to the target repo folder** resolved from the initiative config. The agent MUST NOT modify files in the control repo (bmad.lens.bmad), release repo (bmad.lens.release), governance repo, or any other repo. Only state tracking writes in `_bmad-output/` (sprint-status, state.yaml) are allowed in the control repo.
+During `/dev`, ALL implementation writes (file creation, modification, commits) are **strictly scoped to the TargetProject repo folder** resolved from `initiative.target_repos[0].local_path`. The agent MUST NOT modify files in:
+- `bmad.lens.release/` (read-only framework — NEVER an implementation target)
+- The control repo (bmad.lens.bmad) except `_bmad-output/` state tracking
+- The governance repo
+- `.github/` adapter layer
 
-Before implementing any task, the workflow verifies the working directory is inside the target repo. If the verification fails, implementation is blocked.
+**Dev Write Guard:** Before implementing any task, the workflow runs a hard gate (Step 3.Nc) that verifies the working directory is inside the TargetProject repo. If the working directory resolves to `bmad.lens.release/` or any other non-target path, implementation is **BLOCKED**. The guard also rejects any `target_path` that contains `bmad.lens.release`.
 
 ## Epic-Level Story Loop
 
