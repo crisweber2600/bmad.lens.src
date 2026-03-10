@@ -12,7 +12,7 @@ imports: lifecycle.yaml
 
 # /discover — Repo Discovery Workflow
 
-**Purpose:** Given an active initiative, resolve the scan path from the initiative's domain and service, enumerate all cloned git repos under that path, inspect each for BMAD configuration presence, update the governance repo's `repo-inventory.yaml`, create `/switch` branches in the control repo, and produce a human-readable discovery report.
+**Purpose:** Given an active initiative, resolve the scan path from the initiative's domain and service, enumerate all cloned git repos under that path, inspect each for BMAD configuration presence, detect primary programming language, update the governance repo's `repo-inventory.yaml`, create `/switch` branches in the control repo, generate project context files, update initiative language, and produce a human-readable discovery report.
 
 **Covers:** `/discover`
 
@@ -206,6 +206,7 @@ for each repo in discovered_repos:
             has_bmad: has_bmad,
             language: "unknown",
             error: null,
+            context_status: "pending",
             governance_status: "pending",
             branch_status: "pending"
         }
@@ -217,6 +218,7 @@ for each repo in discovered_repos:
             has_bmad: false,
             language: "unknown",
             error: error.message,
+            context_status: "pending",
             governance_status: "pending",
             branch_status: "pending"
         }
@@ -227,7 +229,7 @@ for each repo in discovered_repos:
 
 **Rules:**
 - Top-level `.bmad/` directory check only — does not recurse into `.bmad/`
-- `language` field is `"unknown"` at MVP (enriched by E5 LanguageDetector when enabled)
+- `language` field is `"unknown"` initially — enriched by Step 3.5 (LanguageDetector) if enabled
 - **Per-repo error isolation (NFR-4):** An error inspecting one repo must NOT abort inspection of remaining repos. The error is logged to the repo's result record and the pipeline continues.
 - `governance_status` and `branch_status` start as `"pending"` — updated by Step 4 (GovernanceWriter) and Step 5 (GitOrchestrator) respectively
 
@@ -240,7 +242,101 @@ for each repo in discovered_repos:
    Errors:            {error_count}
 ```
 
-Pass `repo_results` to Step 4 (GovernanceWriter).
+Pass `repo_results` to Step 3.5 (LanguageDetector).
+
+---
+
+## Step 3.5: LanguageDetector
+
+**Epic:** E5 — NTH Enhancements. Detect the primary programming language of each discovered repo.
+
+For each repo in `repo_results`, detect the primary programming language using the priority order defined in `lifecycle.yaml`. This step enriches the `language` field from `"unknown"` to an actual language identifier. Detection failure is **never fatal** — the fallback is always `"unknown"` (AR-1 DoD, SC-5).
+
+### 3.5a. Check Enable Flag
+
+LanguageDetector is an NTH enhancement. Check whether it is enabled:
+
+- If `lifecycle.yaml` contains `language_detection: disabled` or the `supported_languages` list is empty: skip this step entirely, leave all `language` fields as `"unknown"`, and proceed to Step 4.
+- Otherwise (default): proceed with detection.
+
+### 3.5b. Detect Language Per Repo
+
+For each `repo_result` in `repo_results`:
+
+```
+for each repo in repo_results:
+    if repo.error != null:
+        # Skip repos that failed inspection
+        continue
+
+    try:
+        language = detect_language(repo.path)
+        repo.language = language
+        output: "  🔍 {repo.repo_name}: {language}"
+    catch (error):
+        # AR-1 + SC-5: NEVER throw — fallback to "unknown"
+        repo.language = "unknown"
+        log: "⚠️ Language detection failed for {repo.repo_name}: {error.message} — defaulting to unknown"
+```
+
+**`detect_language(repo_dir)` priority order** (from `lifecycle.yaml` comments):
+
+1. **Explicit override:** Read `{repo_dir}/.bmad/language` file. If it exists and contains a non-empty string matching `lifecycle.yaml.supported_languages`, return that value.
+
+2. **Build file heuristics:** Check for known build files in the repo root:
+
+   | Build File | Language |
+   |---|---|
+   | `package.json` | `typescript` (if `tsconfig.json` also present) or `javascript` |
+   | `*.csproj` or `*.sln` | `csharp` |
+   | `pyproject.toml` or `setup.py` or `requirements.txt` | `python` |
+   | `go.mod` | `go` |
+   | `pom.xml` or `build.gradle` | `java` |
+   | `Cargo.toml` | `rust` |
+   | `*.gemspec` | `ruby` |
+   | `composer.json` | `php` |
+   | `Package.swift` | `swift` |
+   | `build.gradle.kts` | `kotlin` |
+   | `CMakeLists.txt` or `Makefile` (with `.cpp`/`.cc`/`.h` files) | `cpp` |
+
+   If multiple build files match different languages, pick the first match in the table order above.
+
+3. **File extension frequency analysis:** Count source files by extension in the repo (excluding `node_modules/`, `.git/`, `vendor/`, `bin/`, `obj/`). Map extensions to languages:
+
+   | Extension(s) | Language |
+   |---|---|
+   | `.ts`, `.tsx` | `typescript` |
+   | `.js`, `.jsx`, `.mjs` | `javascript` |
+   | `.cs` | `csharp` |
+   | `.py` | `python` |
+   | `.go` | `go` |
+   | `.java` | `java` |
+   | `.rs` | `rust` |
+   | `.rb` | `ruby` |
+   | `.php` | `php` |
+   | `.kt`, `.kts` | `kotlin` |
+   | `.swift` | `swift` |
+   | `.cpp`, `.cc`, `.cxx`, `.h`, `.hpp` | `cpp` |
+
+   Return the language with the highest file count. If tied, return the first alphabetically.
+
+4. **Fallback:** Return `"unknown"`.
+
+**Rules:**
+- Never throws — all exceptions caught, fallback to `"unknown"` (AR-1 DoD)
+- Return value must match an entry in `lifecycle.yaml.supported_languages` or be `"unknown"`
+- If `.bmad/language` contains a value NOT in `supported_languages`, log a warning and proceed to build file heuristics
+- Multi-language repos: note `"multi-language repo"` in detection log but return the dominant language
+
+### 3.5c. Emit Language Summary
+
+```
+🔍 Language Detection Complete
+   Detected:  {detected_count} repo(s)
+   Unknown:   {unknown_count} repo(s)
+```
+
+Pass enriched `repo_results` to Step 4 (GovernanceWriter).
 
 ---
 
@@ -569,11 +665,146 @@ After processing all repos:
 
 ---
 
+## Step 5.5: ContextGenerator
+
+**Epic:** E5 — NTH Enhancements. Delegate `project-context.md` generation per discovered repo.
+
+For each discovered repo, delegate context file generation to the `bmad-bmm-generate-project-context` workflow. This provides AI agents with initial codebase context from day one.
+
+### 5.5a. Check Enable Flag
+
+ContextGenerator is an NTH enhancement. It runs only when enabled:
+
+- If `lifecycle.yaml` contains `context_generation: disabled`: skip this step entirely and proceed to Step 5.7.
+- Otherwise (default): proceed with generation.
+
+### 5.5b. Generate Context Per Repo
+
+For each `repo_result` in `repo_results`:
+
+```
+for each repo in repo_results:
+    if repo.error != null:
+        # Skip repos that failed inspection
+        repo.context_status = "Skipped (inspection error)"
+        continue
+
+    try:
+        # Delegate to bmad-bmm-generate-project-context workflow
+        result = invoke_workflow("bmad-bmm-generate-project-context", {
+            repo_path: repo.path,
+            domain: resolver_result.domain,
+            service: resolver_result.service
+        })
+
+        if result.success:
+            repo.context_status = "Generated"
+            output: "✓ Context generated: {repo.repo_name}"
+        else:
+            repo.context_status = "❌ Failed"
+            log: "⚠️ Context generation failed for {repo.repo_name}: {result.error}"
+
+    catch (error):
+        # Per-repo error isolation — non-fatal
+        repo.context_status = "❌ Failed"
+        log: "⚠️ ContextGenerator error for {repo.repo_name}: {error.message}"
+        continue
+```
+
+**Rules:**
+- Per-repo failure is **non-fatal** — failure for one repo does NOT abort remaining repos
+- `project-context.md` is written to `{repo.path}/.bmad/` (or repo root per workflow contract)
+- The `bmad-bmm-generate-project-context` workflow handle is resolved from module registry
+
+### 5.5c. Output Context Summary
+
+```
+📝 Context Generation Complete
+   Generated: {generated_count} repo(s)
+   Skipped:   {skipped_count} repo(s)
+   Failed:    {failed_count} repo(s)
+```
+
+---
+
+## Step 5.7: StateManager — Language Update
+
+**Epic:** E5 — NTH Enhancements. Update the initiative config's `language` field based on LanguageDetector results.
+
+After all repos have been processed, determine whether a consensus language exists and update the initiative config accordingly.
+
+### 5.7a. Check Prerequisites
+
+- If LanguageDetector was skipped (Step 3.5 disabled): skip this step entirely.
+- If all repos have `language: "unknown"`: skip — leave initiative config unchanged.
+
+### 5.7b. Determine Consensus Language
+
+```
+# Collect detected languages (exclude "unknown")
+detected_languages = [repo.language for repo in repo_results if repo.language != "unknown"]
+
+if len(detected_languages) == 0:
+    # All unknown — nothing to update
+    skip to Step 6
+
+# Count occurrences
+language_counts = count_by_value(detected_languages)
+top_language = max(language_counts, key=count)
+
+if all values in detected_languages are the same:
+    # Unanimous — update automatically
+    consensus = top_language
+    auto_update = true
+else:
+    # Mixed languages — prompt user
+    ask: |
+        Multiple languages detected across repos:
+        {for lang, count in language_counts sorted by count desc:
+            "  {lang}: {count} repo(s)"}
+
+        Update initiative language to "{top_language}" (most common)? [Y/N]
+
+    if user_response == "Y" or user_response == "yes":
+        consensus = top_language
+    else:
+        consensus = null  # user declined
+```
+
+### 5.7c. Update Initiative Config
+
+If `consensus` is determined:
+
+```yaml
+# Read initiative config
+config = load("_bmad-output/lens-work/initiatives/{initiative_path}.yaml")
+
+# Update language field
+config.language = consensus
+
+# Write back
+save(config, "_bmad-output/lens-work/initiatives/{initiative_path}.yaml")
+
+output: "✅ Initiative language updated to: {consensus}"
+```
+
+If user declined or no consensus:
+```
+output: "ℹ️ Initiative language left as: {current_value || 'unknown'}"
+```
+
+**Rules:**
+- Never overwrites an explicitly set language without user confirmation
+- The updated config is written to `_bmad-output/` (control repo state), not committed to git automatically
+- Mixed-language scenarios always prompt — no silent majority-wins
+
+---
+
 ## Step 6: DiscoveryReport
 
-**Epic:** E4 — Workflow Completion & Module Integration. Produce a human-readable summary table of all discovery results.
+**Epic:** E4 + E5 — Produce a human-readable summary table of all discovery results, including NTH enrichments.
 
-After all per-repo processing is complete (Steps 1–5), render a consolidated discovery report table and provide navigation guidance.
+After all per-repo processing is complete (Steps 1–5.7), render a consolidated discovery report table and provide navigation guidance.
 
 ### 6a. Build Report Table
 
@@ -582,8 +813,8 @@ Construct a markdown table from the accumulated `repo_results`:
 ```markdown
 ## 📋 Discovery Report
 
-| Repo | Language | BMAD | Governance | Branch |
-|------|----------|------|------------|--------|
+| Repo | Language | BMAD | Context | Governance | Branch |
+|------|----------|------|---------|------------|--------|
 ```
 
 For each `repo_result` in `repo_results`:
@@ -598,6 +829,9 @@ for each repo in repo_results:
     # Format BMAD column
     bmad_display = repo.has_bmad ? "✅" : "❌"
 
+    # Format Context column (NTH — E5)
+    context_display = format_context_status(repo.context_status)  # "Generated" / "Skipped" / "Failed" / "N/A" (if disabled)
+
     # Format Governance column
     governance_display = format_governance_status(repo.governance_status)
 
@@ -605,7 +839,7 @@ for each repo in repo_results:
     branch_display = format_branch_status(repo)
 
     # Emit row
-    output: "| {prefix}{repo.repo_name} | {repo.language} | {bmad_display} | {governance_display} | {branch_display} |"
+    output: "| {prefix}{repo.repo_name} | {repo.language} | {bmad_display} | {context_display} | {governance_display} | {branch_display} |"
 ```
 
 **Column formatting rules:**
@@ -613,8 +847,9 @@ for each repo in repo_results:
 | Column | Values |
 |--------|--------|
 | Repo | Repo name; prefixed with ⚠️ if any error exists |
-| Language | `unknown` at MVP; enriched by E5 LanguageDetector |
+| Language | Detected language identifier or `unknown` (from LanguageDetector Step 3.5) |
 | BMAD | ✅ if `.bmad/` present, ❌ otherwise |
+| Context | `Generated` / `Skipped` / `Failed` / `N/A` (if ContextGenerator disabled) |
 | Governance | `Updated` / `Skipped` / `Skipped (user)` / `Failed` / `Pull Failed` / `Schema Invalid` / `Push Failed` |
 | Branch | Branch name if created, `Exists` if already present, `Failed` / `Push Failed` if error |
 
@@ -627,6 +862,8 @@ Below the table, display aggregate counts:
 
 - **Discovered:** {total_count} repo(s)
 - **BMAD configured:** {bmad_count} repo(s)
+- **Languages detected:** {language_detected_count} / unknown: {language_unknown_count}
+- **Context generated:** {context_generated_count} / skipped: {context_skipped_count} / failed: {context_failed_count}
 - **Governance updated:** {governance_updated_count} / skipped: {governance_skipped_count} / failed: {governance_failed_count}
 - **Branches created:** {branch_created_count} / existing: {branch_existing_count} / failed: {branch_failed_count}
 - **Errors:** {error_count} repo(s) had inspection errors
@@ -671,8 +908,9 @@ The result set produced by this workflow is the final output — there are no fu
 repo_name: string         # directory basename
 path: string              # full path from workspace root
 has_bmad: boolean         # .bmad/ directory present
-language: string          # "unknown" at MVP; enriched by E5
+language: string          # detected language or "unknown" (from LanguageDetector)
 error: string | null      # null = no error; string = error message
+context_status: string    # "pending" → "Generated" | "Skipped" | "Skipped (inspection error)" | "❌ Failed" | "N/A" (if disabled)
 governance_status: string # "pending" → "Updated" | "Skipped" | "Skipped (user)" | "Skipped (inspection error)" | "❌ Failed" | "❌ Pull Failed" | "❌ Schema Invalid" | "❌ Push Failed"
 branch_status: string     # "pending" → "Created" | "Exists" | "Skipped (inspection error)" | "❌ Failed" | "❌ Push Failed" | "❌ No Control Repo" | "❌ Root Branch Missing"
 ```
@@ -698,3 +936,8 @@ Running `/discover` twice with the same set of repos produces the same `repo-inv
 | Root branch missing | All branch creation aborted | Yes — skip to Step 6 |
 | Single branch creation fails | That repo marked failed | Yes — next repo processed |
 | Single branch push fails | That repo marked push-failed | Yes — next repo processed |
+| Language detection fails (single repo) | That repo stays `unknown` | Yes — next repo processed |
+| Language detection fails (all repos) | All repos stay `unknown` | Yes — skip StateManager |
+| ContextGenerator delegation fails (single repo) | That repo marked context-failed | Yes — next repo processed |
+| ContextGenerator workflow not found | All repos marked N/A | Yes — skip to Step 5.7 |
+| StateManager consensus declined | Initiative config unchanged | Yes — continue to Step 6 |
