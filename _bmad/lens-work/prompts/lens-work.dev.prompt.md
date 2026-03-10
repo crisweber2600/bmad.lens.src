@@ -55,12 +55,12 @@ The dev workflow will:
 1. Discover all story files matching the epic number
 2. Sort stories by story order
 3. Display the story list and confirm before proceeding
-4. Resolve `iteration_id` from the initiative config (e.g., `sprint-1`, `iter-2`)
+4. Resolve `initiative_id` from the initiative config (`initiative.id`, e.g., `lens`, `core`)
 5. For each story:
    - Load story file and run constitution/pre-implementation gates
-   - **Create iteration branch** (`feature/{iterationId}`) in target repo if not exists — resolves the actual integration branch (develop/main/master) via fallback chain
-   - **Create epic branch** (`feature/{iterationId}-{epic-key}`) from iteration branch if not exists
-   - **Create story branch** (`feature/{iterationId}-{epic-key}-{story-key}`) — **STORY CHAINING**: first story branches from epic, subsequent stories branch from the previous story
+   - **Create initiative branch** (`feature/{initiativeId}`) in target repo if not exists — resolves the actual integration branch (develop/main/master) via fallback chain
+   - **Create epic branch** (`feature/{initiativeId}-{epic-key}`) from initiative branch if not exists
+   - **Create story branch** (`feature/{initiativeId}-{epic-key}-{story-key}`) — **STORY CHAINING**: first story branches from epic, subsequent stories branch from the previous story
    - **ASSERT current branch is the story branch** before ANY task implementation begins
    - Implement all tasks — each task gets its own commit with multi-line message (Story/Task/Epic metadata)
    - **Each commit MUST target the story branch** — commits directly to the epic branch are BLOCKED
@@ -72,29 +72,29 @@ The dev workflow will:
    - **NO per-story stop** — PR is created but execution continues to the next story immediately
    - Mark story done and commit state
 6. After all stories: run epic completion gate, retrospective
-7. **Auto-create epic PR** from epic branch → **iteration branch** (`feature/{iterationId}`)
-8. **HARD STOP at epic level** — wait for epic→iteration PR to be merged before proceeding
+7. **Auto-create epic PR** from epic branch → **initiative branch** (`feature/{initiativeId}`)
+8. **HARD STOP at epic level** — wait for epic→initiative PR to be merged before proceeding
 9. Update state
 
 ## Branch Hierarchy
 
 ```
-feature/{iterationId}                              ← iteration branch (merge target for epics)
-  └── feature/{iterationId}-{epic-key}             ← epic branch (merge target for stories)
-        ├── feature/{iterationId}-{epic-key}-{story-1}   ← first story (branches from epic)
-        ├── feature/{iterationId}-{epic-key}-{story-2}   ← chains off story-1
-        └── feature/{iterationId}-{epic-key}-{story-3}   ← chains off story-2
+feature/{initiativeId}                              ← initiative branch (merge target for epics)
+  └── feature/{initiativeId}-{epic-key}             ← epic branch (merge target for stories)
+        ├── feature/{initiativeId}-{epic-key}-{story-1}   ← first story (branches from epic)
+        ├── feature/{initiativeId}-{epic-key}-{story-2}   ← chains off story-1
+        └── feature/{initiativeId}-{epic-key}-{story-3}   ← chains off story-2
 ```
 
 ## Branch Discipline — Story-Branch-First + Story Chaining
 
 **CRITICAL INVARIANT:** During task implementation, the agent MUST be on the **story branch**, not the epic branch.
 
-- **Iteration branch** (`feature/{iterationId}`) receives code ONLY via merged epic→iteration PRs.
-- **Epic branch** (`feature/{iterationId}-{epic-key}`) is a **merge-only** branch. Code enters it ONLY via merged story→epic PRs.
-- **Story branch** (`feature/{iterationId}-{epic-key}-{story-key}`) is where ALL task commits go.
+- **Initiative branch** (`feature/{initiativeId}`) receives code ONLY via merged epic→initiative PRs.
+- **Epic branch** (`feature/{initiativeId}-{epic-key}`) is a **merge-only** branch. Code enters it ONLY via merged story→epic PRs.
+- **Story branch** (`feature/{initiativeId}-{epic-key}-{story-key}`) is where ALL task commits go.
 - **Story chaining:** Story 1 branches from the epic. Story 2 branches from story 1. Story 3 branches from story 2. This allows continuous development without waiting for PR merges.
 - Before each `git commit`, verify `git branch --show-current` returns the story branch.
 - If on the epic branch, `git checkout {story-branch}` before committing.
-- The **epic PR** targets the **iteration branch** (`feature/{iterationId}`), NOT develop/main/master directly.
-- The **iteration PR** (optional, post-epic) targets the **resolved integration branch** (whichever of develop/main/master actually exists).
+- The **epic PR** targets the **initiative branch** (`feature/{initiativeId}`), NOT develop/main/master directly.
+- The **initiative PR** (optional, post-epic) targets the **resolved integration branch** (whichever of develop/main/master actually exists).

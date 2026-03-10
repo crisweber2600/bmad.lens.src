@@ -1,6 +1,6 @@
 ---
 name: dev
-description: Epic-level implementation loop (story iteration/per-task commits/code-review/retro)
+description: Epic-level implementation loop (story development/per-task commits/code-review/retro)
 agent: "@lens"
 trigger: /dev command
 category: router
@@ -380,7 +380,7 @@ for story_idx, story_file in enumerate(session.story_files):
 #### 2.N. Load Story
 
 ```yaml
-  # Load the story file for this iteration
+  # Load the story file for this initiative
   dev_story = load(story_file)
   dev_story_source = story_file
   id = story_id
@@ -497,11 +497,11 @@ params:
   initiative_id: ${initiative.id}
 ```
 
-#### 3.N. Checkout Target Repo — Iteration, Epic & Story Branch Management
+#### 3.N. Checkout Target Repo — Initiative, Epic & Story Branch Management
 
 **IMPORTANT:** This is where we switch from BMAD control repo to TargetProjects.
 
-**Branch hierarchy:** `feature/{iterationId}` → `feature/{iterationId}-{epic}` → `feature/{iterationId}-{epic}-{story}`
+**Branch hierarchy:** `feature/{initiativeId}` → `feature/{initiativeId}-{epic}` → `feature/{initiativeId}-{epic}-{story}`
 **Story chaining:** Story 2 branches off story 1 (not off epic). Story 1 branches off epic.
 **PR flow:** Story PRs are created (story→epic) but execution continues. Hard stop at epic level only.
 
@@ -510,14 +510,14 @@ story_key = story_id
 epic_num = session.epic_number
 epic_key = "epic-${epic_num}"
 
-# Resolve iteration_id from initiative config (sprint/iteration identifier)
-iteration_id = initiative.iteration_id || initiative.sprint_id || "iter-1"
-session.iteration_id = iteration_id
+# Resolve initiative_id from initiative config
+initiative_id = initiative.id || "init-1"
+session.initiative_id = initiative_id
 
 # New branch naming convention
-iteration_branch = "feature/${iteration_id}"
-epic_branch = "feature/${iteration_id}-${epic_key}"
-story_branch = "feature/${iteration_id}-${epic_key}-${story_key}"
+initiative_branch = "feature/${initiative_id}"
+epic_branch = "feature/${initiative_id}-${epic_key}"
+story_branch = "feature/${initiative_id}-${epic_key}-${story_key}"
 
 # target_path resolved during Pre-Flight from initiative.target_repos
 target_path = session.target_path
@@ -538,20 +538,20 @@ output: |
   🔄 Target repo synced — pulled latest from ${default_branch_check}
   └── Path: ${target_path}
 
-# --- Iteration Branch: Ensure iteration branch exists ---
-invoke: git-orchestration.ensure-iteration-branch
+# --- Initiative Branch: Ensure initiative branch exists ---
+invoke: git-orchestration.ensure-initiative-branch
 params:
   target_repo_path: "${target_path}"
-  iteration_id: "${iteration_id}"
+  initiative_id: "${initiative_id}"
 
-# --- Epic Branch: Ensure epic branch exists (branches from iteration) ---
+# --- Epic Branch: Ensure epic branch exists (branches from initiative) ---
 invoke: git-orchestration.ensure-epic-branch
 params:
   target_repo_path: "${target_path}"
-  iteration_id: "${iteration_id}"
+  initiative_id: "${initiative_id}"
   epic_key: "${epic_key}"
   epic_branch: "${epic_branch}"
-  iteration_branch: "${iteration_branch}"
+  initiative_branch: "${initiative_branch}"
 
 # --- Story Branch: Create or checkout story branch ---
 # Story chaining: first story branches from epic, subsequent stories branch from previous story
@@ -560,24 +560,24 @@ if story_idx == 0:
 else:
   # Chain: branch from the previous story branch
   prev_story_id = extract_story_id(session.story_files[story_idx - 1])
-  parent_branch = "feature/${iteration_id}-${epic_key}-${prev_story_id}"
+  parent_branch = "feature/${initiative_id}-${epic_key}-${prev_story_id}"
 
 invoke: git-orchestration.ensure-story-branch
 params:
   target_repo_path: "${target_path}"
-  iteration_id: "${iteration_id}"
+  initiative_id: "${initiative_id}"
   epic_key: "${epic_key}"
   story_key: "${story_key}"
   story_branch: "${story_branch}"
   parent_branch: "${parent_branch}"
 
-session.iteration_id = "${iteration_id}"
-session.iteration_branch = "${iteration_branch}"
+session.initiative_id = "${initiative_id}"
+session.initiative_branch = "${initiative_branch}"
 session.epic_key = "${epic_key}"
 session.epic_branch = "${epic_branch}"
 session.story_branch = "${story_branch}"
 
-# Read the resolved integration branch from ensure-iteration-branch
+# Read the resolved integration branch from ensure-initiative-branch
 resolved_ib_file = "${target_path}/.lens-work-integration-branch"
 if file_exists(resolved_ib_file):
   session.resolved_integration_branch = read_file(resolved_ib_file).trim()
@@ -598,12 +598,12 @@ output: |
   📂 Target Repo Ready — ALL implementation goes here (NOT bmad.lens.release)
   ├── Repo: ${target_repo.name}
   ├── Path: ${target_path}
-  ├── Iteration: ${iteration_id}
-  ├── Iteration Branch: ${iteration_branch}
+  ├── Initiative: ${initiative_id}
+  ├── Initiative Branch: ${initiative_branch}
   ├── Epic Branch: ${epic_branch}
   ├── Story Branch: ${story_branch} (checked out ✅ VERIFIED)
   ├── Parent Branch: ${parent_branch} (${story_idx == 0 ? 'from epic' : 'chained from prev story'})
-  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${iteration_branch} → ${session.resolved_integration_branch}
+  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${initiative_branch} → ${session.resolved_integration_branch}
   ├── Auto-commit: ON (tasks auto-committed after completion)
   ├── Auto-PR: ON (PR created after code review, no wait)
   ├── ⚠️  Commits go to STORY branch only — epic branch is merge-only
@@ -1017,17 +1017,17 @@ if party_mode.status not in ["pass", "complete"]:
     Address _bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md and re-run /dev.
   halt: true
 
-# Push epic branch and create epic-level PR → iteration branch in target repo
+# Push epic branch and create epic-level PR → initiative branch in target repo
 invoke: git-orchestration.commit-and-push
 params:
   repo_path: ${session.target_path}
   branch: ${session.epic_branch}
   message: "feat(${session.epic_key}): Epic ${session.epic_number} complete — all stories merged"
 
-# Epic PR targets the ITERATION branch — NOT develop/main/master directly.
-# Epics merge into their iteration branch. The iteration branch is merged
-# into the integration branch separately (after all epics in the iteration complete).
-target_base_branch = session.iteration_branch
+# Epic PR targets the INITIATIVE branch — NOT develop/main/master directly.
+# Epics merge into their initiative branch. The initiative branch is merged
+# into the integration branch separately (after all epics in the initiative complete).
+target_base_branch = session.initiative_branch
 
 invoke: git-orchestration.create-pr
 params:
@@ -1048,7 +1048,7 @@ params:
 
     This PR was auto-created by /dev after all stories passed code review and epic-level gates.
     
-    ⚠️ All story→epic PRs should be merged before merging this epic→iteration PR.
+    ⚠️ All story→epic PRs should be merged before merging this epic→initiative PR.
 capture: epic_pr_result
 
 if epic_pr_result.fallback:
@@ -1064,7 +1064,7 @@ else:
 
 # === EPIC PR MERGE GATE — HARD STOP ===
 # This is the per-epic hard stop. All story PRs should be merged into the epic
-# branch before this point. Now wait for the epic→iteration PR to be merged.
+# branch before this point. Now wait for the epic→initiative PR to be merged.
 output: |
   ⏳ Epic PR Merge Gate — HARD STOP
   ├── PR: ${epic_pr_result.url || '(manual — see fallback above)'}
@@ -1086,13 +1086,13 @@ if epic_merge_wait_result.merged == false:
     ❌ Epic PR not merged within 10 minutes — STOPPING.
     ├── Epic: ${session.epic_key}
     ├── PR: ${epic_pr_result.url || '(manual)'}
-    ├── Action: Merge all story PRs into epic, then merge epic PR into iteration.
+    ├── Action: Merge all story PRs into epic, then merge epic PR into initiative.
     └── Re-run /dev to continue with post-epic steps.
   invoke: git-orchestration.finish-workflow
   halt: true
 
 output: |
-  ✅ Epic PR merged into iteration branch.
+  ✅ Epic PR merged into initiative branch.
   └── ${session.epic_key} integrated into ${target_base_branch}
 
 # After epic PR: switch back to Amelia (Developer) — _bmad/bmm/agents/dev.md
