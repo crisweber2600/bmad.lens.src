@@ -57,6 +57,9 @@ workflows:
     - id: init-initiative
       path: workflows/router/init-initiative/
       description: "/new-domain, /new-service, /new-feature"
+    - id: discover
+      path: workflows/router/discover/
+      description: "/discover — post-clone repo detection, governance inventory update, branch creation"
     - id: preplan
       path: workflows/router/preplan/
       description: "/preplan phase workflow"
