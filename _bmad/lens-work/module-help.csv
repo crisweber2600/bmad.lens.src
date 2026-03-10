@@ -17,3 +17,4 @@ lens-work,phase-3,TechPlan,TP,3,workflows/router/techplan/,lens-work.techplan.pr
 lens-work,phase-4,DevProposal,DP,4,workflows/router/devproposal/,lens-work.devproposal.prompt.md,false,lens,,"Start DevProposal phase — epics stories readiness check",_bmad-output/lens-work/initiatives,epics stories,
 lens-work,phase-5,SprintPlan,SP,5,workflows/router/sprintplan/,lens-work.sprintplan.prompt.md,false,lens,,"Start SprintPlan phase — sprint-status story files",_bmad-output/lens-work/initiatives,sprint-status story-files,
 lens-work,delegation,Dev,DV,,workflows/router/dev/workflow.md,,false,lens,,"Delegate to implementation agents in target projects",_bmad-output/lens-work/initiatives,,
+lens-work,anytime,Discover,DS,,workflows/router/discover/workflow.md,lens-work.discover.prompt.md,false,lens,,"Discover repos under TargetProjects — inspect for BMAD config update governance inventory create switch branches",_bmad-output/lens-work/initiatives,discovery-report,
