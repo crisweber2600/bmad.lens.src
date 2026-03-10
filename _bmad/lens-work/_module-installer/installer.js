@@ -71,11 +71,11 @@ You must fully embody this agent's persona and follow all activation instruction
 `;
 }
 
-function ghStubPrompt(name, description, targetPrompt, extra) {
+function ghStubPrompt(name, description, targetPrompt, extra, { noModel = false } = {}) {
     const extraBlock = extra ? `\n${extra}` : '';
+    const modelLine = noModel ? '' : 'model: Claude Sonnet 4.6 (copilot)\n';
     return `---
-model: Claude Sonnet 4.6 (copilot)
-description: '${description}'
+${modelLine}description: '${description}'
 ---
 
 # ${name} (Stub)
@@ -146,11 +146,12 @@ const STUB_PROMPTS = [
     { file: 'lens-work.new-domain.prompt.md',     name: 'lens-work.new-domain',     desc: 'Create new domain-level initiative with domain-only branch and folder scaffolding',   target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **domain**' },
     { file: 'lens-work.new-service.prompt.md',    name: 'lens-work.new-service',    desc: 'Create new service-level initiative within a domain',                                  target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **service**' },
     { file: 'lens-work.new-feature.prompt.md',    name: 'lens-work.new-feature',    desc: 'Create new feature-level initiative within a service',                                  target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **feature**' },
-    { file: 'lens-work.preplan.prompt.md',        name: 'lens-work.preplan',        desc: 'Start PrePlan phase — brainstorm, research, product brief (Mary/Analyst, small audience)', target: 'lens-work.preplan.prompt.md' },
+    { file: 'lens-work.preplan.prompt.md',        name: 'lens-work.preplan',        desc: 'Start PrePlan phase — brainstorm, research, product brief (Mary/Analyst, small audience)', target: 'lens-work.preplan.prompt.md', noModel: true },
     { file: 'lens-work.businessplan.prompt.md',   name: 'lens-work.businessplan',   desc: 'Start BusinessPlan phase — PRD creation, UX design (John/PM + Sally/UX, small audience)', target: 'lens-work.businessplan.prompt.md' },
     { file: 'lens-work.techplan.prompt.md',       name: 'lens-work.techplan',       desc: 'Start TechPlan phase — architecture document, technical decisions (Winston/Architect)', target: 'lens-work.techplan.prompt.md' },
     { file: 'lens-work.devproposal.prompt.md',    name: 'lens-work.devproposal',    desc: 'Start DevProposal phase — epics, stories, readiness check (John/PM, medium audience)', target: 'lens-work.devproposal.prompt.md' },
     { file: 'lens-work.sprintplan.prompt.md',     name: 'lens-work.sprintplan',     desc: 'Start SprintPlan phase — sprint-status, story files (Bob/Scrum Master, large audience)', target: 'lens-work.sprintplan.prompt.md' },
+    { file: 'lens-work.dev.prompt.md',            name: 'lens-work.dev',            desc: 'Launch Dev phase — epic-level implementation loop with per-task commits, code review, and retrospective (Amelia/Developer, base audience)', target: 'lens-work.dev.prompt.md', noModel: true },
     { file: 'lens-work.status.prompt.md',         name: 'lens-work.status',         desc: 'Show consolidated status report across all active initiatives',                        target: 'lens-work.status.prompt.md' },
     { file: 'lens-work.next.prompt.md',           name: 'lens-work.next',           desc: 'Recommend next action based on lifecycle state',                                        target: 'lens-work.next.prompt.md' },
     { file: 'lens-work.switch.prompt.md',         name: 'lens-work.switch',         desc: 'Switch to a different initiative via git checkout',                                     target: 'lens-work.switch.prompt.md' },
@@ -231,7 +232,7 @@ async function installGitHubCopilot(projectRoot, { updateMode, logger }) {
     for (const p of STUB_PROMPTS) {
         await writeAdapterFile(
             path.join(promptsDir, p.file),
-            ghStubPrompt(p.name, p.desc, p.target, p.extra),
+            ghStubPrompt(p.name, p.desc, p.target, p.extra, { noModel: !!p.noModel }),
             { updateMode, logger }
         );
     }
