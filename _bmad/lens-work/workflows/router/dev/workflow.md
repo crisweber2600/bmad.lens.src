@@ -86,6 +86,39 @@ if docs_path == null or docs_path == "":
 # REQ-10: Resolve BmadDocs path for per-initiative output co-location
 bmad_docs = initiative.docs.bmad_docs
 
+# === Target Repo Validation Gate ===
+# /dev must only operate against repos registered in the initiative.
+# If target_repos is missing or empty, ask the user before proceeding.
+if initiative.target_repos == null or initiative.target_repos.length == 0:
+  output: |
+    ⚠️ No target repos configured for this initiative.
+    ├── Initiative: ${initiative.id}
+    └── target_repos field is missing or empty.
+
+  ask: |
+    Please provide the path to the target repo for this initiative.
+    This should be the local path to the repository (e.g., TargetProjects/domain/service/repo-name):
+  capture: user_target_path
+
+  if user_target_path == null or user_target_path == "":
+    FAIL("❌ Target repo path is required for /dev. Cannot proceed without a target repo.")
+
+  # Use the user-provided path as a single target repo entry
+  session.target_repo = { name: basename(user_target_path), local_path: user_target_path }
+  session.target_path = user_target_path
+  warning: |
+    ⚠️ Using user-provided target path: ${user_target_path}
+    Consider running /lens init-repo to register this repo in the initiative config.
+else:
+  # Use the first registered target repo from the initiative
+  session.target_repo = initiative.target_repos[0]
+  session.target_path = initiative.target_repos[0].local_path
+
+output: |
+  📂 Target Repo Resolved
+  ├── Repo: ${session.target_repo.name}
+  └── Path: ${session.target_path}
+
 # === Context Loader (S11: Context Enhancement) ===
 if docs_path != "_bmad-output/planning-artifacts/":
   architecture = load_if_exists("${docs_path}/architecture.md")
@@ -463,8 +496,9 @@ epic_key = "epic-${epic_num}"
 epic_branch = "feature/${epic_key}"
 story_branch = "feature/${epic_key}-${story_key}"
 
-target_repo = "${initiative.target_repos[0]}"
-target_path = "TargetProjects/${domain}/${service}/${repo}"
+# target_path resolved during Pre-Flight from initiative.target_repos
+target_path = session.target_path
+target_repo = session.target_repo
 
 # --- Epic Branch: Ensure parent epic branch exists ---
 invoke: git-orchestration.ensure-epic-branch
@@ -472,7 +506,7 @@ params:
   target_repo_path: "${target_path}"
   epic_key: "${epic_key}"
   epic_branch: "${epic_branch}"
-  integration_branch: "develop"
+  integration_branch: "${target_repo.default_branch || 'develop'}"
 
 # --- Story Branch: Create or checkout story branch from epic ---
 invoke: git-orchestration.ensure-story-branch
@@ -486,15 +520,14 @@ params:
 session.epic_key = "${epic_key}"
 session.epic_branch = "${epic_branch}"
 session.story_branch = "${story_branch}"
-session.target_path = "${target_path}"
 
 output: |
   📂 Target Repo Ready
-  ├── Repo: ${target_repo}
+  ├── Repo: ${target_repo.name}
   ├── Path: ${target_path}
   ├── Epic Branch: ${epic_branch}
   ├── Story Branch: ${story_branch} (checked out)
-  ├── Branch Chain: ${story_branch} → ${epic_branch} → develop
+  ├── Branch Chain: ${story_branch} → ${epic_branch} → ${target_repo.default_branch || 'develop'}
   └── Auto-commit: ON (tasks auto-committed after completion)
   └── Auto-PR: ON (PR created only after code review gate passes)
 ```
@@ -817,7 +850,7 @@ read_and_follow: "_bmad/core/workflows/party-mode/workflow.md"
 params:
   input_file: "${docs_path}/epics.md"
   focus_epic: ${current_epic_id}
-  artifacts_path: ${target_path}
+  artifacts_path: ${session.target_path}
   output_file: "_bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md"
   constitutional_context: ${constitutional_context}
 
@@ -830,15 +863,17 @@ if party_mode.status not in ["pass", "complete"]:
 # Push epic branch and create epic-level PR → develop/main in target repo
 invoke: git-orchestration.commit-and-push
 params:
-  repo_path: ${target_path}
+  repo_path: ${session.target_path}
   branch: ${session.epic_branch}
   message: "feat(${session.epic_key}): Epic ${session.epic_number} complete — all stories merged"
 
+target_base_branch = session.target_repo.default_branch || initiative.target_branch || "develop"
+
 invoke: git-orchestration.create-pr
 params:
-  repo_path: ${target_path}
+  repo_path: ${session.target_path}
   head: ${session.epic_branch}
-  base: ${initiative.target_branch || "develop"}
+  base: ${target_base_branch}
   title: "feat(${session.epic_key}): Epic ${session.epic_number}"
   body: |
     Epic ${session.epic_number} — all ${session.stories_completed.length} stories implemented and reviewed.
@@ -849,7 +884,7 @@ params:
     ${endfor}
 
     Source branch: ${session.epic_branch}
-    Target branch: ${initiative.target_branch || "develop"}
+    Target branch: ${target_base_branch}
 
     This PR was auto-created by /dev after all stories passed code review and epic-level gates.
 capture: epic_pr_result
@@ -857,12 +892,12 @@ capture: epic_pr_result
 if epic_pr_result.fallback:
   warning: |
     ⚠️ Auto-PR fallback for epic ${session.epic_number}.
-    Run this in target repo (${target_path}):
-    gh pr create --base "${initiative.target_branch || 'develop'}" --head "${session.epic_branch}" --title "feat(${session.epic_key}): Epic ${session.epic_number}"
+    Run this in target repo (${session.target_path}):
+    gh pr create --base "${target_base_branch}" --head "${session.epic_branch}" --title "feat(${session.epic_key}): Epic ${session.epic_number}"
 else:
   output: |
     ✅ Epic PR auto-created
-    ├── Branch: ${session.epic_branch} → ${initiative.target_branch || "develop"}
+    ├── Branch: ${session.epic_branch} → ${target_base_branch}
     └── URL: ${epic_pr_result.url}
 
 # After epic PR: switch back to Amelia (Developer) — _bmad/bmm/agents/dev.md
