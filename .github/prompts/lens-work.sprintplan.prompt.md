@@ -1,4 +1,5 @@
 ---
+model: Claude Sonnet 4.6 (copilot)
 description: 'Start SprintPlan phase — sprint status, story files (Bob/SM, large audience)'
 ---
 
