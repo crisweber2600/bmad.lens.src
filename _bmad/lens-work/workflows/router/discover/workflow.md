@@ -25,7 +25,7 @@ imports: lifecycle.yaml
 - [x] Active initiative exists (`_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`)
 - [x] Initiative config contains `domain` and `service` fields
 - [x] Governance repo path is resolvable (via `governance-setup.yaml`, `profile.yaml`, or directory scan)
-- [x] User has cloned target repos into `TargetProjects/{domain}/{service}/`
+- [x] User has cloned target repos into `{target_projects_path}/{domain}/{service}/`
 
 ---
 
@@ -72,17 +72,24 @@ Extract required fields:
 ```
 Hard stop — exit workflow.
 
-### 1b. Construct Scan Path
+### 1b. Resolve Target Projects Path and Construct Scan Path
 
-Derive the scan path from the resolved domain and service:
+First, resolve `target_projects_path` using the following priority order:
+
+1. Read `target_projects_path` from `_bmad-output/lens-work/personal/profile.yaml` if the field exists.
+2. Read `target_projects_path` from `bmadconfig.yaml` if the field exists.
+3. Default to `../TargetProjects`.
+
+Then derive the scan path from the resolved `target_projects_path`, domain, and service:
 
 ```yaml
-scan_path = "TargetProjects/${domain}/${service}/"
+target_projects_path = resolve_target_projects_path()   # from profile.yaml, bmadconfig.yaml, or default
+scan_path = "{target_projects_path}/{domain}/{service}/"
 ```
 
 **Gate:** If `scan_path` directory does not exist on the filesystem:
 ```
-❌ Scan path does not exist: TargetProjects/{domain}/{service}/
+❌ Scan path does not exist: {target_projects_path}/{domain}/{service}/
    Create this directory and clone your repos there, then run /discover again.
 ```
 Hard stop — exit workflow.
@@ -91,11 +98,11 @@ Hard stop — exit workflow.
 
 Resolve the governance repo path using a three-level fallback chain:
 
-1. **`governance-setup.yaml`** — read `governance_repo_path` field if file exists
+1. **`governance-setup.yaml`** — read `path` field from `_bmad-output/lens-work/governance-setup.yaml` if the file exists (e.g., `path: TargetProjects/lens/lens-governance`)
 2. **`profile.yaml`** — read `governance_repo_path` field from `_bmad-output/lens-work/personal/profile.yaml`
 3. **Directory scan** — search for a directory containing `repo-inventory.yaml` under common governance paths:
-   - `TargetProjects/{domain}/lens-governance/`
-   - `TargetProjects/lens/lens-governance/`
+   - `{target_projects_path}/{domain}/lens-governance/`
+   - `{target_projects_path}/lens/lens-governance/`
 
 **Gate:** If governance repo path cannot be resolved or the resolved directory does not exist:
 ```
@@ -111,18 +118,20 @@ Emit the structured resolver result for downstream steps:
 resolver_result:
   domain: {domain}
   service: {service}
-  scan_path: "TargetProjects/{domain}/{service}/"
-  governance_repo_path: {governance_repo_path}
+  target_projects_path: {target_projects_path}
+  scan_path: "{target_projects_path}/{domain}/{service}/"
+  governance_repo_path: {governance-repo-path}
   initiative_root: {initiative_root}
 ```
 
 Output to user:
 ```
 ✅ Initiative context resolved
-   Domain:     {domain}
-   Service:    {service}
-   Scan path:  TargetProjects/{domain}/{service}/
-   Governance: {governance_repo_path}
+   Domain:               {domain}
+   Service:              {service}
+   Target projects path: {target_projects_path}
+   Scan path:            {target_projects_path}/{domain}/{service}/
+   Governance:           {governance-repo-path}
 ```
 
 ---
@@ -155,9 +164,9 @@ for each child_dir in list_directories(scan_path):
 If zero repos are discovered on the first scan:
 
 ```
-No repos found in TargetProjects/{domain}/{service}/.
+No repos found in {target_projects_path}/{domain}/{service}/.
 
-Clone your repos to `TargetProjects/{domain}/{service}/` and reply **done** when ready.
+Clone your repos to `{target_projects_path}/{domain}/{service}/` and reply **done** when ready.
 ```
 
 Wait for user signal.
@@ -166,7 +175,7 @@ Wait for user signal.
 
 If re-scan still finds zero repos:
 ```
-No repos found. Did you clone them to the right folder? Expected: TargetProjects/{domain}/{service}/
+No repos found. Did you clone them to the right folder? Expected: {target_projects_path}/{domain}/{service}/
 ```
 
 Exit workflow cleanly (exit 0 — not an error). Having no repos is a valid state.
@@ -254,10 +263,10 @@ For each repo in `repo_results`, detect the primary programming language using t
 
 ### 3.5a. Check Enable Flag
 
-LanguageDetector is an NTH enhancement. Check whether it is enabled:
+LanguageDetector is an NTH enhancement. Check whether it should run based on `lifecycle.yaml`:
 
-- If `lifecycle.yaml` contains `language_detection: disabled` or the `supported_languages` list is empty: skip this step entirely, leave all `language` fields as `"unknown"`, and proceed to Step 4.
-- Otherwise (default): proceed with detection.
+- If the `supported_languages` list in `lifecycle.yaml` is empty or not defined: skip this step entirely, leave all `language` fields as `"unknown"`, and proceed to Step 4.
+- Otherwise (default, when `supported_languages` is non-empty): proceed with detection.
 
 ### 3.5b. Detect Language Per Repo
 
@@ -349,12 +358,12 @@ Pass enriched `repo_results` to Step 4 (GovernanceWriter).
 **HARD GATE:** Pull the governance repo BEFORE any read or write operation. This is a non-negotiable ordering constraint.
 
 ```bash
-git -C {governance_repo_path} pull origin
+git -C {governance-repo-path} pull origin
 ```
 
 **Gate:** If `git pull` fails:
 ```
-❌ Failed to pull governance repo at {governance_repo_path}.
+❌ Failed to pull governance repo at {governance-repo-path}.
    Governance writes aborted — continuing with branch creation (Step 5).
    Run `/discover` again after fixing the governance repo.
 ```
@@ -367,7 +376,7 @@ git -C {governance_repo_path} pull origin
 Read `repo-inventory.yaml` from the governance repo:
 
 ```yaml
-inventory_path = "{governance_repo_path}/repo-inventory.yaml"
+inventory_path = "{governance-repo-path}/repo-inventory.yaml"
 ```
 
 - If file exists: parse YAML and extract the `repos` section
@@ -495,35 +504,56 @@ repos:
 - Only modify entries that were newly discovered or explicitly approved for update
 - Maintain YAML formatting consistency (2-space indent, quoted strings for values with special chars)
 
-### 4f. Commit and Push Governance Update
+### 4f. Submit Governance Update via PR
 
-After writing the updated `repo-inventory.yaml`:
+The governance data zone is PR-gated (`data_zones.governance.pr_required: true` in `lifecycle.yaml`). Do NOT commit directly to the governance repo's default branch. Instead, create a dedicated branch and open a PR:
 
 ```bash
-cd {governance_repo_path}
+cd {governance-repo-path}
+git checkout -b discover/{domain}-{service}-{YYYYMMDD}
 git add repo-inventory.yaml
 git commit -m "[discover] Add/update repos for {domain}/{service}"
-git push origin
+git push origin discover/{domain}-{service}-{YYYYMMDD}
 ```
 
-**Commit message:** `[discover] Add/update repos for {domain}/{service}` — includes initiative context for traceability.
+Then open a PR targeting the governance repo's default branch using the provider adapter:
 
-**Push failure handling (non-fatal):**
-If `git push` fails:
 ```
-❌ Failed to push governance update to remote.
-   Local commit preserved — run `/discover` again to retry the push.
+PR title:   [discover] Repo inventory update — {domain}/{service}
+PR body:    Auto-generated by /discover on {date}.
+            Adds/updates {updated_count} repo(s) for {domain}/{service}.
+PR branch:  discover/{domain}-{service}-{YYYYMMDD}
+PR target:  {governance repo default branch}
 ```
-- Set ALL repos processed in this batch to `governance_status: "❌ Push Failed"`
+
+**Branch creation failure (non-fatal):**
+If branch creation or push fails:
+```
+❌ Failed to create governance PR branch.
+   Local changes staged but not committed — review and submit a PR manually.
+   File: {governance-repo-path}/repo-inventory.yaml
+```
+- Set ALL repos processed in this batch to `governance_status: "❌ PR Branch Failed"`
 - Do NOT report success for any repo in this batch
-- Continue to Step 5 — push failure does not abort the pipeline
+- Continue to Step 5 — branch failure does not abort the pipeline
 
-**Push success:**
+**PR creation failure (non-fatal):**
+If the PR cannot be opened (e.g., no provider adapter or API error):
 ```
-✅ Governance inventory updated
+⚠️ Governance branch pushed but PR could not be opened automatically.
+   Please open a PR manually from branch: discover/{domain}-{service}-{YYYYMMDD}
+   Target: {governance repo default branch}
+```
+- Set ALL repos processed in this batch to `governance_status: "⚠️ PR Manual Required"`
+- Continue to Step 5
+
+**Success:**
+```
+✅ Governance inventory PR submitted
    Updated: {updated_count} repo(s)
    Skipped: {skipped_count} repo(s)
    Failed:  {failed_count} repo(s)
+   PR:      {pr_url}
 ```
 
 ---
@@ -536,10 +566,10 @@ For each discovered repo, create a branch in the **control repo** (the BMAD.Lens
 
 ### 5a. Resolve Control Repo Path
 
-The control repo is the workspace root directory (the parent of `TargetProjects/`). All branch operations target this repo's git state.
+The control repo is the BMAD.Lens workspace root directory for this workflow. It may or may not be the parent of `TargetProjects/`, depending on the configured `target_projects_path`. All branch operations target this repo's git state.
 
 ```yaml
-control_repo_path = workspace_root   # the BMAD.Lens directory
+control_repo_path = workspace_root   # the BMAD.Lens workspace root hosting this control repo
 ```
 
 Verify the control repo is a valid git repository:
@@ -673,10 +703,10 @@ For each discovered repo, delegate context file generation to the `bmad-bmm-gene
 
 ### 5.5a. Check Enable Flag
 
-ContextGenerator is an NTH enhancement. It runs only when enabled:
+ContextGenerator is an NTH enhancement. In the current lifecycle contract it is **always enabled by default**.
 
-- If `lifecycle.yaml` contains `context_generation: disabled`: skip this step entirely and proceed to Step 5.7.
-- Otherwise (default): proceed with generation.
+- To temporarily disable this step, remove or comment out Step 5.5 from this workflow (until a dedicated lifecycle flag is introduced).
+- Once a lifecycle-level flag for context generation is formally defined, this step should be wired to that flag instead of relying on structural edits.
 
 ### 5.5b. Generate Context Per Repo
 
@@ -890,7 +920,7 @@ If `repo_results` is empty (zero repos discovered after Step 2b):
 ```
 ## 📋 Discovery Report
 
-No repos were discovered in TargetProjects/{domain}/{service}/.
+No repos were discovered in {target_projects_path}/{domain}/{service}/.
 
 Clone your repos and run `/discover` again.
 ```
