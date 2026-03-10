@@ -41,9 +41,12 @@ The dev workflow will:
 3. Display the story list and confirm before proceeding
 4. For each story:
    - Load story file and run constitution/pre-implementation gates
-   - Checkout story branch in target repo
-   - Implement all tasks (each task gets its own commit)
+   - **Create epic branch** (`feature/{epic-key}`) in target repo if not exists
+   - **Create story branch** (`feature/{epic-key}-{story-key}`) from epic branch
+   - Implement all tasks (each task gets its own commit with multi-line message including Story/Task/Epic metadata)
+   - **Push after every commit** — no local-only commits allowed
    - Run adversarial code review
    - If issues found: fix and re-review (max 2 passes)
+   - **Auto-create PR** from story branch → epic branch (only after review gate passes)
    - Mark story done and commit state
-5. After all stories: run epic completion gate, retrospective, update state
+5. After all stories: run epic completion gate, retrospective, auto-create epic PR → develop/main, update state

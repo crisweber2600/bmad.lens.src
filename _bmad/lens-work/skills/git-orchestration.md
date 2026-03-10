@@ -207,6 +207,134 @@ files:
 
 ---
 
+### `verify-clean-state`
+
+Verify the working directory is clean. Halts workflow if uncommitted changes detected.
+Unlike `check-dirty` (which reports status), this operation is a **hard gate**.
+
+**Algorithm:**
+```bash
+DIRTY=$(git status --porcelain)
+if [ -n "$DIRTY" ]; then
+  echo "❌ Dirty working directory — commit or stash changes before proceeding."
+  echo "$DIRTY"
+  exit 1
+fi
+echo "✅ Working directory clean"
+```
+
+**Rules:**
+- Used as a pre-condition for branch operations and workflow starts
+- HALTS on dirty state (exit 1) — does not prompt for options (use `check-dirty` for interactive)
+
+---
+
+### `checkout-branch`
+
+Checkout an existing branch.
+
+**Algorithm:**
+```bash
+git checkout "${BRANCH}"
+```
+
+---
+
+### `pull-latest`
+
+Pull latest changes from remote for the current branch.
+
+**Algorithm:**
+```bash
+git pull origin "$(git symbolic-ref --short HEAD)"
+```
+
+---
+
+### `start-phase`
+
+Create a phase branch from its parent and push to remote.
+
+**Algorithm:**
+```bash
+PHASE_BRANCH="${INITIATIVE_ROOT}-${PHASE_NAME}"
+git checkout "${PARENT_BRANCH}"
+git pull origin "${PARENT_BRANCH}"
+git checkout -b "${PHASE_BRANCH}"
+git push -u origin "${PHASE_BRANCH}"
+echo "✅ Phase branch created: ${PHASE_BRANCH}"
+```
+
+**Input:**
+```yaml
+phase_name: "dev"
+initiative_root: "foo-bar-auth"
+parent_branch: "base"
+```
+
+---
+
+### `commit-and-push`
+
+Stage specified files, commit with a message, and push in one operation.
+
+**Algorithm:**
+```bash
+cd "${REPO_PATH}"
+git add ${FILE_PATHS}
+git commit -m "${MESSAGE}"
+git push origin "${BRANCH}"
+```
+
+---
+
+### `exec`
+
+Execute a raw git command and return stdout + exit code.
+
+**Algorithm:**
+```bash
+RESULT=$(git ${GIT_ARGS} 2>&1)
+EXIT_CODE=$?
+```
+
+**Output:**
+```yaml
+stdout: "${RESULT}"
+exit_code: ${EXIT_CODE}
+```
+
+---
+
+### `start-workflow`
+
+Mark the beginning of a sub-workflow context (e.g., code-review, retrospective).
+Used to signal persona switch (e.g., developer → QA for code review).
+
+**Algorithm:**
+```yaml
+session.active_workflow = "${WORKFLOW_NAME}"
+session.workflow_start_agent = session.current_agent
+```
+
+---
+
+### `finish-workflow`
+
+Return from a sub-workflow context to the previous agent.
+
+**Algorithm:**
+```yaml
+session.current_agent = session.workflow_start_agent
+session.active_workflow = null
+```
+
+**Rules:**
+- Always paired with `start-workflow`
+- Restores the agent persona that was active before the sub-workflow
+
+---
+
 ## Git Discipline Rules
 
 1. Clean working directory before any branch operation
@@ -433,6 +561,199 @@ curl -s -H "Authorization: token ${PAT}" \
 - `git` — required for all operations
 - No `gh` CLI required — all GitHub operations use REST API with PAT
 - `az` CLI — optional for Azure DevOps operations (post-MVP)
+
+---
+
+## Target Project Branch Management
+
+Target project repos (code repos, not lens-work control repo) follow the GitFlow branching
+model defined in `lifecycle.yaml → target_projects`. This section formalizes the automation
+for epic branches, story branches, task auto-commits, and story-completion PRs.
+
+### Branch Naming Contract
+
+```yaml
+# Epic branch:  feature/{epic-key}
+# Story branch: feature/{epic-key}-{story-key}
+#
+# Examples:
+#   Epic:   feature/epic-1
+#   Story:  feature/epic-1-1-1-user-authentication
+#
+# {epic-key}  — from sprint-status.yaml (e.g., "epic-1", "epic-2")
+# {story-key} — from sprint-status.yaml (e.g., "1-1-user-authentication")
+```
+
+### `ensure-epic-branch`
+
+Ensure parent epic branch exists in target repo. Creates from integration branch if missing.
+
+**Algorithm:**
+```bash
+epic_branch="feature/${epic_key}"
+
+cd "${target_repo_path}"
+git fetch origin
+if ! git rev-parse --verify "origin/${epic_branch}" > /dev/null 2>&1; then
+  # Epic branch does not exist — create from develop (integration branch)
+  integration_branch="develop"
+  # Fallback: if develop doesn't exist, use main
+  if ! git rev-parse --verify "origin/${integration_branch}" > /dev/null 2>&1; then
+    integration_branch="main"
+  fi
+  git checkout "${integration_branch}"
+  git pull origin "${integration_branch}"
+  git checkout -b "${epic_branch}"
+  git push origin "${epic_branch}"
+  echo "✅ Created epic branch: ${epic_branch} from ${integration_branch}"
+else
+  echo "✅ Epic branch exists: ${epic_branch}"
+fi
+```
+
+**Input:**
+```yaml
+target_repo_path: "${target_path}"
+epic_key: "epic-1"
+epic_branch: "feature/epic-1"
+integration_branch: "develop"   # fallback: main
+```
+
+---
+
+### `ensure-story-branch`
+
+Ensure story branch exists in target repo. Creates from epic branch if missing, or resumes if exists.
+
+**Algorithm:**
+```bash
+story_branch="feature/${epic_key}-${story_key}"
+
+cd "${target_repo_path}"
+git fetch origin
+if ! git rev-parse --verify "origin/${story_branch}" > /dev/null 2>&1; then
+  # Story branch does not exist — create from epic branch
+  git checkout "${epic_branch}"
+  git pull origin "${epic_branch}"
+  git checkout -b "${story_branch}"
+  git push origin "${story_branch}"
+  echo "✅ Created story branch: ${story_branch} from ${epic_branch}"
+else
+  # Story branch already exists — checkout and pull latest
+  git checkout "${story_branch}"
+  git pull origin "${story_branch}"
+  echo "✅ Resumed story branch: ${story_branch}"
+fi
+```
+
+**Input:**
+```yaml
+target_repo_path: "${target_path}"
+epic_key: "epic-1"
+epic_branch: "feature/epic-1"
+story_key: "1-1-user-authentication"
+story_branch: "feature/epic-1-1-1-user-authentication"
+```
+
+---
+
+### Task Auto-Commit
+
+Every completed task MUST be committed and pushed immediately.
+
+**Algorithm:**
+```bash
+cd "${target_repo_path}"
+git add -A
+git commit -m "feat(${story_key}): ${task_description}
+
+Story: ${story_key}
+Task: ${task_number}/${total_tasks}
+Epic: ${epic_key}"
+git push origin "${story_branch}"
+echo "✅ Task ${task_number}/${total_tasks} committed and pushed to ${story_branch}"
+```
+
+**Commit message convention:**
+- Line 1: `feat({story-key}): {task summary}`
+- Body: Story key, task progress, epic key
+- Auto-push: ALWAYS (per git_discipline.auto_push convention)
+
+---
+
+### Story Completion PR
+
+When ALL tasks in a story are complete, auto-create a PR from story branch to epic branch.
+
+**Algorithm:**
+```bash
+cd "${target_repo_path}"
+
+# Ensure all changes are committed and pushed
+git add -A
+if ! git diff --cached --quiet; then
+  git commit -m "feat(${story_key}): story complete — all tasks done"
+  git push origin "${story_branch}"
+fi
+
+# Create PR via create-pr operation
+# See create-pr operation for full details
+```
+
+**PR Naming Convention:**
+- Title: `feat({epic-key}): {story-title} [{story-key}]`
+- Body: Story summary, acceptance criteria, completed tasks, files changed
+
+---
+
+### Epic Completion PR
+
+When all stories in an epic are complete and merged to the epic branch:
+
+**Algorithm:**
+```bash
+epic_branch="feature/${epic_key}"
+integration_branch="develop"  # or main if develop doesn't exist
+
+# Create PR from epic branch to integration branch
+# See create-pr operation for full details
+```
+
+**PR Naming Convention:**
+- Title: `feat({epic-key}): Epic complete — {epic-title}`
+- Body: Epic summary, list of completed stories
+
+---
+
+## Multi-Developer Parallel Development
+
+When multiple developers (human or AI agents) work on the same initiative simultaneously,
+the epic-branch topology provides structural isolation.
+
+### Branch Isolation Model
+
+```
+develop (integration)
+├── feature/epic-1   ← Dev A
+│   ├── feature/epic-1-1-1-api-camelcase
+│   └── feature/epic-1-1-5-benchmark-selector
+├── feature/epic-2   ← Dev B
+│   ├── feature/epic-2-2-1-dataentry-autosave
+│   └── feature/epic-2-2-5-closeout-routes
+└── feature/epic-3   ← Dev C
+    └── feature/epic-3-3-1-linegraph-recharts
+```
+
+**Key principle:** Each developer works on their own epic branch. Story branches are children
+of the epic branch. Two developers on different epics have **zero branch overlap**.
+
+### Coordination Rules
+
+1. **One developer per epic** — Each epic should be assigned to a single developer at a time.
+2. **Pull control repo before claiming** — Always `git pull` before claiming a story.
+3. **Commit and push sprint-status immediately** — After claiming a story, commit and push so other developers see the claim.
+4. **Route-removal stories must merge sequentially** — Stories that remove routes from shared files across multiple epics should be the LAST stories in each epic, and their epic-completion PRs should be merged one at a time.
+5. **Shared file conflict zones** — When two epics both modify the same file, add explicit Dev Notes documenting which sections each touches.
 
 ---
 

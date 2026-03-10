@@ -602,8 +602,17 @@ ${endif}
 
 **Per-Task Commit Rule:**
 - After completing EACH task/subtask, immediately commit and push:
-  `git add -A && git commit -m "feat(${story_key}): {task-description}" && git push`
+  ```bash
+  git add -A
+  git commit -m "feat(${story_key}): {task-description}
+
+  Story: ${story_key}
+  Task: {task_number}/{total_tasks}
+  Epic: ${epic_key}"
+  git push
+  ```
 - Do NOT batch task commits — each task gets its own commit
+- Commit body MUST include Story, Task, and Epic metadata
 
 **Remember:**
 - Follow constitutional articles above during implementation
@@ -633,7 +642,14 @@ else:
 The agent implements each task in the story sequentially.
 After completing EACH task:
 1. `git add -A` in target repo
-2. `git commit -m "feat(${story_key}): {task-description}"`
+2. Commit with multi-line message:
+   ```
+   feat(${story_key}): {task-description}
+
+   Story: ${story_key}
+   Task: {task_number}/{total_tasks}
+   Epic: ${epic_key}
+   ```
 3. `git push`
 
 After ALL tasks are implemented and committed, proceed automatically to Step 5.N (code review).
