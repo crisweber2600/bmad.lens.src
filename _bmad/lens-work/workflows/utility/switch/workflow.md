@@ -39,10 +39,15 @@ If `/switch` was provided with no argument:
 List all initiative roots by parsing branch names:
 
 ```bash
-git branch --list | sed -E 's/-(small|medium|large|base)(-.*)?$//' | sort -u
+git branch -a \
+   | sed -E 's/^[*[:space:]]+//' \
+   | sed '/^remotes\/origin\/HEAD ->/d' \
+   | sed 's#^remotes/origin/##' \
+   | sed -E 's/-(small|medium|large|base)(-.*)?$//' \
+   | sort -u
 ```
 
-Filter out non-initiative branches (main, develop, etc.).
+Filter out non-initiative branches (main, develop, etc.) and deduplicate local plus remote-tracking refs to a single initiative root.
 
 Present as a numbered list:
 
@@ -101,12 +106,20 @@ Wait for user response:
 
 Determine which branch to checkout for the target initiative, using this priority:
 
+Before evaluating candidates, refresh remote-tracking refs:
+
+```bash
+git fetch origin --prune
+```
+
 1. **Active phase branch** — if an open PR exists from `{root}-{audience}-{phase}` → `{root}-{audience}`, checkout the phase branch (work in progress).
 
 2. **Highest audience branch** — if no active phase branch, checkout the highest audience branch that exists:
    - `{root}-base` > `{root}-large` > `{root}-medium` > `{root}-small`
 
 3. **User-specified phase** — if user provided `{root}-{phase}`, checkout `{root}-{audience}-{phase}` directly.
+
+When evaluating branch existence, check both local branches and `origin/*` remote-tracking branches. A branch that exists only on `origin` is still a valid checkout candidate.
 
 **Multiple candidates:**
 ```
@@ -126,7 +139,14 @@ Select branch [1-3]:
 ### Step 5: Execute Checkout
 
 ```bash
-git checkout {target-branch}
+if git rev-parse --verify "refs/heads/{target-branch}" > /dev/null 2>&1; then
+   git checkout {target-branch}
+elif git rev-parse --verify "refs/remotes/origin/{target-branch}" > /dev/null 2>&1; then
+   git checkout -b {target-branch} origin/{target-branch}
+else
+   echo "Initiative branch '{target-branch}' not found locally or on origin."
+   exit 1
+fi
 ```
 
 ### Step 6: Load Initiative Config
@@ -161,7 +181,7 @@ Where `{next-action-recommendation}` is derived from lifecycle state:
 | Scenario | Behavior |
 |----------|----------|
 | Dirty working directory | Prompt: commit, stash, or abort — **never silently discard** |
-| Initiative branch deleted | Report error: "Initiative `{name}` not found." Suggest `git branch --list`. |
+| Initiative branch deleted | Report error: "Initiative `{name}` not found." Suggest `git branch -a`. |
 | Multiple checkout candidates | Present options as numbered list |
 | New initiative (no phase started) | Checkout `{root}-small`, recommend `/{start-phase}` |
 | User specifies non-existent branch | Report error with available branches for that initiative |

@@ -167,10 +167,21 @@ List all active initiative roots, optionally filtered by domain.
 **Algorithm:**
 ```bash
 # List all initiative-root branches, deduplicate
-git branch --list | sed -E 's/-(small|medium|large|base)(-.*)?$//' | sort -u
+git branch -a \
+  | sed -E 's/^[*[:space:]]+//' \
+  | sed '/^remotes\/origin\/HEAD ->/d' \
+  | sed 's#^remotes/origin/##' \
+  | sed -E 's/-(small|medium|large|base)(-.*)?$//' \
+  | sort -u
 
 # Filter by domain if specified
-git branch --list "${DOMAIN}-*" | sed -E 's/-(small|medium|large|base)(-.*)?$//' | sort -u
+git branch -a \
+  | sed -E 's/^[*[:space:]]+//' \
+  | sed '/^remotes\/origin\/HEAD ->/d' \
+  | sed 's#^remotes/origin/##' \
+  | grep -E "^${DOMAIN}-" \
+  | sed -E 's/-(small|medium|large|base)(-.*)?$//' \
+  | sort -u
 ```
 
 **Output:**
