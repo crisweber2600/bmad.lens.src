@@ -205,8 +205,8 @@ if all_workflows_complete("preplan"):
   # REQ-8: Create PR for phase merge
   invoke: git-orchestration.create-pr
   params:
-    head: ${phase_branch}
-    base: ${audience_branch}
+    source_branch: ${phase_branch}
+    target_branch: ${audience_branch}
     title: "[preplan] PrePlan: ${initiative.name}"
     body: "PrePlan phase complete for ${initiative.id}.\n\nArtifacts: product-brief.md"
   capture: pr_result  # { url, number } or fallback message
@@ -219,8 +219,8 @@ if all_workflows_complete("preplan"):
       phase_status:
         preplan:
           status: "pr_pending"
-          pr_url: "${pr_result.url}"
-          pr_number: ${pr_result.number}
+          pr_url: "${pr_result.pr_url || pr_result.url || pr_result}"
+          pr_number: ${pr_result.pr_number || pr_result.number || null}
   # If manual fallback (no PAT), still set pr_pending with null PR info
   if pr_result.fallback:
     invoke: state-management.update-initiative

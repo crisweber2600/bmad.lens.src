@@ -473,9 +473,11 @@ source_branch: foo-bar-auth-small-techplan
 target_branch: foo-bar-auth-small
 ```
 
-**Output:** `{ pr_url: string, pr_number: integer }`
+Use `source_branch` and `target_branch` when invoking `create-pr`. Do not pass `head` and `base` at the workflow level.
 
-**Fallback:** If no PAT is available, the script prints the PR comparison URL for manual creation in the browser.
+**Output:** `{ url: string, number?: integer, fallback?: boolean }`
+
+`url` is the only field guaranteed by the promote-branch scripts today. `number` is optional when the caller can derive it. If no PAT is available, the operation should set `fallback: true` and print the PR comparison URL for manual creation in the browser.
 
 ---
 

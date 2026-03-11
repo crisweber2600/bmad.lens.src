@@ -910,8 +910,8 @@ if reviewed_story_status != "done":
 invoke: git-orchestration.create-pr
 params:
   repo_path: ${target_path}
-  head: ${session.story_branch}
-  base: ${session.epic_branch}
+  source_branch: ${session.story_branch}
+  target_branch: ${session.epic_branch}
   title: "feat(${session.epic_key}): ${story_id}"
   body: |
     Story ${story_id} completed and passed the dev → review → fix gate.
@@ -931,7 +931,7 @@ else:
   output: |
     ✅ Story PR auto-created
     ├── Branch: ${session.story_branch} → ${session.epic_branch}
-    └── URL: ${story_pr_result.url}
+    └── URL: ${story_pr_result.pr_url || story_pr_result.url || story_pr_result}
 
 # === NO PER-STORY HARD STOP — Continue to next story immediately ===
 # Story PRs are created but NOT waited on. The dev loop continues
@@ -940,7 +940,7 @@ else:
 output: |
   📋 Story PR created — continuing to next story (no wait).
   ├── Story: ${story_id}
-  ├── PR: ${story_pr_result.url || '(manual — see fallback above)'}
+  ├── PR: ${story_pr_result.pr_url || story_pr_result.url || story_pr_result || '(manual — see fallback above)'}
   └── ⚠️  Merge story PRs into epic before epic completion gate.
 
 # Switch back to Amelia (Developer) for next story
@@ -1032,8 +1032,8 @@ target_base_branch = session.initiative_branch
 invoke: git-orchestration.create-pr
 params:
   repo_path: ${session.target_path}
-  head: ${session.epic_branch}
-  base: ${target_base_branch}
+  source_branch: ${session.epic_branch}
+  target_branch: ${target_base_branch}
   title: "feat(${session.epic_key}): Epic ${session.epic_number}"
   body: |
     Epic ${session.epic_number} — all ${session.stories_completed.length} stories implemented and reviewed.
@@ -1060,14 +1060,14 @@ else:
   output: |
     ✅ Epic PR auto-created
     ├── Branch: ${session.epic_branch} → ${target_base_branch}
-    └── URL: ${epic_pr_result.url}
+    └── URL: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result}
 
 # === EPIC PR MERGE GATE — HARD STOP ===
 # This is the per-epic hard stop. All story PRs should be merged into the epic
 # branch before this point. Now wait for the epic→initiative PR to be merged.
 output: |
   ⏳ Epic PR Merge Gate — HARD STOP
-  ├── PR: ${epic_pr_result.url || '(manual — see fallback above)'}
+  ├── PR: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result || '(manual — see fallback above)'}
   ├── Branch: ${session.epic_branch} → ${target_base_branch}
   ├── ⚠️  Ensure all story→epic PRs are merged first
   └── ⚠️  Please merge this epic PR now. Waiting up to 10 minutes...
@@ -1077,7 +1077,7 @@ params:
   repo_path: ${session.target_path}
   source_branch: ${session.epic_branch}
   target_branch: ${target_base_branch}
-  pr_url: ${epic_pr_result.url || "(manual)"}
+  pr_url: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result || "(manual)"}
   timeout_seconds: 600
 capture: epic_merge_wait_result
 
@@ -1085,7 +1085,7 @@ if epic_merge_wait_result.merged == false:
   output: |
     ❌ Epic PR not merged within 10 minutes — STOPPING.
     ├── Epic: ${session.epic_key}
-    ├── PR: ${epic_pr_result.url || '(manual)'}
+    ├── PR: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result || '(manual)'}
     ├── Action: Merge all story PRs into epic, then merge epic PR into initiative.
     └── Re-run /dev to continue with post-epic steps.
   invoke: git-orchestration.finish-workflow

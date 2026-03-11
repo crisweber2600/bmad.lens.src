@@ -34,7 +34,7 @@
 
 | Input | Expected |
 |-------|----------|
-| Valid source/target branches | PR created, URL + number returned |
+| Valid source/target branches | PR created, URL returned; PR number optional when provider exposes it |
 | Source = target | Error: source and target must differ |
 | Non-existent source branch | Error from provider |
 

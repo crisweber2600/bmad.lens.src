@@ -380,8 +380,8 @@ params:
 # REQ-8: Create PR for phase merge
 invoke: git-orchestration.create-pr
 params:
-  head: ${phase_branch}
-  base: ${audience_branch}
+  source_branch: ${phase_branch}
+  target_branch: ${audience_branch}
   title: "[sprintplan] SprintPlan: ${initiative.name}"
   body: "SprintPlan phase complete for ${initiative.id}.\n\nArtifacts: sprint-backlog.md, dev-story-*.md"
 capture: pr_result
@@ -394,8 +394,8 @@ params:
     phase_status:
       sprintplan:
         status: "pr_pending"
-        pr_url: "${pr_result.url}"
-        pr_number: ${pr_result.number}
+        pr_url: "${pr_result.pr_url || pr_result.url || pr_result}"
+        pr_number: ${pr_result.pr_number || pr_result.number || null}
 if pr_result.fallback:
   invoke: state-management.update-initiative
   params:

@@ -402,8 +402,8 @@ if businessplan_ready:
   # REQ-8: Create PR for phase merge
   invoke: git-orchestration.create-pr
   params:
-    head: ${phase_branch}
-    base: ${audience_branch}
+    source_branch: ${phase_branch}
+    target_branch: ${audience_branch}
     title: "[businessplan] BusinessPlan: ${initiative.name}"
     body: "BusinessPlan phase complete for ${initiative.id}.\n\nArtifacts: prd.md, ${ux_artifact_name}"
   capture: pr_result
@@ -416,8 +416,8 @@ if businessplan_ready:
       phase_status:
         businessplan:
           status: "pr_pending"
-          pr_url: "${pr_result.url}"
-          pr_number: ${pr_result.number}
+          pr_url: "${pr_result.pr_url || pr_result.url || pr_result}"
+          pr_number: ${pr_result.pr_number || pr_result.number || null}
   if pr_result.fallback:
     invoke: state-management.update-initiative
     params:

@@ -460,8 +460,8 @@ if all_workflows_complete("devproposal"):
   # REQ-8: Create PR for phase merge
   invoke: git-orchestration.create-pr
   params:
-    head: ${phase_branch}
-    base: ${audience_branch}
+    source_branch: ${phase_branch}
+    target_branch: ${audience_branch}
     title: "[devproposal] DevProposal: ${initiative.name}"
     body: "DevProposal phase complete for ${initiative.id}.\n\nArtifacts: epics.md, stories.md, readiness-checklist.md"
   capture: pr_result
@@ -474,8 +474,8 @@ if all_workflows_complete("devproposal"):
       phase_status:
         devproposal:
           status: "pr_pending"
-          pr_url: "${pr_result.url}"
-          pr_number: ${pr_result.number}
+          pr_url: "${pr_result.pr_url || pr_result.url || pr_result}"
+          pr_number: ${pr_result.pr_number || pr_result.number || null}
   if pr_result.fallback:
     invoke: state-management.update-initiative
     params:
