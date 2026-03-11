@@ -199,6 +199,7 @@ for each repo in discovered_repos:
             language: "unknown",
             error: null,
             context_status: "pending",
+            documentation_status: "pending",
             governance_status: "pending",
             branch_status: "pending"
         }
@@ -211,6 +212,7 @@ for each repo in discovered_repos:
             language: "unknown",
             error: error.message,
             context_status: "pending",
+            documentation_status: "pending",
             governance_status: "pending",
             branch_status: "pending"
         }
@@ -719,6 +721,68 @@ for each repo in repo_results:
 
 ---
 
+## Step 5.6: DocumentationGenerator
+
+**Epic:** E5 — NTH Enhancements. Generate comprehensive project documentation per discovered repo.
+
+For each discovered repo, delegate documentation generation to the `bmad-bmm-document-project` workflow. This provides complete project scans and documentation from day one.
+
+### 5.6a. Check Enable Flag
+
+DocumentationGenerator is an NTH enhancement. It runs only when enabled:
+
+- If `lifecycle.yaml` contains `documentation_generation: disabled`: skip this step entirely and proceed to Step 5.7.
+- Otherwise (default): proceed with generation.
+
+### 5.6b. Generate Documentation Per Repo
+
+For each `repo_result` in `repo_results`:
+
+```
+for each repo in repo_results:
+    if repo.error != null:
+        # Skip repos that failed inspection
+        repo.documentation_status = "Skipped (inspection error)"
+        continue
+
+    try:
+        # Delegate to bmad-bmm-document-project workflow
+        result = invoke_workflow("bmad-bmm-document-project", {
+            repo_path: repo.path,
+            domain: resolver_result.domain,
+            service: resolver_result.service
+        })
+
+        if result.success:
+            repo.documentation_status = "Generated"
+            output: "✓ Documentation generated: {repo.repo_name}"
+        else:
+            repo.documentation_status = "❌ Failed"
+            log: "⚠️ Documentation generation failed for {repo.repo_name}: {result.error}"
+
+    catch (error):
+        # Per-repo error isolation — non-fatal
+        repo.documentation_status = "❌ Failed"
+        log: "⚠️ DocumentationGenerator error for {repo.repo_name}: {error.message}"
+        continue
+```
+
+**Rules:**
+- Per-repo failure is **non-fatal** — failure for one repo does NOT abort remaining repos
+- Project documentation is written to `{repo.path}/_bmad-output/` or repo root per workflow contract
+- The `bmad-bmm-document-project` workflow handle is resolved from module registry
+
+### 5.6c. Output Documentation Summary
+
+```
+📖 Documentation Generation Complete
+   Generated: {generated_count} repo(s)
+   Skipped:   {skipped_count} repo(s)
+   Failed:    {failed_count} repo(s)
+```
+
+---
+
 ## Step 5.7: StateManager — Language Update
 
 **Epic:** E5 — NTH Enhancements. Update the initiative config's `language` field based on LanguageDetector results.
@@ -805,8 +869,8 @@ Construct a markdown table from the accumulated `repo_results`:
 ```markdown
 ## 📋 Discovery Report
 
-| Repo | Language | BMAD | Context | Governance | Branch |
-|------|----------|------|---------|------------|--------|
+| Repo | Language | BMAD | Context | Documentation | Governance | Branch |
+|------|----------|------|---------|----------------|------------|--------|
 ```
 
 For each `repo_result` in `repo_results`:
@@ -824,6 +888,9 @@ for each repo in repo_results:
     # Format Context column (NTH — E5)
     context_display = format_context_status(repo.context_status)  # "Generated" / "Skipped" / "Failed" / "N/A" (if disabled)
 
+    # Format Documentation column (NTH — E5)
+    documentation_display = format_documentation_status(repo.documentation_status)  # "Generated" / "Skipped" / "Failed" / "N/A" (if disabled)
+
     # Format Governance column
     governance_display = format_governance_status(repo.governance_status)
 
@@ -831,7 +898,7 @@ for each repo in repo_results:
     branch_display = format_branch_status(repo)
 
     # Emit row
-    output: "| {prefix}{repo.repo_name} | {repo.language} | {bmad_display} | {context_display} | {governance_display} | {branch_display} |"
+    output: "| {prefix}{repo.repo_name} | {repo.language} | {bmad_display} | {context_display} | {documentation_display} | {governance_display} | {branch_display} |"
 ```
 
 **Column formatting rules:**
@@ -842,6 +909,7 @@ for each repo in repo_results:
 | Language | Detected language identifier or `unknown` (from LanguageDetector Step 3.5) |
 | BMAD | ✅ if `.bmad/` present, ❌ otherwise |
 | Context | `Generated` / `Skipped` / `Failed` / `N/A` (if ContextGenerator disabled) |
+| Documentation | `Generated` / `Skipped` / `Failed` / `N/A` (if DocumentationGenerator disabled) |
 | Governance | `Updated` / `Skipped` / `Skipped (user)` / `Failed` / `Pull Failed` / `Schema Invalid` / `Push Failed` |
 | Branch | Branch name if created, `Exists` if already present, `Failed` / `Push Failed` if error |
 
@@ -856,6 +924,7 @@ Below the table, display aggregate counts:
 - **BMAD configured:** {bmad_count} repo(s)
 - **Languages detected:** {language_detected_count} / unknown: {language_unknown_count}
 - **Context generated:** {context_generated_count} / skipped: {context_skipped_count} / failed: {context_failed_count}
+- **Documentation generated:** {documentation_generated_count} / skipped: {documentation_skipped_count} / failed: {documentation_failed_count}
 - **Governance updated:** {governance_updated_count} / skipped: {governance_skipped_count} / failed: {governance_failed_count}
 - **Branches created:** {branch_created_count} / existing: {branch_existing_count} / failed: {branch_failed_count}
 - **Errors:** {error_count} repo(s) had inspection errors
@@ -903,6 +972,7 @@ has_bmad: boolean         # .bmad/ directory present
 language: string          # detected language or "unknown" (from LanguageDetector)
 error: string | null      # null = no error; string = error message
 context_status: string    # "pending" → "Generated" | "Skipped" | "Skipped (inspection error)" | "❌ Failed" | "N/A" (if disabled)
+documentation_status: string  # "pending" → "Generated" | "Skipped" | "Skipped (inspection error)" | "❌ Failed" | "N/A" (if disabled)
 governance_status: string # "pending" → "Updated" | "Skipped" | "Skipped (user)" | "Skipped (inspection error)" | "❌ Failed" | "❌ Pull Failed" | "❌ Schema Invalid" | "❌ Push Failed"
 branch_status: string     # "pending" → "Created" | "Exists" | "Skipped (inspection error)" | "❌ Failed" | "❌ Push Failed" | "❌ No Control Repo" | "❌ Root Branch Missing"
 ```
@@ -931,5 +1001,7 @@ Running `/discover` twice with the same set of repos produces the same `repo-inv
 | Language detection fails (single repo) | That repo stays `unknown` | Yes — next repo processed |
 | Language detection fails (all repos) | All repos stay `unknown` | Yes — skip StateManager |
 | ContextGenerator delegation fails (single repo) | That repo marked context-failed | Yes — next repo processed |
-| ContextGenerator workflow not found | All repos marked N/A | Yes — skip to Step 5.7 |
+| ContextGenerator workflow not found | All repos marked N/A | Yes — skip to Step 5.6 |
+| DocumentationGenerator delegation fails (single repo) | That repo marked documentation-failed | Yes — next repo processed |
+| DocumentationGenerator workflow not found | All repos marked N/A | Yes — skip to Step 5.7 |
 | StateManager consensus declined | Initiative config unchanged | Yes — continue to Step 6 |
