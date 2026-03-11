@@ -179,6 +179,17 @@ jobs:
 
           echo "✅ Synced $SRC_COUNT source agent markdown file(s) into release payload"
 
+      # ── 10.5 Enforce lens-work prompts only in embedded .github ──────
+      - name: Keep only lens-work prompt stubs
+        run: |
+          if [ -d "release-repo/.github/prompts" ]; then
+            REMOVED=$(find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
+            find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' -delete
+            echo "✅ Removed $REMOVED non-lens prompt stub(s) from release payload"
+          else
+            echo "ℹ️ No release-repo/.github/prompts directory found"
+          fi
+
       # ── 11. Post-process: .xml→.yaml + config.yaml→bmadconfig.yaml ──
       - name: Post-process XML and config file names
         run: |
