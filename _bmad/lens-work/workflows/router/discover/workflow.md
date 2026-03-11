@@ -684,16 +684,20 @@ for each repo in repo_results:
         continue
 
     try:
+        # Construct the docs output path — canonical convention for all discover-generated docs
+        docs_output_path = "Docs/{domain}/{service}/{repo.repo_name}/"
+
         # Delegate to bmad-bmm-generate-project-context workflow
         result = invoke_workflow("bmad-bmm-generate-project-context", {
             repo_path: repo.path,
+            output_path: docs_output_path,
             domain: resolver_result.domain,
             service: resolver_result.service
         })
 
         if result.success:
             repo.context_status = "Generated"
-            output: "✓ Context generated: {repo.repo_name}"
+            output: "✓ Context generated: {repo.repo_name} → {docs_output_path}"
         else:
             repo.context_status = "❌ Failed"
             log: "⚠️ Context generation failed for {repo.repo_name}: {result.error}"
@@ -707,7 +711,7 @@ for each repo in repo_results:
 
 **Rules:**
 - Per-repo failure is **non-fatal** — failure for one repo does NOT abort remaining repos
-- `project-context.md` is written to `{repo.path}/.bmad/` (or repo root per workflow contract)
+- Output is written to `Docs/{domain}/{service}/{repo_name}/` — the canonical discover docs path (NOT the repo root or `_bmad-output/`)
 - The `bmad-bmm-generate-project-context` workflow handle is resolved from module registry
 
 ### 5.5c. Output Context Summary
@@ -746,16 +750,20 @@ for each repo in repo_results:
         continue
 
     try:
+        # Construct the docs output path — canonical convention for all discover-generated docs
+        docs_output_path = "Docs/{domain}/{service}/{repo.repo_name}/"
+
         # Delegate to bmad-bmm-document-project workflow
         result = invoke_workflow("bmad-bmm-document-project", {
             repo_path: repo.path,
+            output_path: docs_output_path,
             domain: resolver_result.domain,
             service: resolver_result.service
         })
 
         if result.success:
             repo.documentation_status = "Generated"
-            output: "✓ Documentation generated: {repo.repo_name}"
+            output: "✓ Documentation generated: {repo.repo_name} → {docs_output_path}"
         else:
             repo.documentation_status = "❌ Failed"
             log: "⚠️ Documentation generation failed for {repo.repo_name}: {result.error}"
@@ -769,7 +777,7 @@ for each repo in repo_results:
 
 **Rules:**
 - Per-repo failure is **non-fatal** — failure for one repo does NOT abort remaining repos
-- Project documentation is written to `{repo.path}/_bmad-output/` or repo root per workflow contract
+- All documentation output is written to `Docs/{domain}/{service}/{repo_name}/` — the canonical discover docs path (NOT the repo root or `_bmad-output/`)
 - The `bmad-bmm-document-project` workflow handle is resolved from module registry
 
 ### 5.6c. Output Documentation Summary
