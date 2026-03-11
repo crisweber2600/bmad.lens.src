@@ -16,16 +16,8 @@
 
 Run preflight before executing this workflow:
 
-1. Determine the `bmad.lens.release` branch using `git -C bmad.lens.release branch --show-current`.
-2. If branch is `alpha` or `beta`: run **full preflight** — pull ALL authority repos now (do NOT check `.preflight-timestamp` — ALWAYS pull on alpha/beta):
-   ```bash
-   git -C bmad.lens.release pull origin
-   git -C .github pull origin
-   git -C {governance-repo-path} pull origin   # path from governance-setup.yaml
-   ```
-   Then write today's date to `_bmad-output/lens-work/.preflight-timestamp`.
-3. Otherwise: read `_bmad-output/lens-work/.preflight-timestamp`. If missing or older than today, run the same three `git pull` commands above and update the timestamp. If today's date matches, skip pulls.
-4. If any authority repo directory is missing: stop and return the preflight failure message.
+1. Execute shared preflight from `_bmad/lens-work/workflows/includes/preflight.md`.
+2. If preflight reports missing authority repos, stop and direct the user to run `/onboard` first.
 
 ### Step 1: Determine Scope and Collect Parameters
 
@@ -321,7 +313,8 @@ Config committed at:
 
 - **Service scope:**
   ```
-  ▶️ Run `/new-feature` to create a feature under this service.
+  ▶️ Next: clone your service repos into `TargetProjects/{domain}/{service}/`, then run `/discover`.
+  After discovery completes, run `/new-feature` to create the first feature under this service.
   ```
 
 - **Feature scope:**

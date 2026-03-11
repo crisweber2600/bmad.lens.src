@@ -24,7 +24,7 @@ git -C bmad.lens.release pull origin
 git -C {governance-repo-path} pull origin   # path from governance-setup.yaml
 ```
 
-**Otherwise:** Read `_bmad-output/lens-work/.preflight-timestamp`. 
+**Otherwise:** Read `_bmad-output/lens-work/personal/.preflight-timestamp`. 
 - If missing or older than today: run the same pulls
 - If today's date matches: skip pulls
 
@@ -56,7 +56,7 @@ fi
 
 ### 4. Update Timestamp
 
-Write today's date to `_bmad-output/lens-work/.preflight-timestamp`.
+Write today's date to `_bmad-output/lens-work/personal/.preflight-timestamp`.
 
 ### 5. Verify Authority Repos
 
