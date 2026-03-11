@@ -1,6 +1,6 @@
 # =============================================================================
 # Build full BMAD release with lens-work custom module → bmad.lens.release alpha
-# Also promote Copilot adapter to bmad.lens.copilot alpha
+# GitHub Copilot assets are embedded in bmad.lens.release/.github and synced by preflight.
 #
 # Pipeline:
 #   1. Validate lens-work source
@@ -10,7 +10,6 @@
 #   5. Post-process: rename .xml→.yaml, config.yaml→bmadconfig.yaml
 #   6. Fix copilot-instructions.md with correct project config
 #   7. Push full payload to bmad.lens.release alpha → PR to beta
-#   8. Push Copilot adapter to bmad.lens.copilot alpha → PR to beta
 # =============================================================================
 
 name: Promote to Release
@@ -20,6 +19,7 @@ on:
     branches: [master]
     paths:
       - "_bmad/lens-work/**"
+      - ".github/workflows/promote-to-release.yml"
   workflow_dispatch: # Allow manual trigger
 
 jobs:
@@ -233,7 +233,36 @@ jobs:
             echo "✅ copilot-instructions.md patched"
           fi
 
-      # ── 12. Add manifest entry for lens-work ─────────────────────────
+      # ── 12. Validate release .github payload ─────────────────────────
+      - name: Validate embedded .github payload
+        run: |
+          REQUIRED=(
+            "release-repo/.github/agents/bmad-agent-lens-work-lens.agent.md"
+            "release-repo/.github/prompts/lens-work.onboard.prompt.md"
+            "release-repo/.github/prompts/SetupRepo.prompt.md"
+            "release-repo/.github/lens-work-instructions.md"
+          )
+
+          MISSING=0
+          for f in "${REQUIRED[@]}"; do
+            if [ ! -f "$f" ]; then
+              echo "::error::Missing required release .github artifact: $f"
+              MISSING=1
+            else
+              echo "✅ $f"
+            fi
+          done
+
+          if [ -e "release-repo/.github/.git" ]; then
+            echo "::error::release-repo/.github contains .git; .github must be embedded content, not a nested clone"
+            MISSING=1
+          fi
+
+          if [ "$MISSING" -eq 1 ]; then
+            exit 1
+          fi
+
+      # ── 13. Add manifest entry for lens-work ─────────────────────────
       - name: Update BMAD manifest with lens-work
         run: |
           MANIFEST="release-repo/_bmad/_config/manifest.yaml"
@@ -249,7 +278,7 @@ jobs:
             fi
           fi
 
-      # ── 13. Commit & push to alpha ───────────────────────────────────
+      # ── 14. Commit & push to alpha ───────────────────────────────────
       - name: Commit and push to alpha
         working-directory: release-repo
         run: |
@@ -268,7 +297,7 @@ jobs:
             echo "✅ Committed and pushed to alpha"
           fi
 
-      # ── 14. Create PR alpha → beta ──────────────────────────────────
+      # ── 15. Create PR alpha → beta ──────────────────────────────────
       - name: Create PR alpha → beta
         if: env.has_changes == 'true'
         env:
@@ -291,7 +320,7 @@ jobs:
               "https://api.github.com/repos/${{ github.repository_owner }}/bmad.lens.release/pulls" \
               -d "$(jq -n \
                 --arg title "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}" \
-                --arg body "Full BMAD framework + lens-work custom module build.\n\n**lens-work version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Included:**\n- BMAD core + bmm + bmb + cis + gds + tea\n- lens-work custom module\n- IDE adapters: GitHub Copilot, Cursor, Claude, Codex" \
+                --arg body "Full BMAD framework + lens-work custom module build.\n\n**lens-work version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Included:**\n- BMAD core + bmm + bmb + cis + gds + tea\n- lens-work custom module\n- IDE adapters: GitHub Copilot, Cursor, Claude, Codex\n- Embedded .github payload (agents/prompts/instructions) including SetupRepo prompt" \
                 --arg head "alpha" \
                 --arg base "beta" \
                 '{title: $title, body: $body, head: $head, base: $base}')")
@@ -307,255 +336,3 @@ jobs:
             fi
           fi
 
-  # ═══════════════════════════════════════════════════════════════════════
-  # Job 2: Promote Copilot adapter to bmad.lens.copilot
-  # ═══════════════════════════════════════════════════════════════════════
-  promote-copilot:
-    runs-on: ubuntu-latest
-    needs: promote-release
-
-    steps:
-      # ── 1. Checkout source repo ──────────────────────────────────────
-      - name: Checkout source repo
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      # ── 2. Read module version ───────────────────────────────────────
-      - name: Read module version
-        id: version
-        run: |
-          VERSION=$(grep '^version:' _bmad/lens-work/module.yaml \
-            | sed 's/version: *"\?\([^"]*\)"\?/\1/')
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Module version: $VERSION"
-
-      # ── 3. Clone release repo (just built) ──────────────────────────
-      - name: Clone bmad.lens.release (alpha)
-        run: |
-          git clone --branch alpha \
-            "https://x-access-token:${{ secrets.RELEASE_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/bmad.lens.release.git" \
-            release-repo
-
-      # ── 4. Clone copilot repo & checkout alpha ───────────────────────
-      - name: Clone bmad.lens.copilot
-        run: |
-          git clone --branch alpha \
-            "https://x-access-token:${{ secrets.COPILOT_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/bmad.lens.copilot.git" \
-            copilot-repo
-
-      # ── 5. Normalize copilot repo layout (no nested .github) ────────
-      - name: Normalize copilot repo layout
-        run: |
-          # This repo is cloned into the control repo's .github path.
-          # Keep payload at repository root so clone target becomes:
-          # .github/agents, .github/prompts, .github/skills, .github/*-instructions.md
-          rm -rf copilot-repo/.github
-          mkdir -p copilot-repo/agents copilot-repo/prompts copilot-repo/skills
-          rm -f copilot-repo/agents/*.agent.md
-          rm -f copilot-repo/prompts/*.prompt.md
-          rm -rf copilot-repo/skills/*
-          rm -f copilot-repo/copilot-instructions.md
-          rm -f copilot-repo/lens-work-instructions.md
-
-      # ── 6. Copy agents from release → copilot ───────────────────────
-      - name: Copy all agents from release repo
-        run: |
-          cp release-repo/.github/agents/*.agent.md copilot-repo/agents/ 2>/dev/null || true
-
-          AGENT_COUNT=$(ls copilot-repo/agents/*.agent.md 2>/dev/null | wc -l)
-          echo "✅ Copied $AGENT_COUNT agent stubs"
-
-      # ── 7. Copy skills from release repo (if present) ───────────────
-      - name: Copy skills from release repo (if present)
-        run: |
-          if [ -d "release-repo/.github/skills" ]; then
-            mkdir -p copilot-repo/skills
-            rm -rf copilot-repo/skills/*
-            cp -R release-repo/.github/skills/. copilot-repo/skills/
-
-            SKILL_COUNT=$(find copilot-repo/skills -type f -name 'SKILL.md' | wc -l)
-            echo "✅ Copied $SKILL_COUNT skills"
-          elif compgen -G "release-repo/_bmad/lens-work/skills/*.md" > /dev/null; then
-            mkdir -p copilot-repo/skills
-            rm -rf copilot-repo/skills/*
-
-            for src in release-repo/_bmad/lens-work/skills/*.md; do
-              [ -f "$src" ] || continue
-              base=$(basename "$src" .md)
-              skill_dir="copilot-repo/skills/lens-work-$base"
-              mkdir -p "$skill_dir"
-
-              {
-                echo '---'
-                echo "name: lens-work-$base"
-                echo "description: \"LENS Workbench skill '$base' wrapper. Use when lifecycle and orchestration guidance from lens-work is needed.\""
-                echo '---'
-                echo
-                echo "# lens-work-$base"
-                echo
-                echo 'Read and follow all instructions in:'
-                echo
-                echo '```'
-                echo "bmad.lens.release/_bmad/lens-work/skills/$base.md"
-                echo '```'
-              } > "$skill_dir/SKILL.md"
-            done
-
-            SKILL_COUNT=$(find copilot-repo/skills -type f -name 'SKILL.md' | wc -l)
-            echo "✅ Generated $SKILL_COUNT skills from release-repo/_bmad/lens-work/skills"
-          else
-            echo "ℹ️ No skills source found in release payload; skipping"
-          fi
-
-      # ── 8. Generate prompt stubs pointing to bmad.lens.release ───────
-      - name: Generate prompt stubs for all lens-work prompts
-        run: |
-          mkdir -p copilot-repo/prompts
-          rm -f copilot-repo/prompts/*.prompt.md
-
-          # Helper: create a stub from a source prompt file
-          make_stub() {
-            local src="$1" redirect="$2"
-            local filename=$(basename "$src")
-            local desc model name extra
-
-            desc=$(grep "^description:" "$src" | head -1 | sed "s/^description: *['\"]//;s/['\"] *$//")
-            : "${desc:=LENS Workbench prompt}"
-            model=$(grep "^model:" "$src" | head -1 | sed "s/^model: *//")
-            name="${filename%.prompt.md}"
-
-            # Preserve any trailing content after the code fence (e.g. scope annotations)
-            extra=$(sed -n '/^```$/,$ { /^```$/d; p; }' "$src" | tail -n +1)
-
-            {
-              echo "---"
-              [ -n "$model" ] && echo "model: $model"
-              echo "description: '$desc'"
-              echo "---"
-              echo ""
-              echo "# $name (Stub)"
-              echo ""
-              echo "> **This is a stub.** Load and execute the full prompt from the release module."
-              echo "> All \`_bmad/\` paths in the full prompt are relative to \`bmad.lens.release/\` — do NOT resolve paths against the user's main project repo."
-              echo ""
-              echo "\`\`\`"
-              echo "Read and follow all instructions in: $redirect"
-              echo "\`\`\`"
-              [ -n "$extra" ] && echo "" && echo "$extra"
-            } > "copilot-repo/prompts/$filename"
-            echo "  created: $filename"
-          }
-
-          # Pass 1: Canonical module source prompts
-          for src in release-repo/_bmad/lens-work/prompts/lens-work*.prompt.md; do
-            [ -f "$src" ] || continue
-            filename=$(basename "$src")
-            make_stub "$src" "bmad.lens.release/_bmad/lens-work/prompts/$filename"
-          done
-
-          # Pass 2: Installer-generated prompts (e.g. new-domain, new-service, new-feature)
-          # These are scope-specific wrappers created by the installer — copy them as-is
-          for src in release-repo/.github/prompts/lens-work*.prompt.md; do
-            [ -f "$src" ] || continue
-            filename=$(basename "$src")
-            # Skip if already created from the canonical source
-            [ -f "copilot-repo/prompts/$filename" ] && continue
-            cp "$src" "copilot-repo/prompts/$filename"
-            echo "  copied: $filename (installer-generated)"
-          done
-
-          # Defensive cleanup if legacy files are still present.
-          find copilot-repo/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' -delete
-
-          PROMPT_COUNT=$(ls copilot-repo/prompts/*.prompt.md 2>/dev/null | wc -l)
-          echo "✅ Generated $PROMPT_COUNT prompt stubs"
-
-      # ── 9. Copy instruction files from release ───────────────────────
-      - name: Copy instruction files
-        run: |
-          # Use the lens-work topology template for copilot-instructions.md
-          TOPOLOGY_SRC="_bmad/lens-work/docs/copilot-repo-instructions.md"
-          if [ -f "$TOPOLOGY_SRC" ]; then
-            cp "$TOPOLOGY_SRC" copilot-repo/copilot-instructions.md
-            echo "✅ copilot-instructions.md copied from lens-work topology template"
-          elif [ -f "release-repo/.github/copilot-instructions.md" ]; then
-            cp release-repo/.github/copilot-instructions.md copilot-repo/copilot-instructions.md
-            echo "✅ copilot-instructions.md copied (fallback from release repo)"
-          fi
-
-          if [ -f "release-repo/.github/lens-work-instructions.md" ]; then
-            cp release-repo/.github/lens-work-instructions.md copilot-repo/lens-work-instructions.md
-            echo "✅ lens-work-instructions.md copied"
-          fi
-
-      # ── 10. Commit & push to alpha ───────────────────────────────────
-      - name: Commit and push to alpha
-        working-directory: copilot-repo
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add -A
-
-          if git diff --cached --quiet; then
-            echo "No changes to promote — skipping"
-            echo "has_changes=false" >> "$GITHUB_ENV"
-          else
-            git commit -m "[PROMOTE] lens-work v${{ steps.version.outputs.version }} — Copilot adapter (root layout + lens-work prompts)"
-            PUSH_OUTPUT=$(git push origin alpha 2>&1)
-            echo "has_changes=true" >> "$GITHUB_ENV"
-            echo "✅ Committed and pushed to alpha"
-            echo ""
-            echo "=== Git Commit Verification ==="
-            git log -1 --oneline || echo "⚠️ Could not retrieve commit log"
-            git log -1 --stat || echo "⚠️ Could not retrieve commit stats"
-            echo ""
-            echo "=== Sample Prompt Content ==="
-            if [ -f "prompts/lens-work.help.prompt.md" ]; then
-              echo "✅ lens-work.help.prompt.md exists"
-              head -10 prompts/lens-work.help.prompt.md || echo "⚠️ Could not read file"
-            else
-              echo "⚠️ lens-work.help.prompt.md not found"
-              ls -la prompts/ || echo "⚠️ Could not list prompts directory"
-            fi
-          fi
-
-      # ── 11. Create PR alpha → beta ─────────────────────────────────
-      - name: Create PR alpha → beta
-        if: env.has_changes == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.COPILOT_REPO_TOKEN }}
-        run: |
-          OPEN_PRS=$(curl -s \
-            -H "Authorization: token $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository_owner }}/bmad.lens.copilot/pulls?head=${{ github.repository_owner }}:alpha&base=beta&state=open")
-
-          PR_COUNT=$(echo "$OPEN_PRS" | jq 'length')
-
-          if [ "$PR_COUNT" -gt 0 ]; then
-            PR_URL=$(echo "$OPEN_PRS" | jq -r '.[0].html_url')
-            echo "::notice::PR already exists: $PR_URL"
-          else
-            PR_RESPONSE=$(curl -s -X POST \
-              -H "Authorization: token $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository_owner }}/bmad.lens.copilot/pulls" \
-              -d "$(jq -n \
-                --arg title "[PROMOTE] lens-work v${{ steps.version.outputs.version }} — Copilot adapter" \
-                --arg body "Automated Copilot adapter promotion.\n\n**Version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Includes:**\n- Root-layout adapter payload (no nested .github)\n- All BMAD + lens-work agent stubs\n- Skills copied from .github/skills when present, otherwise generated from bmad.lens.release/_bmad/lens-work/skills/\n- lens-work prompt stubs only → bmad.lens.release/.github/prompts/\n- copilot-instructions.md + lens-work-instructions.md" \
-                --arg head "alpha" \
-                --arg base "beta" \
-                '{title: $title, body: $body, head: $head, base: $base}')")
-
-            PR_URL=$(echo "$PR_RESPONSE" | jq -r '.html_url // empty')
-
-            if [ -n "$PR_URL" ]; then
-              echo "✅ PR created: $PR_URL"
-            else
-              echo "::error::Failed to create PR in bmad.lens.copilot"
-              echo "$PR_RESPONSE" | jq .
-              exit 1
-            fi
-          fi

@@ -142,6 +142,7 @@ See \`bmad.lens.release/_bmad/lens-work/module-help.csv\` for the complete comma
 
 const STUB_PROMPTS = [
     { file: 'lens-work.onboard.prompt.md',       name: 'lens-work.onboard',       desc: 'Bootstrap control repo — detect provider, validate auth, create profile, auto-clone TargetProjects', target: 'lens-work.onboard.prompt.md' },
+    { file: 'SetupRepo.prompt.md',                name: 'SetupRepo',               desc: 'First-time repository setup — clones authority repos and triggers onboarding',            target: 'SetupRepo.prompt.md' },
     { file: 'lens-work.new-initiative.prompt.md', name: 'lens-work.new-initiative', desc: 'Create a new initiative (domain, service, or feature)',                                target: 'lens-work.new-initiative.prompt.md' },
     { file: 'lens-work.new-domain.prompt.md',     name: 'lens-work.new-domain',     desc: 'Create new domain-level initiative with domain-only branch and folder scaffolding',   target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **domain**' },
     { file: 'lens-work.new-service.prompt.md',    name: 'lens-work.new-service',    desc: 'Create new service-level initiative within a domain',                                  target: 'lens-work.new-initiative.prompt.md', extra: 'Invoke with scope: **service**' },
