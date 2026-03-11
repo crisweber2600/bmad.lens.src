@@ -189,21 +189,21 @@ At session start, @lens verifies all authority domain repos are present and pull
 
 ### Daily Freshness Check
 
-Preflight uses `_bmad-output/lens-work/.preflight-timestamp` to track the last pull. The file contains a single ISO 8601 date (e.g., `2026-03-09`).
+Preflight uses `_bmad-output/lens-work/personal/.preflight-timestamp` to track the last pull. The file contains a single ISO 8601 date (e.g., `2026-03-09`).
 
 **Algorithm:**
 1. Read the `bmad.lens.release` branch with `git -C bmad.lens.release branch --show-current`.
 2. If the `bmad.lens.release` branch is `alpha` or `beta` → ALWAYS run full preflight (presence + pull), ignoring timestamp cache.
-3. Otherwise, read `.preflight-timestamp`. If the date matches today → skip pulls, run presence checks only.
+3. Otherwise, read `personal/.preflight-timestamp`. If the date matches today → skip pulls, run presence checks only.
 4. If the timestamp file is missing or older than today → run full preflight (presence + pull).
-5. After a successful full preflight, write today's date to `.preflight-timestamp`.
+5. After a successful full preflight, write today's date to `personal/.preflight-timestamp`.
 6. `/preflight` always runs full preflight regardless of the timestamp.
 
 ### Preflight Algorithm
 
 1. **Check `bmad.lens.release/`** — Verify the directory exists and contains `.git/`. If this run requires full preflight, run `git -C bmad.lens.release pull origin`. If missing, report error with setup instructions.
 
-2. **Check `.github/`** — Verify the directory exists and contains `.git/` (it is a clone of `bmad.lens.copilot`). If this run requires full preflight, run `git -C .github pull origin`. If missing, report error with setup instructions.
+2. **Check `.github/` and sync from release** — Verify `bmad.lens.release/.github/` exists. On every preflight run, check whether any files from `bmad.lens.release/.github/` are missing in local `.github/`; if missing, copy from release. If release `.github/` changed during pull, copy from release. Ensure `.github/prompts/` only contains `lens-work*.prompt.md` files.
 
 3. **Check governance repo** — Read `_bmad-output/lens-work/governance-setup.yaml` for the configured clone path (default: `TargetProjects/lens/lens-governance`). Verify it exists and contains `.git/`. If this run requires full preflight, run `git -C {path} pull origin`. If missing, report error with setup instructions.
 
@@ -215,7 +215,7 @@ Preflight uses `_bmad-output/lens-work/.preflight-timestamp` to track the last p
 | Repo | Path | Status |
 |------|------|--------|
 | bmad.lens.release | bmad.lens.release/ | ✅ up to date |
-| bmad.lens.copilot | .github/ | ✅ up to date |
+| .github sync | .github/ | ✅ synced from bmad.lens.release |
 | lens-governance | TargetProjects/lens/lens-governance/ | ✅ up to date |
 ```
 

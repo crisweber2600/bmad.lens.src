@@ -165,7 +165,21 @@ jobs:
             });
           "
 
-      # ── 10. Post-process: .xml→.yaml + config.yaml→bmadconfig.yaml ──
+      # ── 10. Sync source .github agents into release payload ─────────
+      - name: Sync source .github agents
+        run: |
+          mkdir -p release-repo/.github/agents
+
+          SRC_COUNT=0
+          for src in .github/agents/*.md; do
+            [ -f "$src" ] || continue
+            cp "$src" "release-repo/.github/agents/$(basename "$src")"
+            SRC_COUNT=$((SRC_COUNT + 1))
+          done
+
+          echo "✅ Synced $SRC_COUNT source agent markdown file(s) into release payload"
+
+      # ── 11. Post-process: .xml→.yaml + config.yaml→bmadconfig.yaml ──
       - name: Post-process XML and config file names
         run: |
           cd release-repo
@@ -222,7 +236,7 @@ jobs:
           fi
           echo "✅ Post-processing complete"
 
-      # ── 11. Fix copilot-instructions.md project name ─────────────────
+      # ── 12. Fix copilot-instructions.md project name ─────────────────
       - name: Patch copilot-instructions.md
         run: |
           INSTRUCTIONS="release-repo/.github/copilot-instructions.md"
@@ -233,13 +247,13 @@ jobs:
             echo "✅ copilot-instructions.md patched"
           fi
 
-      # ── 12. Validate release .github payload ─────────────────────────
+      # ── 13. Validate release .github payload ─────────────────────────
       - name: Validate embedded .github payload
         run: |
           REQUIRED=(
             "release-repo/.github/agents/bmad-agent-lens-work-lens.agent.md"
             "release-repo/.github/prompts/lens-work.onboard.prompt.md"
-            "release-repo/.github/prompts/SetupRepo.prompt.md"
+            "release-repo/.github/prompts/lens-work.discover.prompt.md"
             "release-repo/.github/lens-work-instructions.md"
           )
 
@@ -253,16 +267,36 @@ jobs:
             fi
           done
 
+          for src in .github/agents/*.md; do
+            [ -f "$src" ] || continue
+            target="release-repo/.github/agents/$(basename "$src")"
+            if [ ! -f "$target" ]; then
+              echo "::error::Missing published agent file: $target"
+              MISSING=1
+            else
+              echo "✅ $target"
+            fi
+          done
+
           if [ -e "release-repo/.github/.git" ]; then
             echo "::error::release-repo/.github contains .git; .github must be embedded content, not a nested clone"
             MISSING=1
+          fi
+
+          if [ -d "release-repo/.github/prompts" ]; then
+            NON_LENS=$(find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
+            if [ "$NON_LENS" -gt 0 ]; then
+              echo "::error::.github/prompts must only contain lens-work*.prompt.md files"
+              find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md'
+              MISSING=1
+            fi
           fi
 
           if [ "$MISSING" -eq 1 ]; then
             exit 1
           fi
 
-      # ── 13. Add manifest entry for lens-work ─────────────────────────
+      # ── 14. Add manifest entry for lens-work ─────────────────────────
       - name: Update BMAD manifest with lens-work
         run: |
           MANIFEST="release-repo/_bmad/_config/manifest.yaml"
@@ -278,7 +312,7 @@ jobs:
             fi
           fi
 
-      # ── 14. Commit & push to alpha ───────────────────────────────────
+      # ── 15. Commit & push to alpha ───────────────────────────────────
       - name: Commit and push to alpha
         working-directory: release-repo
         run: |
@@ -297,7 +331,7 @@ jobs:
             echo "✅ Committed and pushed to alpha"
           fi
 
-      # ── 15. Create PR alpha → beta ──────────────────────────────────
+      # ── 16. Create PR alpha → beta ──────────────────────────────────
       - name: Create PR alpha → beta
         if: env.has_changes == 'true'
         env:
@@ -320,7 +354,7 @@ jobs:
               "https://api.github.com/repos/${{ github.repository_owner }}/bmad.lens.release/pulls" \
               -d "$(jq -n \
                 --arg title "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}" \
-                --arg body "Full BMAD framework + lens-work custom module build.\n\n**lens-work version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Included:**\n- BMAD core + bmm + bmb + cis + gds + tea\n- lens-work custom module\n- IDE adapters: GitHub Copilot, Cursor, Claude, Codex\n- Embedded .github payload (agents/prompts/instructions) including SetupRepo prompt" \
+                --arg body "Full BMAD framework + lens-work custom module build.\n\n**lens-work version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Included:**\n- BMAD core + bmm + bmb + cis + gds + tea\n- lens-work custom module\n- IDE adapters: GitHub Copilot, Cursor, Claude, Codex\n- Embedded .github payload (agents/prompts/instructions) with lens-work prompts only" \
                 --arg head "alpha" \
                 --arg base "beta" \
                 '{title: $title, body: $body, head: $head, base: $base}')")

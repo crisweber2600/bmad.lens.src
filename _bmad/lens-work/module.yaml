@@ -193,6 +193,7 @@ adapters:
       - .github/prompts/lens-work.switch.prompt.md
       - .github/prompts/lens-work.status.prompt.md
       - .github/prompts/lens-work.next.prompt.md
+      - .github/prompts/lens-work.discover.prompt.md
       - .github/prompts/lens-work.help.prompt.md
       - .github/prompts/lens-work.promote.prompt.md
       - .github/prompts/lens-work.constitution.prompt.md
