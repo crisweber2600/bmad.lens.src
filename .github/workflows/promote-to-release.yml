@@ -115,6 +115,7 @@ jobs:
             --directory release-repo \
             --modules "core,bmb,bmm,cis,gds,tea" \
             --tools "github-copilot,cursor,claude-code" \
+            --action install \
             --user-name "CrisWeber" \
             --communication-language "English" \
             --document-output-language "English" \
