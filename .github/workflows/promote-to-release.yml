@@ -106,6 +106,9 @@ jobs:
           cd release-repo
           # Remove everything except .git and .gitignore
           find . -maxdepth 1 -not -name '.git' -not -name '.gitignore' -not -name '.' | xargs rm -rf
+          # Reset git index so BMAD installer does not detect a prior manifest
+          # via git history and enter update mode (which fails without source files)
+          git rm -rf --cached . --quiet 2>/dev/null || true
           echo "✅ Release repo cleaned for fresh build"
 
       # ── 7. Install full BMAD framework ───────────────────────────────
@@ -113,7 +116,7 @@ jobs:
         run: |
           npx bmad-method install \
             --directory release-repo \
-            --modules "core,bmm,bmb,cis,gds,tea" \
+            --modules "core,bmb,bmm,cis,gds,tea" \
             --tools "github-copilot,cursor,claude-code" \
             --user-name "CrisWeber" \
             --communication-language "English" \
