@@ -93,20 +93,28 @@ jobs:
         with:
           node-version: '20'
 
-      # ── 5+6. Prepare release repo as fresh orphan build ──────────────
-      - name: Prepare release repo (fresh orphan alpha)
+      # ── 5+6. Prepare release repo with beta ancestry ─────────────────
+      - name: Prepare release repo (alpha from beta)
         run: |
-          # Use a fresh git repo with NO commit history so the BMAD installer
-          # cannot read a prior _bmad/_config/manifest.yaml via git-history
-          # (git show HEAD:...) and mistakenly enter update-mode.  The orphan
-          # branch has zero ancestors; force-push at the end replaces alpha.
+          # Keep alpha branch ancestry connected to beta so PR creation always
+          # has a valid merge base.
           mkdir release-repo
           cd release-repo
           git init
           git remote add origin \
             "https://x-access-token:${{ secrets.RELEASE_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/bmad.lens.release.git"
-          git checkout --orphan alpha
-          echo "✅ Release repo initialised on fresh orphan alpha — no prior BMAD manifest visible"
+          if ! git fetch --depth=1 origin beta; then
+            echo "::error::Failed to fetch beta branch from bmad.lens.release"
+            exit 1
+          fi
+          git checkout -B alpha FETCH_HEAD
+          echo "✅ Release repo initialised from beta history"
+
+      - name: Prepare clean build workspace
+        run: |
+          rm -rf build-output
+          mkdir -p build-output
+          echo "✅ build-output prepared as non-git install workspace"
 
       # ── 7. Install full BMAD framework ───────────────────────────────
       - name: Fetch BMB module source (no longer in external-official-modules.yaml)
@@ -121,7 +129,7 @@ jobs:
           echo "✅ BMB source at $BMB_SRC (code=$(grep '^code:' $BMB_SRC/module.yaml))"
 
       - name: Install BMAD framework (all modules + IDEs)
-        working-directory: release-repo
+        working-directory: build-output
         run: |
           npx bmad-method install \
             --directory . \
@@ -141,12 +149,12 @@ jobs:
       - name: Overlay lens-work custom module
         run: |
           # Copy lens-work into _bmad/ as a custom module
-          mkdir -p release-repo/_bmad/
-          cp -r _bmad/lens-work/ release-repo/_bmad/lens-work/
+          mkdir -p build-output/_bmad/
+          cp -r _bmad/lens-work/ build-output/_bmad/lens-work/
 
           # Also register in _config/custom/ (BMAD convention for custom modules)
-          mkdir -p release-repo/_bmad/_config/custom/lens-work/
-          cp -r _bmad/lens-work/ release-repo/_bmad/_config/custom/lens-work/
+          mkdir -p build-output/_bmad/_config/custom/lens-work/
+          cp -r _bmad/lens-work/ build-output/_bmad/_config/custom/lens-work/
 
           echo "✅ lens-work custom module overlaid"
 
@@ -154,11 +162,11 @@ jobs:
       - name: Install lens-work IDE adapters
         run: |
           node -e "
-            const installer = require('./release-repo/_bmad/lens-work/_module-installer/installer.js');
+            const installer = require('./build-output/_bmad/lens-work/_module-installer/installer.js');
             const path = require('path');
 
             installer.install({
-              projectRoot: path.resolve('release-repo'),
+              projectRoot: path.resolve('build-output'),
               config: {
                 target_projects_path: '../TargetProjects',
                 default_git_remote: 'github'
@@ -182,12 +190,12 @@ jobs:
       # ── 10. Sync source .github agents into release payload ─────────
       - name: Sync source .github agents
         run: |
-          mkdir -p release-repo/.github/agents
+          mkdir -p build-output/.github/agents
 
           SRC_COUNT=0
           for src in .github/agents/*.md; do
             [ -f "$src" ] || continue
-            cp "$src" "release-repo/.github/agents/$(basename "$src")"
+            cp "$src" "build-output/.github/agents/$(basename "$src")"
             SRC_COUNT=$((SRC_COUNT + 1))
           done
 
@@ -196,18 +204,18 @@ jobs:
       # ── 10.5 Enforce lens-work prompts only in embedded .github ──────
       - name: Keep only lens-work prompt stubs
         run: |
-          if [ -d "release-repo/.github/prompts" ]; then
-            REMOVED=$(find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
-            find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' -delete
+          if [ -d "build-output/.github/prompts" ]; then
+            REMOVED=$(find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
+            find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' -delete
             echo "✅ Removed $REMOVED non-lens prompt stub(s) from release payload"
           else
-            echo "ℹ️ No release-repo/.github/prompts directory found"
+            echo "ℹ️ No build-output/.github/prompts directory found"
           fi
 
       # ── 11. Post-process: .xml→.yaml + config.yaml→bmadconfig.yaml ──
       - name: Post-process XML and config file names
         run: |
-          cd release-repo
+          cd build-output
 
           echo "=== Step 1: Rename .xml files to .yaml ==="
           find . -name '*.xml' -type f -not -path './.git/*' | while IFS= read -r f; do
@@ -264,10 +272,10 @@ jobs:
       # ── 12. Fix copilot-instructions.md project name ─────────────────
       - name: Patch copilot-instructions.md
         run: |
-          INSTRUCTIONS="release-repo/.github/copilot-instructions.md"
+          INSTRUCTIONS="build-output/.github/copilot-instructions.md"
           if [ -f "$INSTRUCTIONS" ]; then
             # Fix the project name (BMAD CLI uses directory name)
-            sed -i 's/- \*\*Project\*\*: release-repo/- **Project**: bmad.lens.release/' "$INSTRUCTIONS"
+            sed -i 's/- \*\*Project\*\*: build-output/- **Project**: bmad.lens.release/' "$INSTRUCTIONS"
             sed -i 's/- \*\*Output Folder\*\*: _bmad-output/- **Output Folder**: bmad.lens.release\/_bmad-output/' "$INSTRUCTIONS"
             echo "✅ copilot-instructions.md patched"
           fi
@@ -276,10 +284,10 @@ jobs:
       - name: Validate embedded .github payload
         run: |
           REQUIRED=(
-            "release-repo/.github/agents/bmad-agent-lens-work-lens.agent.md"
-            "release-repo/.github/prompts/lens-work.onboard.prompt.md"
-            "release-repo/.github/prompts/lens-work.discover.prompt.md"
-            "release-repo/.github/lens-work-instructions.md"
+            "build-output/.github/agents/bmad-agent-lens-work-lens.agent.md"
+            "build-output/.github/prompts/lens-work.onboard.prompt.md"
+            "build-output/.github/prompts/lens-work.discover.prompt.md"
+            "build-output/.github/lens-work-instructions.md"
           )
 
           MISSING=0
@@ -294,7 +302,7 @@ jobs:
 
           for src in .github/agents/*.md; do
             [ -f "$src" ] || continue
-            target="release-repo/.github/agents/$(basename "$src")"
+            target="build-output/.github/agents/$(basename "$src")"
             if [ ! -f "$target" ]; then
               echo "::error::Missing published agent file: $target"
               MISSING=1
@@ -303,16 +311,16 @@ jobs:
             fi
           done
 
-          if [ -e "release-repo/.github/.git" ]; then
-            echo "::error::release-repo/.github contains .git; .github must be embedded content, not a nested clone"
+          if [ -e "build-output/.github/.git" ]; then
+            echo "::error::build-output/.github contains .git; .github must be embedded content, not a nested clone"
             MISSING=1
           fi
 
-          if [ -d "release-repo/.github/prompts" ]; then
-            NON_LENS=$(find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
+          if [ -d "build-output/.github/prompts" ]; then
+            NON_LENS=$(find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
             if [ "$NON_LENS" -gt 0 ]; then
               echo "::error::.github/prompts must only contain lens-work*.prompt.md files"
-              find release-repo/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md'
+              find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md'
               MISSING=1
             fi
           fi
@@ -324,7 +332,7 @@ jobs:
       # ── 14. Add manifest entry for lens-work ─────────────────────────
       - name: Update BMAD manifest with lens-work
         run: |
-          MANIFEST="release-repo/_bmad/_config/manifest.yaml"
+          MANIFEST="build-output/_bmad/_config/manifest.yaml"
           if [ -f "$MANIFEST" ]; then
             if ! grep -q "name: lens-work" "$MANIFEST"; then
               VERSION="${{ steps.version.outputs.version }}"
@@ -344,6 +352,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          rsync -a --delete --exclude '.git' ../build-output/ ./
+
           git add -A
 
           if git diff --cached --quiet; then
@@ -351,9 +361,9 @@ jobs:
             echo "has_changes=false" >> "$GITHUB_ENV"
           else
             git commit -m "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}"
-            git push --force origin alpha
+            git push --force-with-lease origin alpha
             echo "has_changes=true" >> "$GITHUB_ENV"
-            echo "✅ Force-pushed orphan build to alpha"
+            echo "✅ Force-pushed alpha with beta ancestry"
           fi
 
       # ── 16. Create PR alpha → beta ──────────────────────────────────
