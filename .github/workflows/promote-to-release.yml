@@ -361,7 +361,7 @@ jobs:
             echo "has_changes=false" >> "$GITHUB_ENV"
           else
             git commit -m "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}"
-            git push --force-with-lease origin alpha
+            git push --force origin alpha
             echo "has_changes=true" >> "$GITHUB_ENV"
             echo "✅ Force-pushed alpha with beta ancestry"
           fi
