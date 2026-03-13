@@ -110,9 +110,10 @@ jobs:
 
       # ── 7. Install full BMAD framework ───────────────────────────────
       - name: Install BMAD framework (all modules + IDEs)
+        working-directory: release-repo
         run: |
           npx bmad-method install \
-            --directory release-repo \
+            --directory . \
             --modules "core,bmb,bmm,cis,gds,tea" \
             --tools "github-copilot,cursor,claude-code" \
             --action install \
