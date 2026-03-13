@@ -165,7 +165,7 @@ Exit workflow cleanly (exit 0 — not an error). Having no repos is a valid stat
 
 ### 2c. Emit Discovered Repo List
 
-Pass the `discovered_repos` list (array of directory paths) to Step 3.
+Pass the `discovered_repos` list (array of directory paths) to Step 2.5.
 
 ```yaml
 discovered_repos:
@@ -174,6 +174,120 @@ discovered_repos:
   - path: "{scan_path}/{repo_name_2}"
     repo_name: "{repo_name_2}"
 ```
+
+---
+
+## Step 2.5: RepoBranchSyncer
+
+**Epic:** E1 — For each discovered repo, fetch all remote refs and check out the branch with the most recent commit (local or remote). This ensures subsequent inspection, language detection, and documentation steps operate on the latest code.
+
+### 2.5a. Fetch Remote Refs
+
+For each repo in `discovered_repos`:
+
+```bash
+git -C {repo.path} fetch --all --prune
+```
+
+**Rules:**
+- Run fetch before any branch comparison — ensures remote tracking refs (`refs/remotes/origin/*`) are up to date
+- Fetch failure is **non-fatal**: log a warning and continue using locally-known refs
+- If the repo has no configured remote, skip fetch silently and use local refs only
+
+**Gate (soft):** If fetch fails for a repo:
+```
+⚠️ Could not fetch remote refs for {repo.repo_name} — using local refs only.
+```
+Continue with local-only branch comparison for that repo.
+
+### 2.5b. Identify Most-Recent-Commit Branch
+
+For each repo, enumerate all candidate branches (local + remote tracking) and select the one with the most recent commit:
+
+```
+candidates = []
+
+# Collect all local branches with their last-commit timestamps
+for each local_branch in git -C {repo.path} branch --format="%(refname:short) %(committerdate:iso-strict)":
+    candidates.append({ name: local_branch, ref: "refs/heads/{local_branch}", timestamp: committerdate })
+
+# Collect all remote tracking branches with their last-commit timestamps
+for each remote_branch in git -C {repo.path} branch -r --format="%(refname:short) %(committerdate:iso-strict)":
+    # Strip "origin/" prefix to get the simple branch name
+    simple_name = remote_branch.replace("origin/", "")
+    # Skip HEAD pointer
+    if simple_name == "HEAD":
+        continue
+    candidates.append({ name: simple_name, ref: "refs/remotes/{remote_branch}", timestamp: committerdate })
+
+# Select the candidate with the most recent timestamp
+most_recent = max(candidates, key: timestamp)
+```
+
+**Shell equivalent (single command):**
+```bash
+git -C {repo.path} for-each-ref \
+    --sort=-committerdate \
+    --format="%(refname:short) %(committerdate:iso-strict)" \
+    refs/heads refs/remotes/origin \
+    | grep -v 'origin/HEAD' \
+    | head -1 \
+    | awk '{print $1}'
+```
+
+This returns the branch name with the most recent committer date across all local branches and all `origin/*` remote tracking branches.
+
+**Deduplication:** If the same branch name appears in both local and remote with identical timestamp, prefer the local entry (already checked out).
+
+### 2.5c. Checkout Most-Recent Branch
+
+```
+if most_recent.ref is a remote tracking ref (starts with "refs/remotes/origin/"):
+    # Check if a local tracking branch already exists
+    local_exists = git -C {repo.path} rev-parse --verify "refs/heads/{most_recent.name}" 2>/dev/null
+    if local_exists:
+        git -C {repo.path} checkout "{most_recent.name}"
+        git -C {repo.path} pull origin "{most_recent.name}"
+    else:
+        # Create local tracking branch from remote
+        git -C {repo.path} checkout -b "{most_recent.name}" --track "origin/{most_recent.name}"
+else:
+    # Local branch — check out and pull
+    git -C {repo.path} checkout "{most_recent.name}"
+    git -C {repo.path} pull origin "{most_recent.name}"
+
+repo.checkout_branch = most_recent.name
+output: "  ✓ {repo.repo_name}: checked out '{most_recent.name}' (most recent commit)"
+```
+
+**Pull failure handling (non-fatal):** If `git pull` fails after checkout (e.g., no remote, detached HEAD upstream):
+```
+⚠️ Checked out '{most_recent.name}' in {repo.repo_name} but pull failed — working with local state.
+```
+Continue; the checkout itself is sufficient for inspection purposes.
+
+### 2.5d. Handle No Candidates / Edge Cases
+
+- **Zero candidates (empty repo):** No branches exist. Log `⚠️ {repo.repo_name}: no branches found — skipping checkout` and set `repo.checkout_branch = null`. Continue.
+- **Detached HEAD:** If the repo is in detached HEAD state after checkout, log a warning but do not abort.
+- **Dirty working tree:** If `git checkout` fails due to uncommitted local changes, log:
+  ```
+  ⚠️ {repo.repo_name}: checkout skipped — uncommitted changes present. Stash or commit before running /discover.
+  ```
+  Set `repo.checkout_branch = null` and continue. Do NOT stash automatically.
+
+### 2.5e. Emit Sync Summary
+
+```
+🔄 Branch Sync Complete
+   Synced: {synced_count} repo(s)
+   Skipped: {skipped_count} repo(s) (dirty / no branches)
+   Warnings: {warning_count} (fetch failures / pull failures)
+```
+
+Output per-repo result is incremental (AR-3): emit each repo's checkout result as it completes, not batched at the end.
+
+Pass updated `discovered_repos` (now with `checkout_branch` field populated) to Step 3.
 
 ---
 
@@ -976,6 +1090,7 @@ The result set produced by this workflow is the final output — there are no fu
 ```yaml
 repo_name: string         # directory basename
 path: string              # full path from workspace root
+checkout_branch: string | null  # branch checked out by RepoBranchSyncer (Step 2.5); null if skipped or failed
 has_bmad: boolean         # .bmad/ directory present
 language: string          # detected language or "unknown" (from LanguageDetector)
 error: string | null      # null = no error; string = error message
@@ -997,6 +1112,8 @@ Running `/discover` twice with the same set of repos produces the same `repo-inv
 | Scan path missing | Workflow aborted | No — hard stop |
 | Governance repo missing | Workflow aborted | No — hard stop |
 | Zero repos found | Clean exit after user prompt | No — exit 0 |
+| Fetch fails for a repo (Step 2.5) | That repo uses local refs only | Yes — next step |
+| Checkout fails (dirty tree) for a repo (Step 2.5) | That repo skips checkout | Yes — next repo processed |
 | Governance pull fails | All governance writes aborted | Yes — skip to Step 5 |
 | Schema validation fails | All governance writes aborted | Yes — skip to Step 5 |
 | Single repo write fails | That repo marked failed | Yes — next repo processed |
