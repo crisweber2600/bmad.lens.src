@@ -5,7 +5,7 @@
 # The @lens agent (with 5 skills) and all workflows import
 # this contract. No lifecycle semantics should be hardcoded elsewhere.
 #
-# v2 redesign: Git-derived state replaces state.yaml entirely.
+# v2 redesign: Git-derived state replaces legacy file-based state entirely.
 # Branch existence + PR metadata + committed artifacts = state.
 # =============================================================================
 
@@ -342,14 +342,14 @@ constitution:
     - enforce_stories
 
 # -----------------------------------------------------------------------------
-# GIT STATE MODEL (v2 — replaces state.yaml)
+# GIT STATE MODEL (v2 — git-derived)
 # -----------------------------------------------------------------------------
 # State is derived from three durable sources:
 # 1. Branch existence — what branches exist tells you what's been started
 # 2. PR provider metadata — open/merged/closed PRs tell you what's been reviewed
 # 3. Committed artifacts — what files exist on what branches tells you what's been produced
 #
-# NO state.yaml. NO event-log.jsonl. NO git-ignored runtime state.
+# NO event-log.jsonl. NO git-ignored runtime state.
 git_state:
   sources:
     - git_symbolic_ref: "Current branch → initiative, audience, phase"

@@ -49,8 +49,9 @@ Resolve the active initiative's domain, service, governance path, and compute th
 Load the active initiative config from the two-file state system:
 
 ```yaml
-state = load("_bmad-output/lens-work/state.yaml")
-initiative = load("_bmad-output/lens-work/initiatives/${state.active_initiative}.yaml")
+# Active initiative is derived from current git branch (v2 git-derived state)
+branch = invoke: git-orchestration.get-current-branch
+initiative = load("_bmad-output/lens-work/initiatives/${git-state.parse-initiative-root(branch)}.yaml")
 ```
 
 Extract required fields:

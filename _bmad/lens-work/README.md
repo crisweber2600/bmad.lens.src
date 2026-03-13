@@ -10,7 +10,7 @@ LENS Workbench v2 provides guided lifecycle routing with git-orchestrated discip
 
 ## v2 Design Principles
 
-- **Git is the only source of truth** — no secondary state stores, no `state.yaml`
+- **Git is the only source of truth** — no secondary state stores, no git-ignored runtime state
 - **PRs are the only gating mechanism** — automatic PR creation at phase/promotion boundaries
 - **Authority domains are explicit** — every file belongs to exactly one domain
 - **Sensing is automatic** — cross-initiative awareness at lifecycle gates

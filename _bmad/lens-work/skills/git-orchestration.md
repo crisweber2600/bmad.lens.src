@@ -1061,7 +1061,7 @@ This path is resolved from `initiative.target_repos[0].local_path` during Pre-Fl
 
 **Allowed during `/dev`:**
 - File writes inside `session.target_path` (the target repo)
-- Control repo state updates in `_bmad-output/` (sprint-status, state.yaml, initiative config)
+- Control repo state updates in `_bmad-output/` (sprint-status, initiative config)
 
 **Blocked during `/dev`:**
 - Writes to any repo folder other than `session.target_path`

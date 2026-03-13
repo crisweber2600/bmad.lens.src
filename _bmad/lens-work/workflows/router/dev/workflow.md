@@ -34,7 +34,7 @@ inputs:
 - [x] Dev stories exist for the target epic (created by `/sprintplan`)
 - [x] Epic number provided as input parameter
 - [x] Developer assigned (or self-assigned)
-- [x] state.yaml + initiatives/{id}.yaml exist
+- [x] initiatives/{id}.yaml exists
 - [x] Constitution gate passed (large → base audience promotion)
 
 ---
@@ -46,7 +46,7 @@ inputs:
 ```yaml
 # PRE-FLIGHT (mandatory, never skip) [REQ-9]
 # 1. Verify working directory is clean
-# 2. Load two-file state (state.yaml + initiative config)
+# 2. Load initiative config (git-derived state)
 # 3. Check previous phase status (if applicable)
 # 4. Determine correct phase branch: {initiative_root}-{audience}-{phase_name}
 # 5. Create phase branch if it doesn't exist
@@ -57,9 +57,9 @@ inputs:
 # Verify working directory is clean
 invoke: git-orchestration.verify-clean-state
 
-# Load two-file state
-state = load("_bmad-output/lens-work/state.yaml")
-initiative = load("_bmad-output/lens-work/initiatives/${state.active_initiative}.yaml")
+# Load initiative config from current git branch (v2 git-derived state)
+branch = invoke: git-orchestration.get-current-branch
+initiative = load("_bmad-output/lens-work/initiatives/${git-state.parse-initiative-root(branch)}.yaml")
 
 # Read initiative config
 size = initiative.size
@@ -1154,7 +1154,6 @@ params:
 invoke: git-orchestration.commit-and-push
 params:
   paths:
-    - "_bmad-output/lens-work/state.yaml"
     - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
     - "_bmad-output/lens-work/event-log.jsonl"
     - "_bmad-output/implementation-artifacts/"
@@ -1260,7 +1259,6 @@ Throughout `/dev`, the user may work in TargetProjects for actual coding, but al
 - [ ] Working directory clean (all changes committed)
 - [ ] On correct branch: `{initiative_root}-dev`
 - [ ] Audience promotion validated (large → base passed)
-- [ ] state.yaml updated with phase dev
 - [ ] initiatives/{id}.yaml updated with dev status and gate entries
 - [ ] event-log.jsonl entries appended
 - [ ] All stories for the epic discovered and implemented

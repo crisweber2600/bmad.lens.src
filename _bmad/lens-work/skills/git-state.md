@@ -10,7 +10,7 @@
 
 Derive initiative state from git primitives. No runtime state files. This skill replaces v1's `state-management.md` entirely.
 
-**Design Axiom A1:** Git is the only source of truth. No git-ignored runtime state. No `state.yaml`. No `event-log.jsonl`.
+**Design Axiom A1:** Git is the only source of truth. No git-ignored runtime state. No `event-log.jsonl`.
 
 ## Write Operations
 
@@ -265,14 +265,14 @@ artifact_count: 1
 
 ## v1 → v2 State Derivation Comparison
 
-| Question | v1 (state.yaml) | v2 (git-derived) |
-|----------|-----------------|-------------------|
-| Current initiative | `state.yaml → active_initiative` | Parse `git symbolic-ref --short HEAD` |
-| Current phase | `state.yaml → current_phase` | Parse branch name suffix after audience |
-| Current audience | `state.yaml → current_audience` | Parse branch name for audience token |
-| Completed phases | `state.yaml → completed_phases[]` | Query merged PRs via provider adapter |
-| Promotion status | `state.yaml → promoted_audiences[]` | Query merged PRs via provider adapter |
-| Active initiatives | `state.yaml → initiatives{}` scan | `git branch --list` + parse roots |
+| Question | v2 (git-derived) |
+|----------|-------------------|
+| Current initiative | Parse `git symbolic-ref --short HEAD` |
+| Current phase | Parse branch name suffix after audience |
+| Current audience | Parse branch name for audience token |
+| Completed phases | Query merged PRs via provider adapter |
+| Promotion status | Query merged PRs via provider adapter |
+| Active initiatives | `git branch --list` + parse roots |
 | Initiative config | Dual-written (stale) | Committed on initiative branch (single source) |
 | Event history | `event-log.jsonl` (git-ignored, lost) | PR descriptions + commit messages |
 

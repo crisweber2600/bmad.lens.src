@@ -31,7 +31,6 @@ imports: lifecycle.yaml
 
 - [x] `/preplan` complete (preplan phase merged into small audience branch)
 - [x] Product Brief exists
-- [x] state.yaml + initiatives/{id}.yaml exist
 - [x] preplan gate passed (PrePlan artifacts committed)
 
 ---
@@ -43,7 +42,7 @@ imports: lifecycle.yaml
 ```yaml
 # PRE-FLIGHT (mandatory, never skip) [REQ-9]
 # 1. Verify working directory is clean
-# 2. Load two-file state (state.yaml + initiative config)
+# 2. Derive initiative state from git branch (v2: git-state skill)
 # 3. Check previous phase status (preplan must be complete)
 # 4. Determine correct phase branch: {initiative_root}-{audience}-{phase_name}
 # 5. Create phase branch if it doesn't exist
@@ -54,9 +53,9 @@ imports: lifecycle.yaml
 # Verify working directory is clean
 invoke: git-orchestration.verify-clean-state
 
-# Load two-file state
-state = load("_bmad-output/lens-work/state.yaml")
-initiative = load("_bmad-output/lens-work/initiatives/${state.active_initiative}.yaml")
+# Derive initiative state from git branch (v2: git-state skill)
+initiative_state = invoke: git-state.current-initiative
+initiative = load("${initiative_state.config_path}")
 
 # Load lifecycle contract for phase → audience mapping
 lifecycle = load("lifecycle.yaml")
@@ -475,7 +474,6 @@ params:
 invoke: git-orchestration.commit-and-push
 params:
   paths:
-    - "_bmad-output/lens-work/state.yaml"
     - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
     - "_bmad-output/lens-work/event-log.jsonl"
     - "${docs_path}/"
@@ -520,7 +518,6 @@ params:
 
 - [ ] Working directory clean (all changes committed)
 - [ ] On phase branch: `{initiative_root}-small-businessplan` (REQ-7: no auto-merge)
-- [ ] state.yaml updated with phase businessplan
 - [ ] initiatives/{id}.yaml phase_status.businessplan updated, preplan marked complete
 - [ ] event-log.jsonl entry appended
 - [ ] Planning artifacts written to `${docs_path}/` (PRD; optionally UX)

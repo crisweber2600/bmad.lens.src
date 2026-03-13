@@ -31,7 +31,7 @@ imports: lifecycle.yaml
 - [x] Small → Medium audience promotion complete (adversarial review gate passed)
 - [x] `/techplan` complete (techplan phase merged into small audience branch)
 - [x] PRD + Architecture exist
-- [x] state.yaml + initiatives/{id}.yaml exist
+- [x] initiatives/{id}.yaml exists
 - [x] techplan gate passed (TechPlan artifacts committed)
 
 ---
@@ -43,7 +43,7 @@ imports: lifecycle.yaml
 ```yaml
 # PRE-FLIGHT (mandatory, never skip) [REQ-9]
 # 1. Verify working directory is clean
-# 2. Load two-file state (state.yaml + initiative config)
+# 2. Load initiative config (git-derived state)
 # 3. Validate audience promotion (small → medium must be complete)
 # 4. Determine correct phase branch: {initiative_root}-{audience}-{phase_name}
 # 5. Create phase branch if it doesn't exist
@@ -55,9 +55,9 @@ imports: lifecycle.yaml
 # Verify working directory is clean
 invoke: git-orchestration.verify-clean-state
 
-# Load two-file state
-state = load("_bmad-output/lens-work/state.yaml")
-initiative = load("_bmad-output/lens-work/initiatives/${state.active_initiative}.yaml")
+# Load initiative config from current git branch (v2 git-derived state)
+branch = invoke: git-orchestration.get-current-branch
+initiative = load("_bmad-output/lens-work/initiatives/${git-state.parse-initiative-root(branch)}.yaml")
 
 # Load lifecycle contract for phase → audience mapping
 lifecycle = load("lifecycle.yaml")
@@ -527,7 +527,6 @@ params:
 invoke: git-orchestration.commit-and-push
 params:
   paths:
-    - "_bmad-output/lens-work/state.yaml"
     - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
     - "_bmad-output/lens-work/event-log.jsonl"
     - "${docs_path}/"
@@ -577,7 +576,6 @@ params:
 
 - [ ] Working directory clean (all changes committed)
 - [ ] On phase branch: `{initiative_root}-medium-devproposal` (REQ-7: no auto-merge)
-- [ ] state.yaml updated with phase devproposal
 - [ ] initiatives/{id}.yaml phase_status.devproposal updated
 - [ ] audience_status.small_to_medium marked complete
 - [ ] event-log.jsonl entry appended

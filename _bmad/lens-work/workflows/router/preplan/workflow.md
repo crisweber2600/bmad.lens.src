@@ -259,13 +259,6 @@ params:
         status: "in_progress"
         started_at: "${ISO_TIMESTAMP}"
 
-# Update state.yaml
-invoke: state-management.update-state
-params:
-  updates:
-    current_phase: "preplan"
-    workflow_status: "pr_pending"
-    active_branch: "${phase_branch}"
 ```
 
 ### Step 7: Commit State Changes
@@ -274,7 +267,6 @@ params:
 invoke: git-orchestration.commit-and-push
 params:
   paths:
-    - "_bmad-output/lens-work/state.yaml"
     - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
     - "_bmad-output/lens-work/event-log.jsonl"
     - "${output_path}/"
@@ -331,7 +323,6 @@ Ready to continue?
 - [ ] Phase branch `{initiative_root}-small-preplan` pushed to origin (REQ-7: no auto-merge)
 - [ ] PR created from phase branch to audience branch
 - [ ] Remaining on phase branch: `{initiative_root}-small-preplan`
-- [ ] state.yaml updated with phase preplan
 - [ ] initiatives/{id}.yaml phase_status.preplan updated
 - [ ] event-log.jsonl entry appended
 - [ ] Planning artifacts written to `${output_path}/` (at minimum product-brief.md)
