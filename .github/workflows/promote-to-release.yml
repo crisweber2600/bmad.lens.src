@@ -109,12 +109,24 @@ jobs:
           echo "✅ Release repo initialised on fresh orphan alpha — no prior BMAD manifest visible"
 
       # ── 7. Install full BMAD framework ───────────────────────────────
+      - name: Fetch BMB module source (no longer in external-official-modules.yaml)
+        run: |
+          # bmad-builder npm package contains the BMB module source at /src/
+          # The BMAD installer needs --custom-content pointing to the dir with module.yaml
+          mkdir -p /tmp/bmb-src
+          npm pack bmad-builder@latest --pack-destination /tmp/bmb-src 2>/dev/null
+          tar xzf /tmp/bmb-src/bmad-builder-*.tgz -C /tmp/bmb-src
+          BMB_SRC="/tmp/bmb-src/package/src"
+          echo "BMB_SRC=$BMB_SRC" >> "$GITHUB_ENV"
+          echo "✅ BMB source at $BMB_SRC (code=$(grep '^code:' $BMB_SRC/module.yaml))"
+
       - name: Install BMAD framework (all modules + IDEs)
         working-directory: release-repo
         run: |
           npx bmad-method install \
             --directory . \
-            --modules "core,bmb,bmm,cis,gds,tea" \
+            --modules "core,bmm,cis,gds,tea" \
+            --custom-content "$BMB_SRC" \
             --tools "github-copilot,cursor,claude-code" \
             --action install \
             --user-name "CrisWeber" \
