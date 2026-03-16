@@ -14,6 +14,10 @@
 
 name: Promote to Release
 
+concurrency:
+  group: promote-to-release
+  cancel-in-progress: false
+
 on:
   push:
     branches: [master]
@@ -93,22 +97,46 @@ jobs:
         with:
           node-version: '20'
 
-      # ── 5+6. Prepare release repo with beta ancestry ─────────────────
-      - name: Prepare release repo (alpha from beta)
+      # ── 5+6. Prepare release repo while preserving alpha history ──────
+      - name: Prepare release repo (preserve alpha history)
         run: |
-          # Keep alpha branch ancestry connected to beta so PR creation always
-          # has a valid merge base.
+          # Preserve existing alpha history when possible. Only rebuild alpha
+          # from beta if alpha/beta are already unrelated.
           mkdir release-repo
           cd release-repo
           git init
           git remote add origin \
             "https://x-access-token:${{ secrets.RELEASE_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/bmad.lens.release.git"
-          if ! git fetch --depth=1 origin beta; then
+
+          if ! git fetch --prune --no-tags origin \
+            +refs/heads/alpha:refs/remotes/origin/alpha \
+            +refs/heads/beta:refs/remotes/origin/beta; then
+            echo "::error::Failed to fetch alpha/beta branches from bmad.lens.release"
+            exit 1
+          fi
+
+          if ! git show-ref --verify --quiet refs/remotes/origin/beta; then
             echo "::error::Failed to fetch beta branch from bmad.lens.release"
             exit 1
           fi
-          git checkout -B alpha FETCH_HEAD
-          echo "✅ Release repo initialised from beta history"
+
+          if git show-ref --verify --quiet refs/remotes/origin/alpha; then
+            git checkout -B alpha refs/remotes/origin/alpha
+
+            if git merge-base refs/remotes/origin/alpha refs/remotes/origin/beta >/dev/null 2>&1; then
+              echo "RECOVER_ALPHA_HISTORY=false" >> "$GITHUB_ENV"
+              echo "✅ Reusing existing alpha branch history"
+            else
+              echo "::warning::alpha and beta histories are unrelated; rebuilding alpha from beta"
+              git checkout -B alpha refs/remotes/origin/beta
+              echo "RECOVER_ALPHA_HISTORY=true" >> "$GITHUB_ENV"
+              echo "✅ Alpha reset to beta ancestry for history repair"
+            fi
+          else
+            git checkout -B alpha refs/remotes/origin/beta
+            echo "RECOVER_ALPHA_HISTORY=false" >> "$GITHUB_ENV"
+            echo "✅ Alpha branch created from beta (first publish)"
+          fi
 
       - name: Prepare clean build workspace
         run: |
@@ -357,13 +385,27 @@ jobs:
           git add -A
 
           if git diff --cached --quiet; then
-            echo "No changes to promote — skipping"
+            if [ "${RECOVER_ALPHA_HISTORY:-false}" = "true" ]; then
+              # Repair remote alpha ancestry even when payload content is unchanged.
+              git push --force-with-lease origin alpha
+              echo "✅ Repaired alpha history (no payload delta)"
+            else
+              echo "No changes to promote — skipping"
+            fi
             echo "has_changes=false" >> "$GITHUB_ENV"
           else
             git commit -m "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}"
-            git push --force origin alpha
+
+            if [ "${RECOVER_ALPHA_HISTORY:-false}" = "true" ]; then
+              # Only force-push when repairing a previously broken alpha history.
+              git push --force-with-lease origin alpha
+              echo "✅ Force-pushed alpha once to repair unrelated history"
+            else
+              git push origin alpha
+              echo "✅ Pushed alpha with history preserved"
+            fi
+
             echo "has_changes=true" >> "$GITHUB_ENV"
-            echo "✅ Force-pushed alpha with beta ancestry"
           fi
 
       # ── 16. Create PR alpha → beta ──────────────────────────────────
