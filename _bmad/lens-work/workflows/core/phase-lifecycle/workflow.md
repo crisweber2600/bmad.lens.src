@@ -122,6 +122,24 @@ target_branch: "{initiative-root}-{audience}"
 Merge the PR, then run `/{next_phase}` to continue.
 ```
 
+### Step: Check Promotion Readiness After Phase Completion
+
+After the phase PR is created, automatically check if promotion to the next audience should be available:
+
+1. Read the current phase's `auto_advance_promote` setting from `lifecycle.yaml`
+2. If `auto_advance_promote: false`: Continue to next step (no promotion check)
+3. If `auto_advance_promote: true`: 
+   - Run the promotion-check include: `_bmad/lens-work/workflows/includes/promotion-check.md`
+   - If all phases for current audience are complete, display promotion readiness message:
+   ```
+   ⏭️  PROMOTION READY
+   
+   After merging this phase PR and completing any remaining phases:
+   - All phases for [{current_audience}] will be complete
+   - Run @lens /promote to promote to [{next_audience}]
+   - The promote workflow will verify all gate requirements
+   ```
+
 ## Phase Branch Cleanup
 
 After a phase PR is merged, the phase branch should be cleaned up.

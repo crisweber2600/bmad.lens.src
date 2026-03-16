@@ -149,6 +149,31 @@ The PR requires review and merge to complete promotion.
 Sensing: {overlap_count} overlapping initiative(s) detected — see PR body.
 ```
 
+### Step 8: Check for Further Promotions
+
+After the promotion PR is created and the user is ready to proceed, inform them of potential chain promotions:
+
+```
+**Promotion Chain:**
+
+Current:  small  → **PROMOTED TO →** medium
+Next Available: medium → large (when devproposal is complete)
+
+**To continue the promotion chain after this PR merges:**
+1. Merge the current promotion PR
+2. Run /devproposal to complete the medium audience phase
+3. After devproposal completes, /promote will offer promotion to large
+
+**Chain Status:**
+- ✅ small → medium: In Progress (merge when gate checks pass)
+- ⏳ medium → large: Requires devproposal + merge
+- ⏳ large → base: Requires sprintplan + merge
+```
+
+This provides visibility into the full promotion lifecycle and helps users understand what comes next.
+
+---
+
 ## Error Handling
 
 | Error | Response |
