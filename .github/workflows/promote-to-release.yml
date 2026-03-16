@@ -409,6 +409,21 @@ jobs:
           fi
 
       # ── 16. Create PR alpha → beta ──────────────────────────────────
+      - name: Verify alpha and beta ancestry
+        working-directory: release-repo
+        run: |
+          git fetch --no-tags origin \
+            +refs/heads/alpha:refs/remotes/origin/alpha \
+            +refs/heads/beta:refs/remotes/origin/beta
+
+          if git merge-base refs/remotes/origin/alpha refs/remotes/origin/beta >/dev/null 2>&1; then
+            echo "✅ Verified: alpha and beta share ancestry"
+          else
+            echo "::error::alpha and beta are unrelated after promotion push"
+            echo "::error::This run is blocked to prevent creating an invalid PR state"
+            exit 1
+          fi
+
       - name: Create PR alpha → beta
         if: env.has_changes == 'true'
         env:
