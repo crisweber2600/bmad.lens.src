@@ -100,8 +100,9 @@ jobs:
       # ── 5+6. Prepare release repo while preserving alpha history ──────
       - name: Prepare release repo (preserve alpha history)
         run: |
-          # Preserve existing alpha history when possible. Only rebuild alpha
-          # from beta if alpha/beta are already unrelated.
+          # Strategy:
+          # 1) If alpha exists and is related to beta, commit directly to alpha.
+          # 2) Otherwise, recreate alpha from beta.
           mkdir release-repo
           cd release-repo
           git init
@@ -121,21 +122,20 @@ jobs:
           fi
 
           if git show-ref --verify --quiet refs/remotes/origin/alpha; then
-            git checkout -B alpha refs/remotes/origin/alpha
-
             if git merge-base refs/remotes/origin/alpha refs/remotes/origin/beta >/dev/null 2>&1; then
-              echo "RECOVER_ALPHA_HISTORY=false" >> "$GITHUB_ENV"
-              echo "✅ Reusing existing alpha branch history"
+              git checkout -B alpha refs/remotes/origin/alpha
+              echo "ALPHA_UPDATE_MODE=direct" >> "$GITHUB_ENV"
+              echo "✅ Using existing alpha branch (direct commit mode)"
             else
               echo "::warning::alpha and beta histories are unrelated; rebuilding alpha from beta"
               git checkout -B alpha refs/remotes/origin/beta
-              echo "RECOVER_ALPHA_HISTORY=true" >> "$GITHUB_ENV"
-              echo "✅ Alpha reset to beta ancestry for history repair"
+              echo "ALPHA_UPDATE_MODE=from_beta_reset" >> "$GITHUB_ENV"
+              echo "✅ Recreated alpha from beta (history repair mode)"
             fi
           else
             git checkout -B alpha refs/remotes/origin/beta
-            echo "RECOVER_ALPHA_HISTORY=false" >> "$GITHUB_ENV"
-            echo "✅ Alpha branch created from beta (first publish)"
+            echo "ALPHA_UPDATE_MODE=from_beta_new" >> "$GITHUB_ENV"
+            echo "✅ Alpha branch will be created from beta"
           fi
 
       - name: Prepare clean build workspace
@@ -385,25 +385,38 @@ jobs:
           git add -A
 
           if git diff --cached --quiet; then
-            if [ "${RECOVER_ALPHA_HISTORY:-false}" = "true" ]; then
-              # Repair remote alpha ancestry even when payload content is unchanged.
-              git push --force-with-lease origin alpha
-              echo "✅ Repaired alpha history (no payload delta)"
-            else
-              echo "No changes to promote — skipping"
-            fi
+            case "${ALPHA_UPDATE_MODE:-direct}" in
+              from_beta_reset)
+                git push --force-with-lease origin alpha
+                echo "✅ Repaired alpha from beta (no payload delta)"
+                ;;
+              from_beta_new)
+                git push --set-upstream origin alpha
+                echo "✅ Created alpha from beta (no payload delta)"
+                ;;
+              *)
+                echo "No changes to promote — skipping"
+                ;;
+            esac
             echo "has_changes=false" >> "$GITHUB_ENV"
           else
             git commit -m "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}"
 
-            if [ "${RECOVER_ALPHA_HISTORY:-false}" = "true" ]; then
-              # Only force-push when repairing a previously broken alpha history.
-              git push --force-with-lease origin alpha
-              echo "✅ Force-pushed alpha once to repair unrelated history"
-            else
-              git push origin alpha
-              echo "✅ Pushed alpha with history preserved"
-            fi
+            case "${ALPHA_UPDATE_MODE:-direct}" in
+              from_beta_reset)
+                # Force only when replacing a broken, unrelated alpha history.
+                git push --force-with-lease origin alpha
+                echo "✅ Reset alpha from beta and pushed payload"
+                ;;
+              from_beta_new)
+                git push --set-upstream origin alpha
+                echo "✅ Created alpha from beta and pushed payload"
+                ;;
+              *)
+                git push origin alpha
+                echo "✅ Committed directly to alpha"
+                ;;
+            esac
 
             echo "has_changes=true" >> "$GITHUB_ENV"
           fi
