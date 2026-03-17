@@ -7,7 +7,7 @@
 #   2. Install full BMAD framework (core + all modules + all IDEs)
 #   3. Overlay lens-work custom module into the install
 #   4. Run lens-work _module-installer to generate its IDE adapters
-#   5. Post-process: rename .xml→.yaml, config.yaml→bmadconfig.yaml
+#   5. Post-process: rename .xml→.yaml (no-op for v6.2.0+), config.yaml→bmadconfig.yaml
 #   6. Fix copilot-instructions.md with correct project config
 #   7. Push full payload to bmad.lens.release alpha → PR to beta
 # =============================================================================
@@ -167,7 +167,7 @@ jobs:
       - name: Install BMAD framework (all modules + IDEs)
         working-directory: build-output
         run: |
-          npx bmad-method@6.0.4 install \
+          npx bmad-method@6.2.0 install \
             --directory . \
             --modules "core,bmm,cis,gds,tea" \
             --custom-content "$BMB_SRC" \
@@ -253,16 +253,21 @@ jobs:
         run: |
           cd build-output
 
-          echo "=== Step 1: Rename .xml files to .yaml ==="
-          find . -name '*.xml' -type f -not -path './.git/*' | while IFS= read -r f; do
-            target="${f%.xml}.yaml"
-            if [ -f "$target" ]; then
-              echo "⚠️ Skipping (target exists): $f"
-            else
-              mv "$f" "$target"
-              echo "  $f → $target"
-            fi
-          done
+          echo "=== Step 1: Rename .xml files to .yaml (v6.2.0: may be a no-op) ==="
+          XML_FILES=$(find . -name '*.xml' -type f -not -path './.git/*' || true)
+          if [ -z "$XML_FILES" ]; then
+            echo "ℹ️ No .xml files found (expected for v6.2.0+ installs)"
+          else
+            echo "$XML_FILES" | while IFS= read -r f; do
+              target="${f%.xml}.yaml"
+              if [ -f "$target" ]; then
+                echo "⚠️ Skipping (target exists): $f"
+              else
+                mv "$f" "$target"
+                echo "  $f → $target"
+              fi
+            done
+          fi
 
           echo ""
           echo "=== Step 2: Update .xml references → .yaml ==="
