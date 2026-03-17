@@ -1,6 +1,6 @@
 ---
 model: Claude Sonnet 4.6 (copilot)
-description: 'Switch to a different initiative branch'
+description: 'Switch to a different initiative via git checkout'
 ---
 
 # lens-work.switch (Stub)
@@ -11,3 +11,4 @@ description: 'Switch to a different initiative branch'
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.switch.prompt.md
 ```
+

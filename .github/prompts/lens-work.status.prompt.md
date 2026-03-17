@@ -11,3 +11,4 @@ description: 'Show consolidated status report across all active initiatives'
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.status.prompt.md
 ```
+

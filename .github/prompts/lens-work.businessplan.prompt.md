@@ -1,6 +1,6 @@
 ---
 model: Claude Sonnet 4.6 (copilot)
-description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM, small audience)'
+description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM + Sally/UX, small audience)'
 ---
 
 # lens-work.businessplan (Stub)
@@ -11,3 +11,4 @@ description: 'Start BusinessPlan phase — PRD creation, UX design (John/PM, sma
 ```
 Read and follow all instructions in: bmad.lens.release/_bmad/lens-work/prompts/lens-work.businessplan.prompt.md
 ```
+

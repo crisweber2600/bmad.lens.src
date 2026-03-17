@@ -2,11 +2,23 @@
 applyTo: "**"
 ---
 
-# Repository Topology — BMAD Control Repo
+<!-- BMAD:START -->
+# BMAD Method — LENS Workbench Control Repo
 
-This workspace is a **BMAD control repo** that orchestrates planning and development across multiple nested repositories. Understanding this topology is critical — every agent, prompt, and workflow must respect these boundaries.
+## Project Configuration
 
-## Three Repository Zones
+- **Project**: bmad.lens.bmad
+- **User**: CrisWeber
+- **Communication Language**: English
+- **Document Output Language**: English
+- **User Skill Level**: intermediate
+- **Output Folder**: _bmad-output
+- **Planning Artifacts**: _bmad-output/lens-work/initiatives
+- **Project Knowledge**: bmad.lens.release/_bmad/lens-work/docs
+
+## Repository Topology
+
+This workspace is a **BMAD control repo** that orchestrates planning and development across multiple nested repositories. Every agent, prompt, and workflow must respect these boundaries.
 
 ### 1. Control Repo (workspace root)
 
@@ -20,7 +32,7 @@ The top-level workspace. This is an **operational workspace**, not a code repo. 
 
 ### 2. Release Repo (`bmad.lens.release/`)
 
-A **git submodule** containing the BMAD framework release payload. This is the **authority** for all module definitions.
+A cloned dependency containing the BMAD framework release payload. This is the **authority** for all module definitions.
 
 - `_bmad/lens-work/` — The lens-work module: lifecycle contract, skills, workflows, prompts, scripts, agents, docs
 - `_bmad/bmm/`, `_bmad/core/`, `_bmad/cis/`, etc. — Other BMAD modules
@@ -32,9 +44,20 @@ A **git submodule** containing the BMAD framework release payload. This is the *
 
 Contains **cloned code repositories** organized by `{domain}/{service}/{repo}`. The base path is configured in `bmad.lens.release/_bmad/lens-work/bmadconfig.yaml` as `target_projects_path` (default: `../TargetProjects`).
 
-Each subfolder is an independent git repo with its own `.git/`, branches, and remotes.
-
 **Write rules:** The `/dev` prompt writes ALL implementation code here — file creation, modification, commits, pushes, and PRs happen exclusively in the target repo resolved from the initiative config.
+
+## BMAD Runtime Structure
+
+- **Lens-work module**: `bmad.lens.release/_bmad/lens-work/`
+- **Agent definitions**: `bmad.lens.release/_bmad/bmm/agents/` and `bmad.lens.release/_bmad/core/agents/`
+- **Workflow definitions**: `bmad.lens.release/_bmad/bmm/workflows/` (organized by phase)
+- **Core tasks**: `bmad.lens.release/_bmad/core/tasks/`
+- **Core workflows**: `bmad.lens.release/_bmad/core/workflows/`
+- **Workflow engine**: `bmad.lens.release/_bmad/core/tasks/workflow.yaml`
+- **Module configuration**: `bmad.lens.release/_bmad/bmm/bmadconfig.yaml`
+- **Agent manifest**: `bmad.lens.release/_bmad/_config/agent-manifest.csv`
+- **Workflow manifest**: `bmad.lens.release/_bmad/_config/workflow-manifest.csv`
+- **Agent memory**: `bmad.lens.release/_bmad/_memory/`
 
 ## Path Resolution Rules
 
@@ -74,9 +97,33 @@ The lens-work module manages a 5-phase planning lifecycle with audience-based pr
 - Git is the only source of truth — branch existence, PR metadata, and committed artifacts determine state
 - PRs are the only gating mechanism — no side-channel approvals
 
+## Available Agents
+
+| Agent | Persona | Title | Capabilities |
+|---|---|---|---|
+| lens | @lens | LENS Workbench Orchestrator | lifecycle routing, git orchestration, phase-aware branch topology, constitution governance |
+| bmad-master | BMad Master | BMad Master Executor, Knowledge Custodian, and Workflow Orchestrator | runtime resource management, workflow orchestration, task execution, knowledge custodian |
+| analyst | Mary | Business Analyst | market research, competitive analysis, requirements elicitation, domain expertise |
+| architect | Winston | Architect | distributed systems, cloud infrastructure, API design, scalable patterns |
+| dev | Amelia | Developer Agent | story execution, test-driven development, code implementation |
+| pm | John | Product Manager | PRD creation, requirements discovery, stakeholder alignment, user interviews |
+| qa | Quinn | QA Engineer | test automation, API testing, E2E testing, coverage analysis |
+| sm | Bob | Scrum Master | sprint planning, story preparation, agile ceremonies, backlog management |
+| tech-writer | Paige | Technical Writer | documentation, Mermaid diagrams, standards compliance, concept explanation |
+| ux-designer | Sally | UX Designer | user research, interaction design, UI patterns, experience strategy |
+
 ## Key Conventions
 
+- Always load `bmad.lens.release/_bmad/bmm/bmadconfig.yaml` before any agent activation or workflow execution
+- MD-based workflows execute directly — load and follow the `.md` file
+- YAML-based workflows require the workflow engine — load `workflow.yaml` first, then pass the `.yaml` config
+- Follow step-based workflow execution: load steps JIT, never multiple at once
 - All `.github/prompts/` and `.github/skills/` files are **stubs** that redirect to full implementations in `bmad.lens.release/`
 - Never duplicate module content into `.github/` — module updates propagate through path references
-- The `bmad.lens.release/` submodule branch matters: on `alpha`, run full preflight at most once per hour; on `beta`, run full preflight at most once every 3 hours
+- The `bmad.lens.release/` branch matters: on `alpha`, run full preflight at most once per hour; on `beta`, at most once every 3 hours
 - Initiative artifacts live at `_bmad-output/lens-work/initiatives/{domain}/{service}/{feature}.yaml`
+
+## Slash Commands
+
+Type `/bmad-` in Copilot Chat to see all available BMAD workflows and agent activators. Agents are also available in the agents dropdown. The `@lens` agent is the primary entry point for all lens-work lifecycle commands.
+<!-- BMAD:END -->
