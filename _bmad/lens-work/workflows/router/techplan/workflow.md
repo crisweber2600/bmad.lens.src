@@ -59,9 +59,11 @@ imports: lifecycle.yaml
 # GATE: All steps must pass before proceeding to artifact work
 # NOTE: techplan is in the SAME audience (small) as businessplan — no cascade merge needed
 
-# Shared preflight include (includes constitutional context bootstrap)
+# Shared preflight include (constitution check deferred to Step 1a below)
 invoke: include
 path: "_bmad/lens-work/workflows/includes/preflight.md"
+params:
+  skip_constitution: true
 
 # Verify working directory is clean
 invoke: git-orchestration.verify-clean-state
@@ -173,6 +175,11 @@ for artifact in required_artifacts:
 ### 1a. Constitutional Context Injection (Required)
 
 ```yaml
+# constitution.resolve-context uses a two-layer cache:
+#   1. Session cache: returns immediately if session.constitutional_context is already set
+#   2. File cache: reads .constitution-cache.yaml if within TTL and governance unchanged
+# This means the cost of constitution resolution is paid at most once per session
+# (and at most once per TTL window across sessions).
 constitutional_context = invoke("constitution.resolve-context")
 
 if constitutional_context.status == "parse_error":
@@ -180,6 +187,13 @@ if constitutional_context.status == "parse_error":
     Constitutional context parse error:
     ${constitutional_context.error_details.file}
     ${constitutional_context.error_details.error}
+
+# Enforce gates at this point (skipped in preflight since skip_constitution: true was passed)
+if constitutional_context.gate_mode == "hard" and constitutional_context.preflight_status == "FAIL":
+  FAIL("❌ Constitution hard gate failed. Resolve compliance issues before proceeding with TechPlan.")
+
+if constitutional_context.gate_mode == "advisory" and constitutional_context.preflight_status == "WARN":
+  warning: "⚠️ Constitution advisory warnings detected. Address warnings in phase outputs."
 
 session.constitutional_context = constitutional_context
 ```
