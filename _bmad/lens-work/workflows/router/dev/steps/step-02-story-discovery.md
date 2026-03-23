@@ -81,4 +81,4 @@ session.stories_failed = []
 
 ## NEXT STEP DIRECTIVE
 
-**NEXT:** Read fully and follow: `{project-root}/_bmad/lens-work/workflows/router/dev/steps/step-03-story-loop.md`
+**NEXT:** Read fully and follow: `{nextStepFile}`

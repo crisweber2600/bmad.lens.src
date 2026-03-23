@@ -54,4 +54,4 @@ output: |
 
 ## NEXT STEP DIRECTIVE
 
-**NEXT:** Read fully and follow: `{project-root}/_bmad/lens-work/workflows/router/sprintplan/steps/step-04-dev-story.md`
+**NEXT:** Read fully and follow: `{nextStepFile}`

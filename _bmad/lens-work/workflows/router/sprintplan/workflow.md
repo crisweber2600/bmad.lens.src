@@ -23,7 +23,7 @@ entryStep: './steps/step-01-preflight.md'
 
 ## WORKFLOW ARCHITECTURE
 
-This workflow now uses **step-file architecture**:
+This workflow uses **step-file architecture**:
 
 - Each step keeps a single concern in focus so phase routing remains maintainable.
 - State persists through the active initiative context: `initiative`, `initiative_root`, `docs_path`, `bmad_docs`, `phase_branch`, `constitutional_context`, `missing`, `compliance_warnings`, `compliance_checked`, `readiness`, `selected_story`, `story_id`, `story_title`, `developer_name`, `pr_result`, and `gate_status`.
@@ -33,17 +33,28 @@ This workflow now uses **step-file architecture**:
 
 ## INITIALIZATION
 
-- Core user and module context is already loaded by `@lens` from `{project-root}/_bmad/lens-work/bmadconfig.yaml`.
-- `installed_path = {project-root}/_bmad/lens-work/workflows/router/sprintplan`
-- `lifecycle_contract = {project-root}/_bmad/lens-work/lifecycle.yaml`
-- `preflight_include = {project-root}/_bmad/lens-work/workflows/includes/preflight.md`
-- `promotion_check_include = {project-root}/_bmad/lens-work/workflows/includes/promotion-check.md`
+### Configuration Loading
+
+Load the lens-work session context already provided by `@lens` and resolve:
+
+- `{user_name}`
+- `{communication_language}`
+- `{output_folder}`
+- `{initiative_output_folder}`
+- `{personal_output_folder}`
+
+### Workflow References
+
+- `module_config = ../../../bmadconfig.yaml`
+- `lifecycle_contract = ../../../lifecycle.yaml`
+- `preflight_include = ../../includes/preflight.md`
+- `promotion_check_include = ../../includes/promotion-check.md`
 
 ---
 
 ## EXECUTION
 
-Read fully and follow: `{project-root}/_bmad/lens-work/workflows/router/sprintplan/steps/step-01-preflight.md`
+Read fully and follow: `{entryStep}`
 
 ### Step Map
 

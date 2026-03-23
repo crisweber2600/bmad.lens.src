@@ -97,4 +97,4 @@ if compliance_failures.length > 0:
 
 ## NEXT STEP DIRECTIVE
 
-**NEXT:** Read fully and follow: `{project-root}/_bmad/lens-work/workflows/router/sprintplan/steps/step-03-sprint-planning.md`
+**NEXT:** Read fully and follow: `{nextStepFile}`

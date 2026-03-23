@@ -27,7 +27,7 @@ entryStep: './steps/step-01-preflight.md'
 
 ## WORKFLOW ARCHITECTURE
 
-This workflow now uses **step-file architecture**:
+This workflow uses **step-file architecture**:
 
 - Each stage of the implementation loop is isolated so the long-running `/dev` phase remains readable and maintainable.
 - State persists through the active initiative and execution context: `initiative`, `docs_path`, `bmad_docs`, `phase_branch`, `constitutional_context`, `story_files`, `stories_completed`, `stories_failed`, `target_repo`, `target_path`, `initiative_branch`, `epic_branch`, `story_branch`, `resolved_integration_branch`, `epic_number`, `special_instructions`, `story_id`, `code_review_path`, and `epic_pr_result`.
@@ -37,16 +37,27 @@ This workflow now uses **step-file architecture**:
 
 ## INITIALIZATION
 
-- Core user and module context is already loaded by `@lens` from `{project-root}/_bmad/lens-work/bmadconfig.yaml`.
-- `installed_path = {project-root}/_bmad/lens-work/workflows/router/dev`
-- `lifecycle_contract = {project-root}/_bmad/lens-work/lifecycle.yaml`
-- `preflight_include = {project-root}/_bmad/lens-work/workflows/includes/preflight.md`
+### Configuration Loading
+
+Load the lens-work session context already provided by `@lens` and resolve:
+
+- `{user_name}`
+- `{communication_language}`
+- `{output_folder}`
+- `{initiative_output_folder}`
+- `{personal_output_folder}`
+
+### Workflow References
+
+- `module_config = ../../../bmadconfig.yaml`
+- `lifecycle_contract = ../../../lifecycle.yaml`
+- `preflight_include = ../../includes/preflight.md`
 
 ---
 
 ## EXECUTION
 
-Read fully and follow: `{project-root}/_bmad/lens-work/workflows/router/dev/steps/step-01-preflight.md`
+Read fully and follow: `{entryStep}`
 
 ### Step Map
 

@@ -123,4 +123,4 @@ invoke: git-orchestration.finish-workflow
 
 ## NEXT STEP DIRECTIVE
 
-**NEXT:** Read fully and follow: `{project-root}/_bmad/lens-work/workflows/router/dev/steps/step-05-closeout.md`
+**NEXT:** Read fully and follow: `{nextStepFile}`
