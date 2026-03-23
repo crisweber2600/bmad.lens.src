@@ -20,6 +20,44 @@ const fsHelpers = {
     }
 };
 
+function readScalarYamlValue(content, key) {
+    const match = content.match(new RegExp(`^${key}:\\s*(.+)$`, 'm'));
+    if (!match) return undefined;
+    const rawValue = match[1].trim();
+    if ((rawValue.startsWith('"') && rawValue.endsWith('"')) || (rawValue.startsWith("'") && rawValue.endsWith("'"))) {
+        return rawValue.slice(1, -1);
+    }
+    return rawValue;
+}
+
+function toYamlString(value) {
+    return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+}
+
+async function readInstalledCoreConfig(projectRoot) {
+    const candidatePaths = [
+        path.join(projectRoot, '_bmad', 'core', 'config.yaml'),
+        path.join(projectRoot, '_bmad', 'bmb', 'config.yaml'),
+        path.join(projectRoot, '_bmad', 'bmm', 'config.yaml'),
+        path.join(projectRoot, '_bmad', 'cis', 'config.yaml'),
+        path.join(projectRoot, '_bmad', 'gds', 'config.yaml'),
+        path.join(projectRoot, '_bmad', 'tea', 'config.yaml'),
+    ];
+
+    for (const candidatePath of candidatePaths) {
+        if (!(await fsHelpers.pathExists(candidatePath))) continue;
+        const content = await fsHelpers.readFile(candidatePath);
+        return {
+            user_name: readScalarYamlValue(content, 'user_name'),
+            communication_language: readScalarYamlValue(content, 'communication_language'),
+            document_output_language: readScalarYamlValue(content, 'document_output_language'),
+            output_folder: readScalarYamlValue(content, 'output_folder'),
+        };
+    }
+
+    return {};
+}
+
 /**
  * Copy all files from srcDir to destDir, optionally skipping existing files.
  * Only copies files (not subdirectories).
@@ -355,6 +393,7 @@ async function install(options) {
     try {
         const modeLabel = updateMode ? 'Updating' : 'Installing';
         logger.log(`${modeLabel} LENS Workbench (lens-work)...`);
+        const coreConfig = await readInstalledCoreConfig(projectRoot);
 
         // ── Phase 1: Output directories ─────────────────────────────────
         const outputDir = path.join(projectRoot, '_bmad-output', 'lens-work');
@@ -376,12 +415,24 @@ async function install(options) {
                 '# LENS Workbench Configuration',
                 '# Generated during installation',
                 '',
-                '# TargetProjects path (where repos are cloned)',
-                `target_projects_path: "${config.target_projects_path || '../TargetProjects'}"`,
+                `project_name: ${toYamlString(path.basename(projectRoot))}`,
+                'user_skill_level: intermediate',
+                'planning_artifacts: "{project-root}/_bmad-output/planning-artifacts"',
+                'implementation_artifacts: "{project-root}/_bmad-output/implementation-artifacts"',
+                'project_knowledge: "{project-root}/docs"',
                 '',
-                '# Git settings',
-                'git:',
-                `  default_remote: ${config.default_git_remote || 'github'}`,
+                '# Lens-work module defaults',
+                `target_projects_path: ${toYamlString(config.target_projects_path || '../TargetProjects')}`,
+                `default_git_remote: ${toYamlString(config.default_git_remote || 'github')}`,
+                'lifecycle_contract: "{project-root}/_bmad/lens-work/lifecycle.yaml"',
+                'initiative_output_folder: "{project-root}/_bmad-output/lens-work/initiatives"',
+                'personal_output_folder: "{project-root}/_bmad-output/lens-work/personal"',
+                '',
+                '# Core Configuration Values',
+                `user_name: ${toYamlString(coreConfig.user_name || config.user_name || 'User')}`,
+                `communication_language: ${toYamlString(coreConfig.communication_language || config.communication_language || 'English')}`,
+                `document_output_language: ${toYamlString(coreConfig.document_output_language || config.document_output_language || 'English')}`,
+                `output_folder: ${toYamlString(coreConfig.output_folder || config.output_folder || '{project-root}/_bmad-output')}`,
                 '',
             ].join('\n');
             await fsHelpers.writeFile(configFile, configContent);
