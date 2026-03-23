@@ -2,99 +2,87 @@
 name: 'step-02-readiness'
 description: 'Resolve constitutional context, run readiness validation, and enforce compliance gating'
 nextStepFile: './step-03-sprint-planning.md'
+readinessWorkflow: '{project-root}/_bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md'
 ---
 
 # Step 2: Readiness And Compliance
 
-**Goal:** Load constitutional context, validate implementation readiness, and block SprintPlan when compliance failures remain unresolved.
+## STEP GOAL:
+
+Load constitutional context, validate implementation readiness, and block SprintPlan when compliance failures remain unresolved.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Treat readiness blockers and constitutional failures as hard stops.
+- Preserve the resolved constitutional context for later SprintPlan steps.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Prevent sprint planning from starting until readiness and compliance gates are clean.
+
+### Step-Specific Rules:
+- Resolve constitutional context before running readiness validation.
+- Use `{readinessWorkflow}` in validate mode only.
+- Fail the step if any constitutional compliance failures remain.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly.
+- Persist `constitutional_context`, `readiness`, `compliance_checked`, and `compliance_warnings` into session state.
+- Stop immediately on blockers or compliance failures.
+
+## CONTEXT BOUNDARIES:
+- Available context: `docs_path`, the planning artifacts, and `{readinessWorkflow}`.
+- Focus: constitutional context, readiness blockers, and compliance gating.
+- Limits: do not run sprint planning in this step.
+- Dependencies: successful SprintPlan preflight and artifact gating.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Constitutional Context Injection (Required)
 
-```yaml
-constitutional_context = invoke("constitution.resolve-context")
+Resolve constitutional context and store it in session state.
 
-if constitutional_context.status == "parse_error":
-  error: |
-    Constitutional context parse error:
-    ${constitutional_context.error_details.file}
-    ${constitutional_context.error_details.error}
-
-session.constitutional_context = constitutional_context
-```
+If constitutional parsing fails, stop and surface the parsing error details.
 
 ### 2. Re-run Readiness Checklist
 
-```yaml
-# RESOLVED: bmm.readiness-checklist -> Read fully and follow:
-#   _bmad/bmm/workflows/3-solutioning/bmad-check-implementation-readiness/workflow.md
-# Run in validate mode (check existing artifacts, don't create new ones)
-# Agent persona: Bob (Scrum Master) - _bmad/bmm/agents/sm.md
-read_and_follow: "_bmad/bmm/workflows/3-solutioning/bmad-check-implementation-readiness/workflow.md"
-params:
-  mode: "validate"
-  constitutional_context: ${constitutional_context}
+Load and follow `{readinessWorkflow}` in validate mode, using the resolved constitutional context.
 
-if readiness.blockers > 0:
-  output: |
-    ⚠️ Readiness blockers found:
-    ${readiness.blockers}
-
-    Resolve blockers before proceeding to sprint planning.
-  exit: 1
-```
+If readiness blockers remain, stop and require the user to resolve them before SprintPlan can continue.
 
 ### 3. Constitutional Compliance Gate (Required)
 
-```yaml
-compliance_targets:
-  - path: "${docs_path}/product-brief.md"
-    type: "PRD"
-  - path: "${docs_path}/prd.md"
-    type: "PRD"
-  - path: "${docs_path}/architecture.md"
-    type: "Architecture document"
-  - path: "${docs_path}/epics.md"
-    type: "Story/Epic"
-  - path: "${docs_path}/stories.md"
-    type: "Story/Epic"
-  - path: "${docs_path}/readiness-checklist.md"
-    type: "Story/Epic"
+Run constitutional compliance checks against each planning artifact that exists under `{docs_path}`.
 
-compliance_failures = []
-compliance_warnings = []
-compliance_checked = 0
+Track how many artifacts were checked, collect warnings into `compliance_warnings`, and collect hard failures into `compliance_failures`.
 
-for target in compliance_targets:
-  if file_exists(target.path):
-    compliance_result = invoke("constitution.compliance-check")
-    params:
-      artifact_path: ${target.path}
-      artifact_type: ${target.type}
-      constitutional_context: ${constitutional_context}
+If any compliance failures exist, stop the workflow and block SprintPlan until those violations are resolved.
 
-    compliance_checked = compliance_checked + 1
+### 4. Auto-Proceed
 
-    if compliance_result.fail_count > 0:
-      compliance_failures.append("${target.path}: ${compliance_result.fail_count} FAIL")
+Display: "**Proceeding to sprint planning...**"
 
-    if compliance_result.warn_count > 0:
-      compliance_warnings.append("${target.path}: ${compliance_result.warn_count} WARN")
+#### Menu Handling Logic:
+- After readiness and compliance gates pass, load, read fully, and execute `{nextStepFile}`.
 
-if compliance_failures.length > 0:
-  output: |
-    FAIL Constitutional compliance failures detected:
-    ${compliance_failures.join("\n")}
+#### EXECUTION RULES:
+- This is an auto-proceed step with no user choice.
+- Stop only when readiness blockers or constitutional failures remain.
 
-    Sprint planning blocked until violations are resolved.
-  exit: 1
-```
+## SYSTEM SUCCESS/FAILURE METRICS:
 
----
+### SUCCESS:
+- Constitutional context is resolved.
+- Readiness validation runs in validate mode with zero blockers.
+- Compliance checks complete with no hard failures.
 
-## NEXT STEP DIRECTIVE
+### SYSTEM FAILURE:
+- Constitutional context cannot be resolved.
+- Readiness blockers remain.
+- Any planning artifact fails constitutional compliance.
 
-**NEXT:** Read fully and follow: `{nextStepFile}`
+**Master Rule:** Skipping steps is FORBIDDEN.

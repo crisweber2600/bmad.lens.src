@@ -1,109 +1,77 @@
 ---
 name: 'step-05-closeout'
 description: 'Run the optional retrospective, persist dev state, and finalize initiative completion when applicable'
+workflowXml: '{project-root}/_bmad/core/tasks/workflow.xml'
+retrospectiveWorkflow: '{project-root}/_bmad/bmm/workflows/4-implementation/retrospective/workflow.yaml'
 ---
 
 # Step 5: Closeout And Initiative State
 
-**Goal:** Offer the retrospective, persist dev state, append the event log, and complete the initiative when all phases are done.
+## STEP GOAL:
+
+Offer the retrospective, persist dev state, append the event log, and complete the initiative when all phases are done.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Persist control-plane state before declaring `/dev` complete.
+- Keep implementation writes in the TargetProject repo and state writes in `_bmad-output/`.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Close the implementation phase without losing auditability, branch discipline, or initiative state.
+
+### Step-Specific Rules:
+- The retrospective remains optional.
+- State updates, event logging, and control-plane commits are mandatory.
+- Only mark the initiative complete when all phases are actually complete.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly.
+- Use `{workflowXml}` to execute `{retrospectiveWorkflow}` when the user opts into a retrospective.
+- Persist phase status, event log, and control-plane commits before evaluating initiative completion.
+
+## CONTEXT BOUNDARIES:
+- Available context: `initiative`, `story_id`, `constitutional_context`, `session.target_path`, and `_bmad-output` state artifacts.
+- Focus: retrospective decision, state persistence, event logging, and initiative closeout.
+- Limits: do not restart story or epic execution from this step.
+- Dependencies: successful epic merge gate.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Retrospective (Optional)
 
-```yaml
-offer: "Run retrospective? [Y]es / [N]o"
+Ask whether to run the retrospective.
 
-if yes:
-  invoke: git-orchestration.start-workflow
-  params:
-    workflow_name: retro
-
-  agent_persona: "_bmad/bmm/agents/sm.md"
-  read_and_follow: "_bmad/bmm/workflows/4-implementation/bmad-retrospective/workflow.md"
-  params:
-    constitutional_context: ${constitutional_context}
-  invoke: git-orchestration.finish-workflow
-```
+If the user accepts:
+- start workflow tracking for the retrospective
+- load `{workflowXml}`
+- execute `{retrospectiveWorkflow}` with the current constitutional context
+- finish workflow tracking after the retrospective completes
 
 ### 2. Update State Files And Initiative Config
 
-```yaml
-invoke: state-management.update-initiative
-params:
-  initiative_id: ${initiative.id}
-  updates:
-    current_phase: "dev"
-    phase_status:
-      dev: "in_progress"
-    gates:
-      large_to_base:
-        status: "passed"
-        verified_at: "${ISO_TIMESTAMP}"
-      dev_started:
-        status: "in_progress"
-        started_at: "${ISO_TIMESTAMP}"
-        story_id: "${story_id}"
-
-invoke: state-management.update-state
-params:
-  updates:
-    current_phase: "dev"
-    active_branch: "${initiative.initiative_root}-dev"
-    workflow_status: "in_progress"
-```
+Update the initiative record and workflow state so `/dev` remains the active phase, the large-to-base gate is marked passed, and the current story context is preserved in the control-plane state.
 
 ### 3. Commit State Changes
 
-```yaml
-invoke: git-orchestration.commit-and-push
-params:
-  paths:
-    - "_bmad-output/lens-work/initiatives/${initiative.id}.yaml"
-    - "_bmad-output/lens-work/event-log.jsonl"
-    - "_bmad-output/implementation-artifacts/"
-  message: "[lens-work] /dev: Dev Implementation - ${initiative.id} - ${story_id}"
-  branch: "${initiative.initiative_root}-dev"
-```
+Commit and push the updated initiative state, event log, and implementation artifacts on the `/dev` phase branch.
 
 ### 4. Log Event
 
-```json
-{"ts":"${ISO_TIMESTAMP}","event":"dev","id":"${initiative.id}","phase":"dev","workflow":"dev","story":"${story_id}","status":"in_progress"}
-```
+Append the `/dev` event-log entry that records initiative id, phase, workflow, story id, and in-progress status.
 
 ### 5. Complete Initiative (When All Done)
 
-```yaml
-if all_phases_complete():
-  invoke: state-management.update-initiative
-  params:
-    initiative_id: ${initiative.id}
-    updates:
-      status: "complete"
-      completed_at: "${ISO_TIMESTAMP}"
-      phase_status:
-        dev: "complete"
+If all phases are complete:
+- update the initiative status to `complete`
+- archive initiative state through `state-management.archive`
+- commit and push the final `_bmad-output/lens-work/` state
+- display the initiative completion summary
 
-  invoke: state-management.archive
-
-  invoke: git-orchestration.commit-and-push
-  params:
-    paths:
-      - "_bmad-output/lens-work/"
-    message: "[lens-work] Initiative complete - ${initiative.id}"
-
-  output: |
-    🎉 Initiative Complete!
-    ├── All phases finished
-    ├── Code merged to main
-    ├── Initiative archived
-    └── Great work, team!
-```
-
----
 
 ## CONTROL-PLANE RULE REMINDER
 
@@ -120,7 +88,6 @@ Throughout `/dev`, the user may work in TargetProjects for actual coding, but al
 
 **⚠️ bmad.lens.release is NEVER the implementation target.** It is a read-only authority repo containing BMAD framework code.
 
----
 
 ## OUTPUT ARTIFACTS
 
@@ -134,7 +101,6 @@ Throughout `/dev`, the user may work in TargetProjects for actual coding, but al
 | Initiative State | `_bmad-output/lens-work/initiatives/${id}.yaml` |
 | Event Log | `_bmad-output/lens-work/event-log.jsonl` |
 
----
 
 ## ERROR HANDLING
 
@@ -159,24 +125,18 @@ Throughout `/dev`, the user may work in TargetProjects for actual coding, but al
 | Epic party mode teardown failed | Address epic party-mode findings and re-run code review |
 | State file write failed | Retry (max 3 attempts), then fail with save instructions |
 
----
 
-## POST-CONDITIONS
+## SYSTEM SUCCESS/FAILURE METRICS:
 
-- [ ] Working directory clean (all changes committed)
-- [ ] On correct branch: `{initiative_root}-dev`
-- [ ] Audience promotion validated (large -> base passed)
-- [ ] initiatives/{id}.yaml updated with dev status and gate entries
-- [ ] event-log.jsonl entries appended
-- [ ] All stories for the epic discovered and implemented
-- [ ] Each story: constitution check passed, pre-implementation gates passed
-- [ ] Each task: individually committed to story branch
-- [ ] Each story: adversarial code review executed with fix loop (max 2 passes)
-- [ ] Each story: party mode teardown passed
-- [ ] Each story: PR created (story branch -> epic branch)
-- [ ] Epic completion gate: adversarial review and party-mode teardown passed
-- [ ] Constitutional guidance surfaced with special instructions (if provided)
-- [ ] Target repo feature branches used for implementation
-- [ ] Epic adversarial review executed when epic completion is detected
-- [ ] Epic party-mode teardown executed when epic completion is detected
-- [ ] All state changes pushed to origin
+### SUCCESS:
+- Optional retrospective handling is complete.
+- Initiative state, workflow state, and event log are persisted.
+- Control-plane changes are committed and pushed.
+- The initiative is marked complete and archived when all phases are done.
+
+### SYSTEM FAILURE:
+- Retrospective execution fails after the user opts in.
+- State files cannot be updated or committed.
+- Event logging or initiative archiving fails.
+
+**Master Rule:** Skipping steps is FORBIDDEN.

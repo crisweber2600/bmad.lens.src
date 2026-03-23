@@ -2,134 +2,96 @@
 name: 'step-01-preflight'
 description: 'Run dev pre-flight, resolve the target repo, and validate the large-to-base promotion gate'
 nextStepFile: './step-02-story-discovery.md'
+preflightInclude: '../../includes/preflight.md'
 promotionAndContextData: '../data/preflight-promotion-and-context.md'
 ---
 
 # Step 1: Pre-Flight And Target Repo Validation
 
-**Goal:** Establish the `/dev` branch context, resolve the implementation target repo, and confirm SprintPlan and promotion gates before story execution begins.
+## STEP GOAL:
+
+Establish the `/dev` branch context, resolve the implementation target repo, and confirm SprintPlan and promotion gates before story execution begins.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Keep control-plane operations in the BMAD repo unless this step explicitly switches to the TargetProject repo.
+- Stop immediately when a hard gate fails.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Protect authority boundaries, branch discipline, and constitutional enforcement.
+
+### Step-Specific Rules:
+- NEVER allow `/dev` to target `bmad.lens.release`.
+- Resolve initiative context from git-derived state, not ad hoc assumptions.
+- Load `{preflightInclude}` before applying any dev-specific gate logic.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly.
+- Carry forward `initiative`, `docs_path`, `bmad_docs`, `phase_branch`, `constitutional_context`, `session.target_repo`, and `session.target_path`.
+- Load `{promotionAndContextData}` completely before applying its checks.
+
+## CONTEXT BOUNDARIES:
+- Available context: active git branch, initiative config, lifecycle state, `{preflightInclude}`, and `{promotionAndContextData}`.
+- Focus: branch setup, target repo resolution, prior-phase validation, and large-to-base promotion enforcement.
+- Limits: do not begin story implementation in this step.
+- Dependencies: clean working tree and valid initiative state.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Pre-Flight [REQ-9]
 
-```yaml
-# PRE-FLIGHT (mandatory, never skip) [REQ-9]
-# 0. Execute shared preflight include (authority sync + constitution enforcement)
-# 1. Verify working directory is clean
-# 2. Load initiative config (git-derived state)
-# 3. Determine correct phase branch: {initiative_root}-{audience}-{phase_name}
-# 4. Create phase branch if it doesn't exist
-# 5. Checkout phase branch
-# 6. Confirm to user: "Now on branch: {branch_name}"
+Load and execute `{preflightInclude}` first so authority-repo sync and constitutional bootstrap happen before any `/dev` routing logic.
 
-invoke: include
-path: "_bmad/lens-work/workflows/includes/preflight.md"
+Verify the working directory is clean, derive the active initiative from the current branch, and load the initiative configuration.
 
-invoke: git-orchestration.verify-clean-state
+Set the `/dev` audience context to `base`, resolve `initiative_root`, derive `phase_branch = {initiative_root}-dev`, and resolve `docs_path`, `repo_docs_path`, and `bmad_docs` from initiative metadata.
 
-branch = invoke: git-orchestration.get-current-branch
-initiative = load("_bmad-output/lens-work/initiatives/${git-state.parse-initiative-root(branch)}.yaml")
+If `initiative.docs.path` is missing, fall back to `_bmad-output/planning-artifacts/`, clear `repo_docs_path`, and surface the existing deprecation warning.
 
-size = initiative.size
-domain_prefix = initiative.domain_prefix
+Resolve the target repository from `initiative.target_repos[0]`. If no target repo is configured, ask the user for a local repository path, require a non-empty answer, and store the result in `session.target_repo` and `session.target_path`.
 
-audience = "base"
-initiative_root = initiative.initiative_root
-audience_branch = "base"
+Display the resolved target repository. If the resolved path points into `bmad.lens.release`, fail immediately because `/dev` may only write inside the TargetProject repository.
 
-docs_path = initiative.docs.path
-repo_docs_path = "docs/${initiative.docs.domain}/${initiative.docs.service}/${initiative.docs.repo}"
+If initiative-specific docs exist, load architecture and stories context when available. Otherwise continue without planning context.
 
-if docs_path == null or docs_path == "":
-  docs_path = "_bmad-output/planning-artifacts/"
-  repo_docs_path = null
-  warning: "⚠️ DEPRECATED: Initiative missing docs.path configuration."
-  warning: "  -> Run: /lens migrate <initiative-id> to add docs.path"
-
-bmad_docs = initiative.docs.bmad_docs
-
-if initiative.target_repos == null or initiative.target_repos.length == 0:
-  output: |
-    ⚠️ No target repos configured for this initiative.
-    ├── Initiative: ${initiative.id}
-    └── target_repos field is missing or empty.
-
-  ask: |
-    Please provide the path to the target repo for this initiative.
-    This should be the local path to the repository (e.g., TargetProjects/domain/service/repo-name):
-  capture: user_target_path
-
-  if user_target_path == null or user_target_path == "":
-    FAIL("❌ Target repo path is required for /dev. Cannot proceed without a target repo.")
-
-  session.target_repo = { name: basename(user_target_path), local_path: user_target_path }
-  session.target_path = user_target_path
-  warning: |
-    ⚠️ Using user-provided target path: ${user_target_path}
-    Consider running /lens init-repo to register this repo in the initiative config.
-else:
-  session.target_repo = initiative.target_repos[0]
-  session.target_path = initiative.target_repos[0].local_path
-
-output: |
-  📂 Target Repo Resolved
-  ├── Repo: ${session.target_repo.name}
-  └── Path: ${session.target_path}
-
-if session.target_path contains "bmad.lens.release":
-  FAIL: |
-    ❌ INVALID TARGET - bmad.lens.release is a READ-ONLY authority repo.
-    ├── Resolved target_path: ${session.target_path}
-    ├── It is NEVER the implementation target for /dev
-    └── Fix: Update initiative.target_repos to point to the actual TargetProject repo path.
-
-if docs_path != "_bmad-output/planning-artifacts/":
-  architecture = load_if_exists("${docs_path}/architecture.md")
-  stories = load_if_exists("${docs_path}/stories.md")
-  planning_context = { architecture: architecture, stories: stories }
-else:
-  planning_context = null
-
-phase_branch = "${initiative.initiative_root}-dev"
-
-if not branch_exists(phase_branch):
-  invoke: git-orchestration.start-phase
-  params:
-    phase_name: "dev"
-    initiative_id: ${initiative.id}
-    audience: ${audience}
-    initiative_root: ${initiative.initiative_root}
-    parent_branch: ${audience_branch}
-  if start_phase.exit_code != 0:
-    FAIL("❌ Pre-flight failed: Could not create branch ${phase_branch}")
-
-invoke: git-orchestration.checkout-branch
-params:
-  branch: ${phase_branch}
-invoke: git-orchestration.pull-latest
-
-output: |
-  📋 Pre-flight complete [REQ-9]
-  ├── Initiative: ${initiative.name} (${initiative.id})
-  ├── Phase: Dev (Implementation)
-  ├── Branch: ${phase_branch}
-  └── Working directory: clean ✅
-```
+Ensure `{phase_branch}` exists through `git-orchestration.start-phase` when needed, then check it out, pull the latest remote state, and confirm the branch to the user.
 
 ### 2. Promotion, Constitutional Context, And Branch Verification
 
-Load and execute `{promotionAndContextData}` in the active `/dev` pre-flight context. This reference contains:
+Load and apply `{promotionAndContextData}` in the active `/dev` pre-flight context. This reference contains the remaining hard-gate logic for this step and must be followed completely. It is responsible for:
 
 - large-to-base promotion verification
 - prior SprintPlan completion handling
 - constitutional context injection
 - final branch assertion
 
----
+### 3. Auto-Proceed
 
-## NEXT STEP DIRECTIVE
+Display: "**Proceeding to story discovery...**"
 
-**NEXT:** Read fully and follow: `{nextStepFile}`
+#### Menu Handling Logic:
+- After successful preflight and gate checks, load, read fully, and execute `{nextStepFile}`.
+
+#### EXECUTION RULES:
+- This is an auto-proceed step with no user choice.
+- Stop only if target repo resolution is cancelled or a hard gate fails.
+
+## SYSTEM SUCCESS/FAILURE METRICS:
+
+### SUCCESS:
+- `/dev` phase branch is ready and checked out.
+- `session.target_repo` and `session.target_path` are resolved and safe.
+- Prior-phase, promotion, and constitutional checks have been applied.
+
+### SYSTEM FAILURE:
+- The working tree is dirty.
+- The target repo is missing, empty, or resolves into `bmad.lens.release`.
+- Prior-phase or promotion gates fail.
+- The `/dev` phase branch cannot be created or checked out.
+
+**Master Rule:** Skipping steps is FORBIDDEN.

@@ -2,125 +2,85 @@
 name: 'step-04-epic-completion'
 description: 'Run epic-level review gates, create the epic PR, and stop until the epic merge completes'
 nextStepFile: './step-05-closeout.md'
+implementationReadinessWorkflow: '{project-root}/_bmad/bmm/workflows/3-solutioning/check-implementation-readiness/workflow.md'
+partyModeWorkflow: '{project-root}/_bmad/core/workflows/party-mode/workflow.md'
 ---
 
 # Step 4: Epic Completion Gate
 
-**Goal:** After all stories finish, run epic-level gates, create the epic PR into the initiative branch, and wait at the hard merge gate.
+## STEP GOAL:
+
+After all stories finish, run epic-level gates, create the epic PR into the initiative branch, and wait at the hard merge gate.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Treat the epic merge gate as a hard stop.
+- Do not proceed to closeout until the epic PR is merged.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Protect the initiative branch from bypassing epic-level quality and review gates.
+
+### Step-Specific Rules:
+- Run the implementation-readiness gate before party mode.
+- Create the epic PR only after all story PRs have been produced.
+- Wait for the epic merge result instead of assuming success.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly.
+- Use `{implementationReadinessWorkflow}` for the epic readiness gate and `{partyModeWorkflow}` for epic teardown.
+- Persist `session.epic_branch`, `session.initiative_branch`, and `epic_pr_result` through the wait gate.
+
+## CONTEXT BOUNDARIES:
+- Available context: completed story state, `docs_path`, `constitutional_context`, `session.epic_branch`, and `session.initiative_branch`.
+- Focus: epic-level review, PR creation, and merge confirmation.
+- Limits: do not perform post-merge closeout in this step.
+- Dependencies: all story work and story PR creation must already be complete.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Epic Completion Gate (Mandatory)
 
-```yaml
-current_epic_id = "epic-${session.epic_number}"
+Set `current_epic_id = epic-{session.epic_number}`.
 
-read_and_follow: "_bmad/bmm/workflows/3-solutioning/bmad-check-implementation-readiness/workflow.md"
-params:
-  scope: "epic"
-  epic_id: ${current_epic_id}
-  stories: "${docs_path}/stories.md"
-  implementation_artifacts: "_bmad-output/implementation-artifacts/"
-  constitutional_context: ${constitutional_context}
+Load and follow `{implementationReadinessWorkflow}` in epic scope, using the current stories document, implementation artifacts, and constitutional context. If the epic readiness result is blocked or failed, stop and require the user to resolve the findings before rerunning `/dev`.
 
-if epic_adversarial.status in ["blocked", "fail", "failed"]:
-  error: |
-    ⛔ MANDATORY GATE - Epic adversarial review failed for ${current_epic_id}.
-    Resolve implementation-readiness findings and re-run /dev.
-  halt: true
+Load and follow `{partyModeWorkflow}` against the current epic context. If party-mode teardown is not complete, stop and require the user to resolve the generated review artifact before rerunning `/dev`.
 
-read_and_follow: "_bmad/core/skills/bmad-party-mode/workflow.md"
-params:
-  input_file: "${docs_path}/epics.md"
-  focus_epic: ${current_epic_id}
-  artifacts_path: ${session.target_path}
-  output_file: "_bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md"
-  constitutional_context: ${constitutional_context}
+Commit and push the epic branch in the target repo, then create the epic PR from `session.epic_branch` into `session.initiative_branch`.
 
-if party_mode.status not in ["pass", "complete"]:
-  error: |
-    ⛔ MANDATORY GATE - Epic party-mode teardown found unresolved issues for ${current_epic_id}.
-    Address _bmad-output/implementation-artifacts/epic-${current_epic_id}-party-mode-review.md and re-run /dev.
-  halt: true
+If PR creation falls back to manual instructions, surface the fallback and keep the recorded PR result. Otherwise display the created PR URL.
 
-invoke: git-orchestration.commit-and-push
-params:
-  repo_path: ${session.target_path}
-  branch: ${session.epic_branch}
-  message: "feat(${session.epic_key}): Epic ${session.epic_number} complete - all stories merged"
+Wait up to 10 minutes for the epic PR to merge. If the PR is not merged in time, stop the workflow and instruct the user to merge the story PRs and epic PR before rerunning `/dev`.
 
-target_base_branch = session.initiative_branch
+When the merge completes, confirm that the epic has been integrated into the initiative branch and finish the epic-level workflow bookkeeping.
 
-invoke: git-orchestration.create-pr
-params:
-  repo_path: ${session.target_path}
-  source_branch: ${session.epic_branch}
-  target_branch: ${target_base_branch}
-  title: "feat(${session.epic_key}): Epic ${session.epic_number}"
-  body: |
-    Epic ${session.epic_number} - all ${session.stories_completed.length} stories implemented and reviewed.
+### 2. Auto-Proceed
 
-    Stories completed:
-    ${for sid in session.stories_completed}
-    - ✅ ${sid}
-    ${endfor}
+Display: "**Proceeding to closeout...**"
 
-    Source branch: ${session.epic_branch}
-    Target branch: ${target_base_branch}
+#### Menu Handling Logic:
+- After the epic PR merge gate completes successfully, load, read fully, and execute `{nextStepFile}`.
 
-    This PR was auto-created by /dev after all stories passed code review and epic-level gates.
+#### EXECUTION RULES:
+- This is an auto-proceed step with no user choice.
+- Halt only if epic readiness, party mode, PR creation, or the merge wait gate fails.
 
-    ⚠️ All story->epic PRs should be merged before merging this epic->initiative PR.
-capture: epic_pr_result
+## SYSTEM SUCCESS/FAILURE METRICS:
 
-if epic_pr_result.fallback:
-  warning: |
-    ⚠️ Auto-PR fallback for epic ${session.epic_number}.
-    Run this in target repo (${session.target_path}):
-    gh pr create --base "${target_base_branch}" --head "${session.epic_branch}" --title "feat(${session.epic_key}): Epic ${session.epic_number}"
-else:
-  output: |
-    ✅ Epic PR auto-created
-    ├── Branch: ${session.epic_branch} -> ${target_base_branch}
-    └── URL: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result}
+### SUCCESS:
+- Epic readiness and party-mode teardown both pass.
+- The epic branch is committed and pushed.
+- The epic PR is created and merged into the initiative branch.
 
-output: |
-  ⏳ Epic PR Merge Gate - HARD STOP
-  ├── PR: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result || '(manual - see fallback above)'}
-  ├── Branch: ${session.epic_branch} -> ${target_base_branch}
-  ├── ⚠️  Ensure all story->epic PRs are merged first
-  └── ⚠️  Please merge this epic PR now. Waiting up to 10 minutes...
+### SYSTEM FAILURE:
+- Epic readiness review fails.
+- Epic party-mode teardown fails.
+- Epic PR cannot be created.
+- The epic PR does not merge within the wait window.
 
-invoke: git-orchestration.wait-for-pr-merge
-params:
-  repo_path: ${session.target_path}
-  source_branch: ${session.epic_branch}
-  target_branch: ${target_base_branch}
-  pr_url: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result || "(manual)"}
-  timeout_seconds: 600
-capture: epic_merge_wait_result
-
-if epic_merge_wait_result.merged == false:
-  output: |
-    ❌ Epic PR not merged within 10 minutes - STOPPING.
-    ├── Epic: ${session.epic_key}
-    ├── PR: ${epic_pr_result.pr_url || epic_pr_result.url || epic_pr_result || '(manual)'}
-    ├── Action: Merge all story PRs into epic, then merge epic PR into initiative.
-    └── Re-run /dev to continue with post-epic steps.
-  invoke: git-orchestration.finish-workflow
-  halt: true
-
-output: |
-  ✅ Epic PR merged into initiative branch.
-  └── ${session.epic_key} integrated into ${target_base_branch}
-
-invoke: git-orchestration.finish-workflow
-```
-
----
-
-## NEXT STEP DIRECTIVE
-
-**NEXT:** Read fully and follow: `{nextStepFile}`
+**Master Rule:** Skipping steps is FORBIDDEN.

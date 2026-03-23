@@ -2,193 +2,104 @@
 name: 'step-01-preflight'
 description: 'Run pre-flight, branch routing, prerequisite validation, and artifact checklist gating'
 nextStepFile: './step-02-readiness.md'
+preflightInclude: '../../includes/preflight.md'
+lifecycleContract: '{project-root}/_bmad/lens-work/lifecycle.yaml'
 ---
 
 # Step 1: Pre-Flight And Gate Checks
 
-**Goal:** Establish the correct SprintPlan branch context, confirm promotion prerequisites, and detect missing required artifacts before deeper validation.
+## STEP GOAL:
+
+Establish the correct SprintPlan branch context, confirm promotion prerequisites, and detect missing required artifacts before deeper validation.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Stop immediately when a hard gate fails.
+- Keep all branch and state decisions grounded in initiative config and lifecycle data.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Protect audience progression, branch discipline, and planning gate integrity.
+
+### Step-Specific Rules:
+- Load `{preflightInclude}` before SprintPlan-specific gating.
+- Use `{lifecycleContract}` to derive the large-audience SprintPlan branch.
+- Treat missing required artifacts as a warning gate that needs an explicit user decision.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly.
+- Carry forward `initiative`, `initiative_root`, `docs_path`, `bmad_docs`, `phase_branch`, `audience_branch`, and `missing`.
+- Preserve any artifact-warning decision so later steps can mark `passed_with_warnings` when necessary.
+
+## CONTEXT BOUNDARIES:
+- Available context: active branch, initiative config, `{preflightInclude}`, and `{lifecycleContract}`.
+- Focus: branch setup, prerequisite validation, promotion checks, and artifact gating.
+- Limits: do not run readiness validation or sprint planning in this step.
+- Dependencies: clean working tree and resolvable initiative state.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Pre-Flight [REQ-9]
 
-```yaml
-# PRE-FLIGHT (mandatory, never skip) [REQ-9]
-# 0. Execute shared preflight include (authority sync + constitution enforcement)
-# 1. Verify working directory is clean
-# 2. Derive initiative state from git branch (v2: git-state skill)
-# 3. Validate audience promotion (medium -> large must be complete)
-# 4. Determine correct phase branch: {initiative_root}-{audience}-{phase_name}
-# 5. Create phase branch if it doesn't exist
-# 6. Checkout phase branch
-# 7. Confirm to user: "Now on branch: {branch_name}"
-# GATE: All steps must pass before proceeding to sprint planning
-# NOTE: sprintplan is the FIRST phase in large audience - requires medium->large promotion
+Load and execute `{preflightInclude}` first so authority-repo sync and constitutional bootstrap happen before SprintPlan routing logic.
 
-# Shared preflight include (includes constitutional context bootstrap)
-invoke: include
-path: "_bmad/lens-work/workflows/includes/preflight.md"
+Verify the working directory is clean, derive initiative state from the active branch, and load `{lifecycleContract}` to determine the SprintPlan audience.
 
-# Verify working directory is clean
-invoke: git-orchestration.verify-clean-state
+Set `current_phase = sprintplan`, derive the large-audience branch from the lifecycle contract, resolve `initiative_root`, `audience_branch`, `docs_path`, `repo_docs_path`, `output_path`, and `bmad_docs`, and preserve the existing docs-path deprecation warning when initiative metadata is incomplete.
 
-# Derive initiative state from git branch (v2: git-state skill)
-initiative_state = invoke: git-state.current-initiative
-initiative = load("${initiative_state.config_path}")
+Validate the medium-to-large audience promotion gate. If promotion is already complete, update initiative state accordingly. If it is not complete, surface the gate failure and auto-trigger `@lens promote`, then stop this workflow.
 
-# Load lifecycle contract for phase -> audience mapping
-lifecycle = load("lifecycle.yaml")
-
-# Read initiative config
-size = initiative.size
-domain_prefix = initiative.domain_prefix
-
-# Derive audience from lifecycle contract (sprintplan -> large)
-current_phase = "sprintplan"
-audience = lifecycle.phases[current_phase].branching_audience || lifecycle.phases[current_phase].audience
-initiative_root = initiative.initiative_root
-audience_branch = "${initiative_root}-${audience}"
-
-# === Path Resolver (S01-S06: Context Enhancement) ===
-docs_path = initiative.docs.path
-repo_docs_path = "docs/${initiative.docs.domain}/${initiative.docs.service}/${initiative.docs.repo}"
-
-if docs_path == null or docs_path == "":
-  docs_path = "_bmad-output/planning-artifacts/"
-  repo_docs_path = null
-  warning: "⚠️ DEPRECATED: Initiative missing docs.path configuration."
-
-output_path = "${docs_path}/reviews/"
-ensure_directory("${docs_path}/reviews/")
-
-# REQ-10: Resolve BmadDocs path for per-initiative output co-location
-bmad_docs = initiative.docs.bmad_docs
-if bmad_docs != null and bmad_docs != "":
-  ensure_directory("${bmad_docs}")
-
-# REQ-9: Validate audience promotion gate (medium -> large)
-prev_audience = "medium"
-prev_audience_branch = "${initiative_root}-medium"
-
-if initiative.audience_status exists:
-  if initiative.audience_status.medium_to_large != "complete":
-    result = git-orchestration.exec("git merge-base --is-ancestor origin/${prev_audience_branch} origin/${audience_branch}")
-
-    if result.exit_code == 0:
-      invoke: state-management.update-initiative
-      params:
-        initiative_id: ${initiative.id}
-        updates:
-          audience_status:
-            medium_to_large: "complete"
-      output: "✅ Audience promotion (medium -> large) complete - stakeholder approval gate passed"
-    else:
-      output: |
-        ❌ Audience promotion (medium -> large) not complete
-        ├── Gate: stakeholder-approval
-        ├── All medium-audience phases (devproposal) must be complete
-        └── Auto-triggering audience promotion now
-
-      invoke_command: "@lens promote"
-      exit: 0
-else:
-  warning: "⚠️ No audience_status in initiative config - legacy format detected"
-
-# Determine phase branch [REQ-9]
-phase_branch = "${initiative_root}-${audience}-sprintplan"
-
-# Step 5: Create phase branch if it doesn't exist [REQ-9]
-if not branch_exists(phase_branch):
-  invoke: git-orchestration.start-phase
-  params:
-    phase_name: "sprintplan"
-    display_name: "SprintPlan"
-    initiative_id: ${initiative.id}
-    audience: ${audience}
-    initiative_root: ${initiative_root}
-    parent_branch: ${audience_branch}
-  if start_phase.exit_code != 0:
-    FAIL("❌ Pre-flight failed: Could not create branch ${phase_branch}")
-
-# Step 6: Checkout phase branch
-invoke: git-orchestration.checkout-branch
-params:
-  branch: ${phase_branch}
-invoke: git-orchestration.pull-latest
-
-# Step 7: Confirm to user [REQ-9]
-output: |
-  📋 Pre-flight complete [REQ-9]
-  ├── Initiative: ${initiative.name} (${initiative.id})
-  ├── Phase: SprintPlan (sprintplan)
-  ├── Audience: large (stakeholder approval)
-  ├── Branch: ${phase_branch}
-  └── Working directory: clean ✅
-```
+Derive `phase_branch = {initiative_root}-{audience}-sprintplan`, ensure it exists through `git-orchestration.start-phase` when required, check it out, pull the latest state, and confirm the active branch to the user.
 
 ### 2. Validate Prerequisites And Gate Check
 
-```yaml
-# Gate check - verify devproposal phase is complete and medium->large promotion done
-devproposal_branch = "${initiative_root}-medium-devproposal"
-medium_branch = "${initiative_root}-medium"
+Verify that the medium-audience `devproposal` branch has been merged into the medium audience branch.
 
-result = git-orchestration.exec("git merge-base --is-ancestor origin/${devproposal_branch} origin/${medium_branch}")
+If DevProposal is not complete, stop with guidance to finish `/devproposal` or merge pending PRs.
 
-if result.exit_code != 0:
-  error: "DevProposal phase not complete. Run /devproposal first or merge pending PRs."
-
-# Verify audience promotion gate (medium -> large) passed
-if initiative.audience_status.medium_to_large != "complete":
-  output: |
-    ⏳ Audience promotion (medium -> large) still incomplete
-    ▶️  Auto-triggering audience promotion now
-  invoke_command: "@lens promote"
-  exit: 0
-```
+If the medium-to-large audience promotion is still incomplete after the prerequisite check, auto-trigger `@lens promote` and stop.
 
 ### 3. Checklist Enforcement - Verify Required Artifacts
 
-```yaml
-required_artifacts:
-  - path: "${docs_path}/product-brief.md"
-    phase: "preplan"
-    name: "Product Brief"
-  - path: "${docs_path}/prd.md"
-    phase: "businessplan"
-    name: "PRD"
-  - path: "${docs_path}/architecture.md"
-    phase: "techplan"
-    name: "Architecture"
-  - path: "${docs_path}/epics.md"
-    phase: "devproposal"
-    name: "Epics"
-  - path: "${docs_path}/stories.md"
-    phase: "devproposal"
-    name: "Stories"
-  - path: "${docs_path}/readiness-checklist.md"
-    phase: "devproposal"
-    name: "Readiness Checklist"
+Verify the required planning artifacts exist at `{docs_path}`:
+- Product Brief
+- PRD
+- Architecture
+- Epics
+- Stories
+- Readiness Checklist
 
-missing = []
-for artifact in required_artifacts:
-  if not file_exists(artifact.path):
-    missing.append("${artifact.name} (${artifact.phase}): ${artifact.path}")
+Collect missing artifacts into `missing`.
 
-if missing.length > 0:
-  output: |
-    ⚠️ Missing required artifacts:
-    ${missing.join("\n")}
+If any required artifacts are missing, display the list and ask whether to continue in warning mode. If the user declines, stop. If the user accepts, preserve that choice so later SprintPlan state can be marked `passed_with_warnings`.
 
-    These must exist before passing the sprint planning gate.
+### 4. Auto-Proceed
 
-  offer: "Continue anyway? [Y]es / [N]o - (choosing Yes will mark gate as 'passed_with_warnings')"
-```
+Display: "**Proceeding to readiness validation...**"
 
----
+#### Menu Handling Logic:
+- After preflight, prerequisite checks, and artifact gating complete, load, read fully, and execute `{nextStepFile}`.
 
-## NEXT STEP DIRECTIVE
+#### EXECUTION RULES:
+- This is an auto-proceed step with no final menu.
+- Stop only on hard prerequisite failures or when the user declines to continue past missing artifacts.
 
-**NEXT:** Read fully and follow: `{nextStepFile}`
+## SYSTEM SUCCESS/FAILURE METRICS:
+
+### SUCCESS:
+- The large-audience SprintPlan phase branch is ready and checked out.
+- Medium-to-large promotion prerequisites are validated.
+- Required planning artifacts are checked and any warning-mode decision is explicit.
+
+### SYSTEM FAILURE:
+- The working tree is dirty.
+- DevProposal is incomplete.
+- Audience promotion is not complete.
+- The SprintPlan branch cannot be created or checked out.
+- The user declines to continue with missing required artifacts.
+
+**Master Rule:** Skipping steps is FORBIDDEN.
