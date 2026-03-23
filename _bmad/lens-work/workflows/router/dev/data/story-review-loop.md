@@ -18,7 +18,7 @@ params:
   workflow_name: code-review
 
 agent_persona: "_bmad/bmm/agents/qa.md"
-read_and_follow: "_bmad/bmm/workflows/4-implementation/bmad-code-review/workflow.md"
+read_and_follow: "_bmad/bmm/workflows/4-implementation/code-review/workflow.yaml"
 params:
   target_repo: "${target_path}"
   branch: "${session.story_branch}"

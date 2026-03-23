@@ -9,143 +9,73 @@ reviewLoopData: '../data/story-review-loop.md'
 
 # Step 3: Story Implementation Loop
 
-**Goal:** For each story in the epic, enforce constitutional gates, route implementation into the TargetProject repo, run review loops, and create the story PR before moving to the next story.
+## STEP GOAL:
+
+For each story in the epic, enforce constitutional gates, route implementation into the TargetProject repo, run review loops, and create the story PR before moving to the next story.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Process one story at a time in the resolved story order.
+- Stop immediately when an enforced constitutional or review gate fails.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Protect the story-branch, epic-branch, and initiative-branch chain while coordinating implementation inside the TargetProject repo.
+
+### Step-Specific Rules:
+- NEVER skip the story constitution check or pre-implementation gates.
+- Use `{targetRepoRoutingData}`, `{implementationGuidanceData}`, and `{reviewLoopData}` in that order for every story.
+- Keep TargetProject writes inside `session.target_path` and keep control-plane state updates in the BMAD repo.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly for each story.
+- Maintain `story_id`, `dev_story`, `dev_story_source`, `article_gates`, `session.story_branch`, `session.epic_branch`, and `session.stories_completed` throughout the loop.
+- Do not advance to the next story until review, PR creation, and control-plane updates are complete for the current story.
+
+## CONTEXT BOUNDARIES:
+- Available context: `session.story_files`, `initiative`, `constitutional_context`, and the three referenced data files.
+- Focus: story-by-story execution, gating, branch routing, implementation guidance, review, and PR creation.
+- Limits: do not run the epic completion gate in this step.
+- Dependencies: accepted story set from step 2 and successful preflight.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Story Loop
 
-**For each story in the epic, execute the sequence below before moving to the next story.**
-
-```yaml
-for story_idx, story_file in enumerate(session.story_files):
-  story_id = extract_story_id(story_file)
-
-  output: |
-    ═══════════════════════════════════════════
-    📖 Story ${story_idx + 1}/${session.story_files.length}: ${story_id}
-    ═══════════════════════════════════════════
-
-  dev_story = load(story_file)
-  dev_story_source = story_file
-  id = story_id
-
-  output: |
-    🚀 Story: ${dev_story.title}
-    **Source:** ${dev_story_source}
-    **Acceptance Criteria:**
-    ${dev_story.acceptance_criteria}
-
-    **Technical Notes:**
-    ${dev_story.technical_notes}
-
-    **Branch:** ${initiative.initiative_root}-dev
-```
+Iterate `session.story_files` in order. For each story:
+- derive `story_id`
+- load the story artifact into `dev_story`
+- persist `dev_story_source`
+- present the story title, acceptance criteria, technical notes, and active `/dev` branch context before implementation begins
 
 ### 2. Story Constitution Check (Required)
 
-```yaml
-dev_story_path = dev_story_source
+Run `constitution.compliance-check` against the active story artifact.
 
-dev_story_compliance = invoke("constitution.compliance-check")
-params:
-  artifact_path: ${dev_story_path}
-  artifact_type: "Story/Epic"
-  constitutional_context: ${constitutional_context}
+If article-gate failures are present:
+- display the failing gates
+- auto-resolve and halt when enforcement mode is `enforced`
+- otherwise record the advisory warning through constitutional complexity tracking
 
-if dev_story_compliance.article_gate_results.failed_gates > 0:
-  display: dev_story_compliance.article_gate_results
-
-  if enforcement_mode == "enforced":
-    invoke: constitution.auto-resolve-gate-block
-    params:
-      failed_gates: ${dev_story_compliance.article_gate_results}
-      artifact_path: ${dev_story_path}
-      artifact_type: "Story/Epic"
-      initiative_id: ${initiative.id}
-      source_branch: current_branch()
-      gate_stage: "dev-story-compliance"
-    halt: true
-  else:
-    warning: |
-      ⚠️ Dev story has ${dev_story_compliance.article_gate_results.failed_gates} article gate warning(s).
-    invoke: constitution.record-complexity-tracking
-    params:
-      article_gate_results: ${dev_story_compliance.article_gate_results}
-      initiative_id: ${initiative.id}
-      phase: "dev"
-
-if dev_story_compliance.fail_count > 0 and enforcement_mode == "enforced":
-  invoke: constitution.auto-resolve-gate-block
-  params:
-    fail_count: ${dev_story_compliance.fail_count}
-    artifact_path: ${dev_story_path}
-    artifact_type: "Story/Epic"
-    initiative_id: ${initiative.id}
-    source_branch: current_branch()
-    gate_stage: "dev-story-compliance-legacy"
-  halt: true
-```
+If legacy fail counts remain after compliance evaluation and enforcement mode is `enforced`, auto-resolve the gate block and halt.
 
 ### 3. Pre-Implementation Gates (Required)
 
-```yaml
-article_gates = invoke("constitution.generate-article-gates")
-params:
-  constitutional_context: ${constitutional_context}
-  artifact_path: ${dev_story_path}
-  artifact_type: "Story/Epic"
+Generate article gates for the active story and display the gate summary.
 
-output: |
-  ═══ Pre-Implementation Gates ═══
-  ${for gate in article_gates.gates}
-  Gate ${gate.article_id}: ${gate.title} (${gate.source_layer})  ${gate.status == "pass" ? "✓ PASS" : "✗ FAIL"}
-    ${for item in gate.check_items}
-    ${item.status == "pass" ? "✓" : "✗"} ${item.description}
-      ${if item.status == "fail"}→ ${item.violation}${endif}
-    ${endfor}
-  ${endfor}
-  ── Summary ──
-    Passed: ${article_gates.passed_gates}/${article_gates.total_gates} gates
-    Mode: ${enforcement_mode}
+If any pre-implementation gate fails:
+- auto-resolve and halt when enforcement mode is `enforced`
+- otherwise gather the user’s justification for each override and record it through constitutional complexity tracking
 
-if article_gates.failed_gates > 0:
-  if enforcement_mode == "enforced":
-    invoke: constitution.auto-resolve-gate-block
-    params:
-      failed_gates: ${article_gates}
-      artifact_path: ${dev_story_path}
-      artifact_type: "Story/Epic"
-      initiative_id: ${initiative.id}
-      source_branch: current_branch()
-      gate_stage: "pre-implementation-gates"
-    halt: true
-  else:
-    output: |
-      ⚠️ ${article_gates.failed_gates} gate(s) have warnings (advisory mode).
-    for gate in article_gates.gates where gate.status == "fail":
-      ask: |
-        Override gate ${gate.article_id}: ${gate.title}?
-        Provide justification and simpler alternative considered:
-      invoke: constitution.record-complexity-tracking
-      params:
-        gate: ${gate}
-        initiative_id: ${initiative.id}
-        phase: "dev"
-        justification: ${user_justification}
-
-checklist_gate = invoke("constitution.checklist-quality-gate")
-params:
-  bmad_docs: ${bmad_docs}
-  docs_path: ${docs_path}
-  initiative_id: ${initiative.id}
-```
+Run the checklist quality gate against `bmad_docs` and `docs_path` before implementation proceeds.
 
 ### 4. Target Repo Routing, Implementation Guidance, And Review Loop
 
-Load and execute the following references inside the active story iteration:
+Load and apply the following references inside the active story iteration, in order:
 
 - `{targetRepoRoutingData}` for initiative, epic, and story branch routing plus the dev write guard
 - `{implementationGuidanceData}` for constitutional implementation guidance and per-task commit rules
@@ -153,18 +83,30 @@ Load and execute the following references inside the active story iteration:
 
 ### 5. End-Of-Loop Summary
 
-```yaml
-output: |
-  ═══════════════════════════════════════════
-  🎉 All ${session.stories_completed.length} stories in Epic ${session.epic_number} implemented!
-  ═══════════════════════════════════════════
-  ${for sid in session.stories_completed}
-  ✅ ${sid}
-  ${endfor}
-```
+After the final story finishes, display the completed story list and confirm how many stories were successfully implemented in the epic.
 
----
+### 6. Auto-Proceed
 
-## NEXT STEP DIRECTIVE
+Display: "**Proceeding to the epic completion gate...**"
 
-**NEXT:** Read fully and follow: `{nextStepFile}`
+#### Menu Handling Logic:
+- After the story loop completes successfully, load, read fully, and execute `{nextStepFile}`.
+
+#### EXECUTION RULES:
+- This is an auto-proceed step with no user choice.
+- Halt only when a story-level gate, review loop, or PR creation block remains unresolved.
+
+## SYSTEM SUCCESS/FAILURE METRICS:
+
+### SUCCESS:
+- Every story in `session.story_files` is processed in order.
+- Story-level constitutional and pre-implementation gates are enforced.
+- Target repo routing, implementation guidance, review, and PR creation all complete per story.
+- `session.stories_completed` reflects the finished story set.
+
+### SYSTEM FAILURE:
+- Any story fails constitutional enforcement.
+- Target repo routing or dev write guard fails.
+- Code review, party-mode teardown, or story PR creation halts the loop.
+
+**Master Rule:** Skipping steps is FORBIDDEN.

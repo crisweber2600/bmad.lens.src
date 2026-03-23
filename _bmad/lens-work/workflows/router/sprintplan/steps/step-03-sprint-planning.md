@@ -2,56 +2,80 @@
 name: 'step-03-sprint-planning'
 description: 'Run the scrum-master sprint planning workflow and generate the sprint backlog'
 nextStepFile: './step-04-dev-story.md'
+workflowXml: '{project-root}/_bmad/core/tasks/workflow.xml'
+scrumMasterAgent: '{project-root}/_bmad/bmm/agents/sm.md'
+sprintPlanningWorkflow: '{project-root}/_bmad/bmm/workflows/4-implementation/sprint-planning/workflow.yaml'
 ---
 
 # Step 3: Sprint Planning
 
-**Goal:** Execute the sprint-planning sub-workflow as Bob, producing the sprint backlog after all gates pass.
+## STEP GOAL:
+
+Execute the sprint-planning sub-workflow as Bob, producing the sprint backlog after all gates pass.
+
+## MANDATORY EXECUTION RULES:
+
+### Universal Rules:
+- Read the complete step file before taking action.
+- Execute the sprint-planning workflow sequentially.
+- Preserve SprintPlan context while using Bob’s planning persona.
+
+### Role Reinforcement:
+- You are the LENS control-plane router.
+- Delegate sprint planning cleanly while keeping phase gating and artifact ownership intact.
+
+### Step-Specific Rules:
+- Load `{scrumMasterAgent}` before executing the sprint-planning workflow.
+- Load `{workflowXml}` and execute `{sprintPlanningWorkflow}` through the workflow engine.
+- Save outputs after each sub-workflow step.
+
+## EXECUTION PROTOCOLS:
+- Follow the numbered sequence exactly.
+- Start workflow tracking before sub-workflow execution and finish it afterward.
+- Persist the created sprint backlog location for the next step.
+
+## CONTEXT BOUNDARIES:
+- Available context: readiness-approved planning artifacts, `{scrumMasterAgent}`, `{workflowXml}`, and `{sprintPlanningWorkflow}`.
+- Focus: sprint backlog generation.
+- Limits: do not create dev-story artifacts in this step.
+- Dependencies: readiness and compliance gates must already pass.
 
 ---
 
-## EXECUTION SEQUENCE
+## MANDATORY SEQUENCE
 
 ### 1. Run Sprint Planning Workflow
 
-**CRITICAL - Workflow Rules:**
-Sub-workflow execution remains sequential.
+Start workflow tracking for `sprint-planning`.
 
-- Read and follow the workflow.md file directly.
-- Save outputs after each step.
-- Stop and wait for user at decision points.
+Load `{scrumMasterAgent}` to adopt Bob’s persona, then load `{workflowXml}` and execute `{sprintPlanningWorkflow}` with:
+- `stories = {docs_path}/stories.md`
+- `output_path = {bmad_docs}`
+- `constitutional_context = current constitutional context`
 
-**Agent:** Adopt Bob (Scrum Master) persona - load `_bmad/bmm/agents/sm.md`
+Finish workflow tracking after the sprint-planning workflow completes.
 
-```yaml
-invoke: git-orchestration.start-workflow
-params:
-  workflow_name: sprint-planning
+Display the sprint backlog output path and confirm that prioritization and capacity allocation are complete.
 
-# RESOLVED: bmm.sprint-planning -> Read fully and follow this workflow file:
-#   _bmad/bmm/workflows/4-implementation/bmad-sprint-planning/workflow.md
-# Agent persona: Bob (Scrum Master) - _bmad/bmm/agents/sm.md
-# Execute steps sequentially - save outputs after EACH step
-# STOP and wait for user at decision points
-agent_persona: "_bmad/bmm/agents/sm.md"
-read_and_follow: "_bmad/bmm/workflows/4-implementation/bmad-sprint-planning/workflow.md"
-params:
-  stories: "${docs_path}/stories.md"
-  output_path: "${bmad_docs}"
-  constitutional_context: ${constitutional_context}
+### 2. Auto-Proceed
 
-invoke: git-orchestration.finish-workflow
+Display: "**Proceeding to dev-story creation...**"
 
-output: |
-  📋 Sprint Planning
-  ├── Stories prioritized
-  ├── Capacity allocated
-  ├── Sprint backlog: ${bmad_docs}/sprint-backlog.md
-  └── Sprint backlog created
-```
+#### Menu Handling Logic:
+- After sprint planning completes successfully, load, read fully, and execute `{nextStepFile}`.
 
----
+#### EXECUTION RULES:
+- This is an auto-proceed step with no user choice.
+- Halt only if the sprint-planning workflow fails or returns incomplete output.
 
-## NEXT STEP DIRECTIVE
+## SYSTEM SUCCESS/FAILURE METRICS:
 
-**NEXT:** Read fully and follow: `{nextStepFile}`
+### SUCCESS:
+- Bob’s sprint-planning workflow executes through the workflow engine.
+- The sprint backlog is generated at `{bmad_docs}/sprint-backlog.md`.
+
+### SYSTEM FAILURE:
+- The scrum-master persona cannot be loaded.
+- The sprint-planning workflow fails or does not produce the expected backlog output.
+
+**Master Rule:** Skipping steps is FORBIDDEN.
