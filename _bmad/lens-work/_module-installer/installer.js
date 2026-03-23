@@ -34,6 +34,15 @@ function toYamlString(value) {
     return `"${String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
+function getConfigValue(config, keys, fallback) {
+    for (const key of keys) {
+        if (Object.prototype.hasOwnProperty.call(config, key) && config[key] !== undefined && config[key] !== null && config[key] !== '') {
+            return config[key];
+        }
+    }
+    return fallback;
+}
+
 async function readInstalledCoreConfig(projectRoot) {
     const candidatePaths = [
         path.join(projectRoot, '_bmad', 'core', 'config.yaml'),
@@ -220,6 +229,7 @@ const STUB_PROMPTS = [
     { file: 'lens-work.discover.prompt.md', name: 'lens-work.discover', desc: 'Discover repos under TargetProjects and update governance inventory', target: 'lens-work.discover.prompt.md' },
     { file: 'lens-work.switch.prompt.md', name: 'lens-work.switch', desc: 'Switch to a different initiative via git checkout', target: 'lens-work.switch.prompt.md' },
     { file: 'lens-work.promote.prompt.md', name: 'lens-work.promote', desc: 'Promote current audience to next level with gate checks', target: 'lens-work.promote.prompt.md' },
+    { file: 'lens-work.sense.prompt.md', name: 'lens-work.sense', desc: 'Run cross-initiative overlap detection on demand', target: 'lens-work.sense.prompt.md' },
     { file: 'lens-work.constitution.prompt.md', name: 'lens-work.constitution', desc: 'Resolve and display constitutional governance', target: 'lens-work.constitution.prompt.md' },
     { file: 'lens-work.help.prompt.md', name: 'lens-work.help', desc: 'Show available commands and usage', target: 'lens-work.help.prompt.md' },
 ];
@@ -237,7 +247,7 @@ const IDE_COMMANDS = [
     { file: 'bmad-lens-work-next.md', name: 'next', desc: 'Recommend next action based on lifecycle state', wf: 'workflows/utility/next/workflow.md' },
     { file: 'bmad-lens-work-switch.md', name: 'switch', desc: 'Switch to different initiative branch', wf: 'workflows/utility/switch/workflow.md' },
     { file: 'bmad-lens-work-help.md', name: 'help', desc: 'Show available commands and usage reference', wf: 'workflows/utility/help/workflow.md' },
-    { file: 'bmad-lens-work-promote.md', name: 'promote', desc: 'Promote current audience to next tier with gate checks', wf: 'workflows/core/audience-promotion/workflow.md' },
+    { file: 'bmad-lens-work-promote.md', name: 'promote', desc: 'Promote current audience to next tier with gate checks', wf: 'workflows/utility/promote/workflow.md' },
     { file: 'bmad-lens-work-constitution.md', name: 'constitution', desc: 'Resolve and display constitutional governance', wf: 'workflows/governance/resolve-constitution/workflow.md' },
     { file: 'bmad-lens-work-compliance.md', name: 'compliance', desc: 'Run constitution compliance check on current initiative', wf: 'workflows/governance/compliance-check/workflow.md' },
     { file: 'bmad-lens-work-sense.md', name: 'sense', desc: 'Cross-initiative overlap detection on demand', wf: 'workflows/governance/cross-initiative/workflow.md' },
@@ -409,6 +419,9 @@ async function install(options) {
         const configDir = path.join(projectRoot, '_bmad', 'lens-work');
         await fsHelpers.ensureDir(configDir);
 
+        const targetProjectsPath = getConfigValue(config, ['target-projects-path', 'target_projects_path'], '../TargetProjects');
+        const defaultGitRemote = getConfigValue(config, ['default-git-remote', 'default_git_remote'], 'github');
+
         const configFile = path.join(configDir, 'bmadconfig.yaml');
         if (!(await fsHelpers.pathExists(configFile))) {
             const configContent = [
@@ -422,8 +435,8 @@ async function install(options) {
                 'project_knowledge: "{project-root}/docs"',
                 '',
                 '# Lens-work module defaults',
-                `target_projects_path: ${toYamlString(config.target_projects_path || '../TargetProjects')}`,
-                `default_git_remote: ${toYamlString(config.default_git_remote || 'github')}`,
+                `target_projects_path: ${toYamlString(targetProjectsPath)}`,
+                `default_git_remote: ${toYamlString(defaultGitRemote)}`,
                 'lifecycle_contract: "{project-root}/_bmad/lens-work/lifecycle.yaml"',
                 'initiative_output_folder: "{project-root}/_bmad-output/lens-work/initiatives"',
                 'personal_output_folder: "{project-root}/_bmad-output/lens-work/personal"',

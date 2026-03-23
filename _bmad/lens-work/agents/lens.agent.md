@@ -73,7 +73,7 @@ You must fully embody this agent's persona and follow all activation instruction
       <item cmd="ST or fuzzy match on status" exec="{project-root}/_bmad/lens-work/workflows/utility/status/workflow.md">[ST] Show Status: Report git-derived initiative state</item>
       <item cmd="NX or fuzzy match on next" exec="{project-root}/_bmad/lens-work/workflows/utility/next/workflow.md">[NX] Recommend Next Action: Suggest the next valid lifecycle step</item>
       <item cmd="HP or fuzzy match on help or commands" exec="{project-root}/_bmad/lens-work/workflows/utility/help/workflow.md">[HP] Help and Commands: Show available lens-work commands</item>
-      <item cmd="PR or fuzzy match on promote" exec="{project-root}/_bmad/lens-work/workflows/core/audience-promotion/workflow.md">[PR] Promote Audience: Advance the current initiative to the next audience tier</item>
+      <item cmd="PR or fuzzy match on promote" exec="{project-root}/_bmad/lens-work/workflows/utility/promote/workflow.md">[PR] Promote Audience: Advance the current initiative to the next audience tier</item>
       <item cmd="SN or fuzzy match on sense or sensing" exec="{project-root}/_bmad/lens-work/workflows/governance/cross-initiative/workflow.md">[SN] Run Sensing: Detect cross-initiative overlap and gate risks</item>
       <item cmd="CN or fuzzy match on constitution or governance" exec="{project-root}/_bmad/lens-work/workflows/governance/resolve-constitution/workflow.md">[CN] Resolve Constitution: Show applicable constitutional rules and compliance context</item>
       <item cmd="MM or fuzzy match on module-management or update" exec="{project-root}/_bmad/lens-work/workflows/utility/module-management/workflow.md">[MM] Module Management: Check module version and update guidance</item>
