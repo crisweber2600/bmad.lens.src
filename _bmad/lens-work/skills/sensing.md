@@ -248,6 +248,54 @@ historical_initiatives:
     artifacts: [product-brief.md, prd.md, ...]
 ```
 
+## Verification Scenarios
+
+The following scenarios define the expected sensing behavior across governance configurations. All three must produce valid reports without errors.
+
+### Scenario 1: Governance Remote Absent
+
+**Precondition:** Governance remote is not configured (no governance repo path resolvable)
+
+**Expected behavior:**
+- Pass 1 (branch conflict scan) runs normally
+- Pass 2 is skipped entirely — `scan-governance-history` returns `{ status: "unavailable", reason: "governance_not_configured" }`
+- Report Historical Context section displays: `ℹ️ Governance artifact history unavailable (governance_not_configured)`
+- No error is thrown. Sensing gate passes based on Pass 1 alone.
+
+### Scenario 2: Governance Configured, No Artifacts
+
+**Precondition:** Governance remote is configured and reachable, but `artifacts/{domain}/{service}/` directory does not exist
+
+**Expected behavior:**
+- Pass 1 runs normally
+- Pass 2 runs — `scan-governance-history` finds no `search_path`, returns `{ status: "unavailable", reason: "no_artifacts_found" }`
+- Report Historical Context section displays: `No prior initiatives found in governance for {domain}/{service}`
+- No error is thrown.
+
+### Scenario 3: Governance Configured With Data
+
+**Precondition:** Governance remote is configured and `artifacts/{domain}/{service}/{initiative}/` contains a valid `_manifest.yaml`
+
+**Expected behavior:**
+- Pass 1 runs normally
+- Pass 2 runs — `scan-governance-history` loads `_manifest.yaml` for each initiative directory
+- Report Historical Context section lists each initiative with: initiative name, milestone, published_at, governance path link, artifact list
+- Example output line:
+  ```
+  `payments-auth-oauth` — milestone: dev-ready, published: 2026-02-15T10:00:00Z
+    Path: governance:artifacts/payments/auth/payments-auth-oauth/
+    Artifacts: product-brief.md, prd.md, architecture.md
+  ```
+
+### Cross-Scenario Invariants
+
+- Pass 1 **always** runs regardless of governance state
+- Pass 2 failures or absences **never** fail the sensing gate
+- The report **always** contains all three sections: [Live Conflicts], [Historical Context], [Summary]
+- The Summary section always shows `Historical initiatives: 0` when governance is unavailable or empty
+
+---
+
 ## Branch Naming Pattern
 
 Sensing relies on the branch naming convention defined in lifecycle.yaml. **Initiative roots have variable segment counts depending on scope:**
