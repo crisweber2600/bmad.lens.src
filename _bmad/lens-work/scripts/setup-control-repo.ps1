@@ -1,5 +1,5 @@
 # =============================================================================
-# LENS Workbench v2 — Control Repo Setup
+# LENS Workbench v3 — Control Repo Setup
 #
 # PURPOSE:
 #   Bootstraps a new control repo by cloning all required authority domains:
@@ -375,7 +375,7 @@ function Ensure-GitIgnoreEntries {
 # =============================================================================
 
 Write-Host ""
-Write-Host "LENS Workbench v2 - Control Repo Setup" -ForegroundColor White -NoNewline
+Write-Host "LENS Workbench v3 - Control Repo Setup" -ForegroundColor White -NoNewline
 Write-Host ""
 Write-Host "Base URL: $BaseUrl" -ForegroundColor DarkGray
 Write-Host "Root:     $ProjectRoot" -ForegroundColor DarkGray
@@ -419,7 +419,20 @@ else {
     Write-Info "[DRY-RUN] Would create _bmad-output\lens-work\ directories"
 }
 
-# -- 5. Ensure .gitignore entries -------------------------------------------
+# -- 5. Write LENS_VERSION ---------------------------------------------------
+if (-not $DryRun) {
+    $lifecyclePath = Join-Path $ReleasePath "_bmad\lens-work\lifecycle.yaml"
+    $schemaLine = Get-Content $lifecyclePath | Where-Object { $_ -match '^schema_version:' } | Select-Object -First 1
+    $schemaVersion = ($schemaLine -split ':', 2)[1].Trim()
+    $versionString = "$schemaVersion.0.0"
+    Set-Content -Path (Join-Path $ProjectRoot "LENS_VERSION") -Value $versionString -NoNewline
+    Write-Ok "LENS_VERSION written: $versionString"
+}
+else {
+    Write-Info "[DRY-RUN] Would write LENS_VERSION"
+}
+
+# -- 6. Ensure .gitignore entries -------------------------------------------
 Ensure-GitIgnoreEntries -RootPath $ProjectRoot
 
 # -- Summary ----------------------------------------------------------------
