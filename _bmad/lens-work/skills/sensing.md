@@ -203,7 +203,7 @@ current_service: auth
    search_path = "${governance_root}${current_domain}/${current_service}/"
 
    if not exists(search_path):
-     return { status: "unavailable", reason: "no_artifacts_found" }
+     return { status: "available", historical_initiatives: [] }
 
    # List all initiative directories under the service path
    completed_initiatives = list_dirs(search_path)
@@ -268,7 +268,7 @@ The following scenarios define the expected sensing behavior across governance c
 
 **Expected behavior:**
 - Pass 1 runs normally
-- Pass 2 runs — `scan-governance-history` finds no `search_path`, returns `{ status: "unavailable", reason: "no_artifacts_found" }`
+- Pass 2 runs — `scan-governance-history` finds no `search_path`, returns `{ status: "available", historical_initiatives: [] }`
 - Report Historical Context section displays: `No prior initiatives found in governance for {domain}/{service}`
 - No error is thrown.
 
