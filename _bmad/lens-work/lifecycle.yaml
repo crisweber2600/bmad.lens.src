@@ -142,7 +142,7 @@ phases:
       - epics
       - stories
       - implementation-readiness
-    milestone: techplan
+    milestone: devproposal
     branching_milestone: devproposal
     auto_advance_to: /sprintplan
     auto_advance_promote: true
@@ -156,7 +156,7 @@ phases:
     artifacts:
       - sprint-status
       - story-files
-    milestone: techplan
+    milestone: sprintplan
     branching_milestone: sprintplan
     auto_advance_to: /dev
     auto_advance_promote: true

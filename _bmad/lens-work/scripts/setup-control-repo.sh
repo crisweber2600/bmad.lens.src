@@ -277,6 +277,18 @@ fi
 # -- 5. Write LENS_VERSION ---------------------------------------------------
 if [[ "$DRY_RUN" != true ]]; then
   SCHEMA_VERSION=$(grep '^schema_version:' "${RELEASE_PATH}/_bmad/lens-work/lifecycle.yaml" | awk '{print $2}')
+
+  # Validate that SCHEMA_VERSION was successfully parsed and is numeric
+  if [[ -z "${SCHEMA_VERSION:-}" ]]; then
+    log_error "Failed to determine schema_version from ${RELEASE_PATH}/_bmad/lens-work/lifecycle.yaml"
+    exit 1
+  fi
+
+  if ! [[ "${SCHEMA_VERSION}" =~ ^[0-9]+$ ]]; then
+    log_error "Invalid schema_version '${SCHEMA_VERSION}' in ${RELEASE_PATH}/_bmad/lens-work/lifecycle.yaml (expected numeric)"
+    exit 1
+  fi
+
   printf '%s.0.0\n' "${SCHEMA_VERSION}" > "${PROJECT_ROOT}/LENS_VERSION"
   log_ok "LENS_VERSION written: ${SCHEMA_VERSION}.0.0"
 else

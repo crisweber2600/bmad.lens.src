@@ -422,8 +422,28 @@ else {
 # -- 5. Write LENS_VERSION ---------------------------------------------------
 if (-not $DryRun) {
     $lifecyclePath = Join-Path $ReleasePath "_bmad\lens-work\lifecycle.yaml"
-    $schemaLine = Get-Content $lifecyclePath | Where-Object { $_ -match '^schema_version:' } | Select-Object -First 1
-    $schemaVersion = ($schemaLine -split ':', 2)[1].Trim()
+
+    if (-not (Test-Path -Path $lifecyclePath)) {
+        throw "Unable to write LENS_VERSION: lifecycle file not found at '$lifecyclePath'. Ensure bmad.lens.release is correctly cloned and contains _bmad\lens-work\lifecycle.yaml."
+    }
+
+    $lifecycleContent = Get-Content -Path $lifecyclePath -ErrorAction Stop
+    $schemaLine = $lifecycleContent | Where-Object { $_ -match '^\s*schema_version\s*:' } | Select-Object -First 1
+
+    if (-not $schemaLine) {
+        throw "Unable to write LENS_VERSION: 'schema_version:' entry not found in lifecycle file '$lifecyclePath'."
+    }
+
+    $parts = $schemaLine -split ':', 2
+    if ($parts.Count -lt 2) {
+        throw "Unable to write LENS_VERSION: could not parse schema_version from line '$schemaLine' in '$lifecyclePath'."
+    }
+
+    $schemaVersion = $parts[1].Trim()
+    if ([string]::IsNullOrWhiteSpace($schemaVersion)) {
+        throw "Unable to write LENS_VERSION: schema_version value is empty or whitespace in '$lifecyclePath'."
+    }
+
     $versionString = "$schemaVersion.0.0"
     Set-Content -Path (Join-Path $ProjectRoot "LENS_VERSION") -Value $versionString -NoNewline
     Write-Ok "LENS_VERSION written: $versionString"

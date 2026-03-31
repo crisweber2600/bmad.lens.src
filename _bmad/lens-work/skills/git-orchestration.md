@@ -25,8 +25,8 @@ Create a new branch following lifecycle.yaml naming conventions.
 | Branch Type | Pattern | Created From |
 |-------------|---------|-------------|
 | Initiative root | `{initiative-root}` | Control repo default branch |
-| Audience | `{initiative-root}-{audience}` | Previous audience or initiative root |
-| Phase | `{initiative-root}-{audience}-{phase}` | Audience branch |
+| Milestone | `{initiative-root}-{milestone}` | Initiative root or previous milestone branch |
+| Phase | `{initiative-root}-{milestone}-{phase}` | Milestone branch |
 
 **Algorithm:**
 ```bash
@@ -40,15 +40,15 @@ git push -u origin "${NEW_BRANCH}"
 
 **Validation rules:**
 - Branch name MUST match lifecycle.yaml `branch_patterns`
-- Audience token MUST be one of: `small`, `medium`, `large`, `base`
+- Milestone token MUST be one of the milestones defined in lifecycle.yaml `milestones`
 - Phase name MUST be defined in lifecycle.yaml `phases`
 - Initiative root MUST be slug-safe (`{domain}-{service}-{feature}` pattern where each component is lowercase alphanumeric)
 - Reject invalid names with clear error message
 
-**Audience branch creation policy: LAZY**
-- At init: create `{root}` and `{root}-small` ONLY
-- Additional audience branches created on-demand at promotion time
-- Branch existence becomes meaningful signal (if `{root}-medium` exists, promotion was attempted)
+**Milestone branch creation policy: LAZY**
+- At init: create `{root}` only
+- Milestone branches created on-demand at promotion time
+- Branch existence becomes meaningful signal (if `{root}-devproposal` exists, promotion was attempted)
 
 ---
 
@@ -105,8 +105,8 @@ phase_status: in-progress
 lifecycle_status: active
 superseded_by: ~
 lens_version: '3.0.0'
-created: '2026-03-26'
-last_updated: '2026-03-26'
+created: '2026-03-26T10:00:00Z'
+last_updated: '2026-03-26T10:00:00Z'
 artifacts:
   preplan:
     product-brief: 'product-brief-foo-bar-auth-2026-03-26.md'
@@ -145,7 +145,7 @@ Mark a phase as started and refresh the initiative timestamp.
 read initiative-state.yaml
 set phase = ${PHASE}
 set phase_status = in-progress
-set last_updated = current_utc_date
+set last_updated = now_iso8601()
 write file and stage with the phase-start commit
 ```
 
@@ -165,7 +165,7 @@ Mark a phase complete and record the artifacts produced by that phase.
 read initiative-state.yaml
 merge produced artifacts into artifacts.${PHASE}
 set phase_status = complete
-set last_updated = current_utc_date
+set last_updated = now_iso8601()
 write file and stage with the phase-complete commit
 ```
 
@@ -187,7 +187,7 @@ read initiative-state.yaml
 set milestone = ${TARGET_MILESTONE}
 set phase = ${CURRENT_PHASE}
 set phase_status = complete
-set last_updated = current_utc_date
+set last_updated = now_iso8601()
 write file and stage with the promotion commit
 ```
 
@@ -207,7 +207,7 @@ Record a formal lifecycle close event.
 read initiative-state.yaml
 set lifecycle_status = ${CLOSE_STATE}
 set superseded_by = ${SUCCESSOR?}
-set last_updated = current_utc_date
+set last_updated = now_iso8601()
 write file and stage with the close commit
 ```
 
@@ -227,7 +227,7 @@ Record a module upgrade / schema transition.
 read initiative-state.yaml
 set schema_version = ${NEW_SCHEMA_VERSION}
 set lens_version = ${NEW_LENS_VERSION}
-set last_updated = current_utc_date
+set last_updated = now_iso8601()
 write file and stage with the upgrade commit
 ```
 
@@ -292,7 +292,7 @@ Delete a phase branch after its PR has been merged.
 # 1. VERIFY PR is merged before allowing deletion
 provider-adapter query-pr-status \
   --head "${PHASE_BRANCH}" \
-  --base "${AUDIENCE_BRANCH}" \
+  --base "${MILESTONE_BRANCH}" \
   --state merged
 
 # 2. Only if merged PR found:
@@ -322,15 +322,15 @@ Validate a proposed branch name against lifecycle.yaml patterns.
 
 **Output:**
 ```yaml
-name: foo-bar-auth-small-techplan
+name: foo-bar-auth-techplan-preplan
 valid: true
 parsed:
   initiative_root: foo-bar-auth
-  audience: small
-  phase: techplan
+  milestone: techplan
+  phase: preplan
 ```
 
-Domain-only example (no audience — domains don't have audience branches):
+Domain-only example (no milestone — domains don't have milestone branches):
 ```yaml
 name: test
 valid: true
@@ -341,11 +341,11 @@ parsed:
 
 Feature-level example:
 ```yaml
-name: test-worker-small
+name: test-worker-techplan
 valid: true
 parsed:
   initiative_root: test-worker
-  audience: small
+  milestone: techplan
   phase: null
 ```
 
