@@ -131,6 +131,142 @@ phase_status: in-progress
 
 ---
 
+### `update-phase-start`
+
+Mark a phase as started and refresh the initiative timestamp.
+
+**Updates:**
+- `phase`
+- `phase_status: in-progress`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set phase = ${PHASE}
+set phase_status = in-progress
+set last_updated = current_utc_date
+write file and stage with the phase-start commit
+```
+
+---
+
+### `update-phase-complete`
+
+Mark a phase complete and record the artifacts produced by that phase.
+
+**Updates:**
+- `phase_status: complete`
+- `artifacts.{phase}`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+merge produced artifacts into artifacts.${PHASE}
+set phase_status = complete
+set last_updated = current_utc_date
+write file and stage with the phase-complete commit
+```
+
+---
+
+### `update-milestone-promote`
+
+Update initiative state when a milestone branch promotion completes.
+
+**Updates:**
+- `milestone`
+- `phase`
+- `phase_status`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set milestone = ${TARGET_MILESTONE}
+set phase = ${CURRENT_PHASE}
+set phase_status = complete
+set last_updated = current_utc_date
+write file and stage with the promotion commit
+```
+
+---
+
+### `update-close`
+
+Record a formal lifecycle close event.
+
+**Updates:**
+- `lifecycle_status`
+- `superseded_by` (if applicable)
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set lifecycle_status = ${CLOSE_STATE}
+set superseded_by = ${SUCCESSOR?}
+set last_updated = current_utc_date
+write file and stage with the close commit
+```
+
+---
+
+### `update-lens-upgrade`
+
+Record a module upgrade / schema transition.
+
+**Updates:**
+- `schema_version`
+- `lens_version`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set schema_version = ${NEW_SCHEMA_VERSION}
+set lens_version = ${NEW_LENS_VERSION}
+set last_updated = current_utc_date
+write file and stage with the upgrade commit
+```
+
+---
+
+### `publish-to-governance`
+
+Publish milestone artifacts to the governance repo after a milestone promotion succeeds.
+
+**Updates:**
+- Copies approved artifacts from the control repo initiative path into the configured governance publication root
+- Writes or refreshes governance-side publication metadata required by downstream readers
+
+**Algorithm:**
+```bash
+# 1. Resolve governance repo path and artifact_publication.governance_root from lifecycle.yaml
+# 2. Copy milestone-approved artifacts into the governance repo publication tree
+# 3. Commit and push the governance update directly after the promotion gate succeeds
+```
+
+---
+
+### `publish-tombstone`
+
+Publish a lifecycle tombstone to governance when an initiative is formally closed.
+
+**Updates:**
+- Writes a governance tombstone record for completed, abandoned, or superseded initiatives
+- Includes final milestone, lifecycle status, and successor linkage when applicable
+
+**Algorithm:**
+```bash
+# 1. Resolve governance repo path and tombstone destination
+# 2. Write tombstone metadata derived from initiative-state.yaml and close inputs
+# 3. Commit and push the governance tombstone update with the close event
+```
+
+---
+
 ### `push`
 
 Push the current branch to the configured remote.
