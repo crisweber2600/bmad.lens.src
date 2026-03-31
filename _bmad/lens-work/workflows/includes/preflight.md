@@ -21,6 +21,33 @@ Read the `bmad.lens.release` branch:
 git -C bmad.lens.release branch --show-current
 ```
 
+### 1a. Enforce LENS_VERSION Compatibility
+
+Read `LENS_VERSION` from the control repo root and `schema_version` from `bmad.lens.release/_bmad/lens-work/lifecycle.yaml`.
+
+If `LENS_VERSION` is missing or does not match the lifecycle schema version, hard-stop the workflow:
+
+```bash
+CONTROL_VERSION=$(tr -d '\r\n' < LENS_VERSION 2>/dev/null || true)
+MODULE_SCHEMA=$(grep '^schema_version:' bmad.lens.release/_bmad/lens-work/lifecycle.yaml | awk '{print $2}')
+
+if [ -z "$CONTROL_VERSION" ] || [ "$CONTROL_VERSION" != "$MODULE_SCHEMA.0.0" -a "$CONTROL_VERSION" != "$MODULE_SCHEMA" ]; then
+        echo "VERSION MISMATCH: control repo is v${CONTROL_VERSION:-missing}, module expects v${MODULE_SCHEMA}. Run /lens-upgrade."
+        exit 1
+fi
+```
+
+**PowerShell:**
+```powershell
+$controlVersion = if (Test-Path "LENS_VERSION") { (Get-Content "LENS_VERSION" -Raw).Trim() } else { "" }
+$moduleSchemaLine = Get-Content "bmad.lens.release/_bmad/lens-work/lifecycle.yaml" | Where-Object { $_ -match '^schema_version:' } | Select-Object -First 1
+$moduleSchema = ($moduleSchemaLine -split ':', 2)[1].Trim()
+
+if ([string]::IsNullOrWhiteSpace($controlVersion) -or ($controlVersion -ne $moduleSchema -and $controlVersion -ne "$moduleSchema.0.0")) {
+                throw "VERSION MISMATCH: control repo is v$([string]::IsNullOrWhiteSpace($controlVersion) ? 'missing' : $controlVersion), module expects v$moduleSchema. Run /lens-upgrade."
+}
+```
+
 ### 2. Determine Pull Strategy
 
 Read `_bmad-output/lens-work/personal/.preflight-timestamp` as the last successful full preflight time (ISO 8601 UTC datetime).
