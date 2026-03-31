@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Encapsulates all git write operations for the lens-work lifecycle. Handles branch creation, commits, pushes, branch cleanup, and dirty working directory management. This is the WRITE counterpart to the read-only `git-state` skill.
+Encapsulates all git write operations for the lens-work lifecycle. Handles branch creation, commits, pushes, initiative-state updates, branch cleanup, and dirty working directory management. This is the WRITE counterpart to the read-only `git-state` skill.
 
 ## Read Operations
 
@@ -25,8 +25,8 @@ Create a new branch following lifecycle.yaml naming conventions.
 | Branch Type | Pattern | Created From |
 |-------------|---------|-------------|
 | Initiative root | `{initiative-root}` | Control repo default branch |
-| Audience | `{initiative-root}-{audience}` | Previous audience or initiative root |
-| Phase | `{initiative-root}-{audience}-{phase}` | Audience branch |
+| Milestone | `{initiative-root}-{milestone}` | Initiative root or previous milestone branch |
+| Phase | `{initiative-root}-{milestone}-{phase}` | Milestone branch |
 
 **Algorithm:**
 ```bash
@@ -40,15 +40,15 @@ git push -u origin "${NEW_BRANCH}"
 
 **Validation rules:**
 - Branch name MUST match lifecycle.yaml `branch_patterns`
-- Audience token MUST be one of: `small`, `medium`, `large`, `base`
+- Milestone token MUST be one of the milestones defined in lifecycle.yaml `milestones`
 - Phase name MUST be defined in lifecycle.yaml `phases`
 - Initiative root MUST be slug-safe (`{domain}-{service}-{feature}` pattern where each component is lowercase alphanumeric)
 - Reject invalid names with clear error message
 
-**Audience branch creation policy: LAZY**
-- At init: create `{root}` and `{root}-small` ONLY
-- Additional audience branches created on-demand at promotion time
-- Branch existence becomes meaningful signal (if `{root}-medium` exists, promotion was attempted)
+**Milestone branch creation policy: LAZY**
+- At init: create `{root}` only
+- Milestone branches created on-demand at promotion time
+- Branch existence becomes meaningful signal (if `{root}-devproposal` exists, promotion was attempted)
 
 ---
 
@@ -83,6 +83,190 @@ git commit -m "[${PHASE}] ${INITIATIVE} — ${DESCRIPTION}"
 
 ---
 
+### `create-initiative-state`
+
+Create the committed `initiative-state.yaml` file for a new initiative.
+
+**Path:**
+```text
+_bmad-output/lens-work/initiatives/{domain}/{service}/{initiative}/initiative-state.yaml
+```
+
+**Schema:**
+```yaml
+schema_version: 3
+initiative: foo-bar-auth
+domain: payments
+service: auth
+feature: ~
+milestone: techplan
+phase: preplan
+phase_status: in-progress
+lifecycle_status: active
+superseded_by: ~
+lens_version: '3.0.0'
+created: '2026-03-26T10:00:00Z'
+last_updated: '2026-03-26T10:00:00Z'
+artifacts:
+  preplan:
+    product-brief: 'product-brief-foo-bar-auth-2026-03-26.md'
+```
+
+**Algorithm:**
+```bash
+# 1. Resolve initiative metadata from current branch / config
+# 2. Initialize the YAML payload from lifecycle.yaml schema and architecture contract
+# 3. Write initiative-state.yaml at the initiative path
+# 4. Stage initiative-state.yaml together with the triggering phase-start commit
+# 5. Commit with the phase marker so state and audit trail remain atomic
+```
+
+**Output:**
+```yaml
+state_file: _bmad-output/lens-work/initiatives/foo/bar/auth/initiative-state.yaml
+schema_version: 3
+lifecycle_status: active
+phase_status: in-progress
+```
+
+---
+
+### `update-phase-start`
+
+Mark a phase as started and refresh the initiative timestamp.
+
+**Updates:**
+- `phase`
+- `phase_status: in-progress`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set phase = ${PHASE}
+set phase_status = in-progress
+set last_updated = now_iso8601()
+write file and stage with the phase-start commit
+```
+
+---
+
+### `update-phase-complete`
+
+Mark a phase complete and record the artifacts produced by that phase.
+
+**Updates:**
+- `phase_status: complete`
+- `artifacts.{phase}`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+merge produced artifacts into artifacts.${PHASE}
+set phase_status = complete
+set last_updated = now_iso8601()
+write file and stage with the phase-complete commit
+```
+
+---
+
+### `update-milestone-promote`
+
+Update initiative state when a milestone branch promotion completes.
+
+**Updates:**
+- `milestone`
+- `phase`
+- `phase_status`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set milestone = ${TARGET_MILESTONE}
+set phase = ${CURRENT_PHASE}
+set phase_status = complete
+set last_updated = now_iso8601()
+write file and stage with the promotion commit
+```
+
+---
+
+### `update-close`
+
+Record a formal lifecycle close event.
+
+**Updates:**
+- `lifecycle_status`
+- `superseded_by` (if applicable)
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set lifecycle_status = ${CLOSE_STATE}
+set superseded_by = ${SUCCESSOR?}
+set last_updated = now_iso8601()
+write file and stage with the close commit
+```
+
+---
+
+### `update-lens-upgrade`
+
+Record a module upgrade / schema transition.
+
+**Updates:**
+- `schema_version`
+- `lens_version`
+- `last_updated`
+
+**Algorithm:**
+```yaml
+read initiative-state.yaml
+set schema_version = ${NEW_SCHEMA_VERSION}
+set lens_version = ${NEW_LENS_VERSION}
+set last_updated = now_iso8601()
+write file and stage with the upgrade commit
+```
+
+---
+
+### `publish-to-governance`
+
+Publish milestone artifacts to the governance repo after a milestone promotion succeeds.
+
+**Updates:**
+- Copies approved artifacts from the control repo initiative path into the configured governance publication root
+- Writes or refreshes governance-side publication metadata required by downstream readers
+
+**Algorithm:**
+```bash
+# 1. Resolve governance repo path and artifact_publication.governance_root from lifecycle.yaml
+# 2. Copy milestone-approved artifacts into the governance repo publication tree
+# 3. Commit and push the governance update directly after the promotion gate succeeds
+```
+
+---
+
+### `publish-tombstone`
+
+Publish a lifecycle tombstone to governance when an initiative is formally closed.
+
+**Updates:**
+- Writes a governance tombstone record for completed, abandoned, or superseded initiatives
+- Includes final milestone, lifecycle status, and successor linkage when applicable
+
+**Algorithm:**
+```bash
+# 1. Resolve governance repo path and tombstone destination
+# 2. Write tombstone metadata derived from initiative-state.yaml and close inputs
+# 3. Commit and push the governance tombstone update with the close event
+```
+
+---
+
 ### `push`
 
 Push the current branch to the configured remote.
@@ -108,7 +292,7 @@ Delete a phase branch after its PR has been merged.
 # 1. VERIFY PR is merged before allowing deletion
 provider-adapter query-pr-status \
   --head "${PHASE_BRANCH}" \
-  --base "${AUDIENCE_BRANCH}" \
+  --base "${MILESTONE_BRANCH}" \
   --state merged
 
 # 2. Only if merged PR found:
@@ -138,15 +322,15 @@ Validate a proposed branch name against lifecycle.yaml patterns.
 
 **Output:**
 ```yaml
-name: foo-bar-auth-small-techplan
+name: foo-bar-auth-techplan-preplan
 valid: true
 parsed:
   initiative_root: foo-bar-auth
-  audience: small
-  phase: techplan
+  milestone: techplan
+  phase: preplan
 ```
 
-Domain-only example (no audience — domains don't have audience branches):
+Domain-only example (no milestone — domains don't have milestone branches):
 ```yaml
 name: test
 valid: true
@@ -157,11 +341,11 @@ parsed:
 
 Feature-level example:
 ```yaml
-name: test-worker-small
+name: test-worker-techplan
 valid: true
 parsed:
   initiative_root: test-worker
-  audience: small
+  milestone: techplan
   phase: null
 ```
 
