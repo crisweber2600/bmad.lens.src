@@ -26,11 +26,12 @@ Create a new branch following lifecycle.yaml naming conventions.
 |-------------|---------|-------------|
 | Initiative root | `{initiative-root}` | Control repo default branch |
 | Milestone | `{initiative-root}-{milestone}` | Initiative root or previous milestone branch |
-| Phase | `{initiative-root}-{milestone}-{phase}` | Milestone branch |
+
+**Precondition:** `validate-branch-name` MUST pass before any branch creation.
 
 **Algorithm:**
 ```bash
-# 1. Validate branch name against lifecycle.yaml patterns
+# 1. invoke: validate-branch-name with proposed name — FAIL if invalid
 # 2. Check branch doesn't already exist
 # 3. Create from appropriate parent
 git checkout "${PARENT_BRANCH}"
@@ -41,14 +42,72 @@ git push -u origin "${NEW_BRANCH}"
 **Validation rules:**
 - Branch name MUST match lifecycle.yaml `branch_patterns`
 - Milestone token MUST be one of the milestones defined in lifecycle.yaml `milestones`
-- Phase name MUST be defined in lifecycle.yaml `phases`
 - Initiative root MUST be slug-safe (`{domain}-{service}-{feature}` pattern where each component is lowercase alphanumeric)
 - Reject invalid names with clear error message
 
 **Milestone branch creation policy: LAZY**
 - At init: create `{root}` only
-- Milestone branches created on-demand at promotion time
-- Branch existence becomes meaningful signal (if `{root}-devproposal` exists, promotion was attempted)
+- Milestone branches created on-demand at phase closeout via `create-milestone-branch`
+- Branch existence becomes meaningful signal (if `{root}-devproposal` exists, devproposal phase is complete)
+
+---
+
+### `create-milestone-branch`
+
+Create a milestone branch at phase closeout from the current branch state and push to remote.
+This is the primary branch-creation mechanism for the milestone model (v3). Replaces
+the deprecated `start-phase` operation for milestone transitions.
+
+**Precondition:** `validate-branch-name` MUST pass before branch creation.
+
+**Algorithm:**
+```bash
+MILESTONE_BRANCH="${INITIATIVE_ROOT}-${MILESTONE}"
+
+# 1. Validate branch name against lifecycle.yaml
+invoke: validate-branch-name
+params:
+  name: "${MILESTONE_BRANCH}"
+# FAIL if invalid
+
+# 2. Ensure source branch is up-to-date
+git checkout "${SOURCE_BRANCH}"
+git pull origin "${SOURCE_BRANCH}"
+
+# 3. Create milestone branch from current HEAD
+git checkout -b "${MILESTONE_BRANCH}"
+git push -u origin "${MILESTONE_BRANCH}"
+echo "✅ Milestone branch created: ${MILESTONE_BRANCH} from ${SOURCE_BRANCH}"
+
+# 4. Update initiative-state.yaml with new milestone
+invoke: update-milestone-promote
+params:
+  initiative_id: "${INITIATIVE_ID}"
+  milestone: "${MILESTONE}"
+  phase: "${PHASE}"
+  phase_status: "complete"
+```
+
+**Input:**
+```yaml
+milestone: "techplan"          # Must be a valid milestone from lifecycle.yaml
+initiative_root: "foo-bar-auth"
+source_branch: "foo-bar-auth"  # Current working branch
+new_branch: "foo-bar-auth-techplan"
+```
+
+**Output:**
+```yaml
+branch: foo-bar-auth-techplan
+source: foo-bar-auth
+milestone: techplan
+pushed: true
+```
+
+**Validation:**
+- Milestone token MUST be one of: `techplan`, `devproposal`, `sprintplan`, `dev-ready` (from lifecycle.yaml)
+- Branch MUST NOT already exist (fail with clear error if it does)
+- Source branch MUST be clean (invoke `verify-clean-state` first)
 
 ---
 
@@ -271,8 +330,18 @@ Publish a lifecycle tombstone to governance when an initiative is formally close
 
 Push the current branch to the configured remote.
 
+**Precondition:** `validate-branch-name` MUST pass for the current branch before push.
+
 **Algorithm:**
 ```bash
+# 1. Validate current branch name conforms to lifecycle.yaml
+CURRENT_BRANCH=$(git symbolic-ref --short HEAD)
+invoke: validate-branch-name
+params:
+  name: "${CURRENT_BRANCH}"
+# FAIL if invalid — prevents pushing non-conforming branches
+
+# 2. Push
 git push origin "${CURRENT_BRANCH}"
 ```
 
@@ -309,28 +378,29 @@ git push origin --delete "${PHASE_BRANCH}"  # Delete remote
 
 ### `validate-branch-name`
 
-Validate a proposed branch name against lifecycle.yaml patterns.
+Validate a proposed branch name against lifecycle.yaml patterns. This operation is a
+**precondition** for `create-branch`, `create-milestone-branch`, and `push` — it MUST
+pass before any of those operations proceed.
 
 **Algorithm:**
 ```bash
-# Parse proposed name against patterns
+# Parse proposed name against lifecycle.yaml branch_patterns
 # Check: slug-safe root pattern from normalized components
-# Check: audience token is valid
-# Check: phase name is defined in lifecycle.yaml
+# Check: milestone token (if present) is one of lifecycle.yaml milestones
+#         Valid milestone tokens: techplan, devproposal, sprintplan, dev-ready
 # Return: valid/invalid with reason
 ```
 
 **Output:**
 ```yaml
-name: foo-bar-auth-techplan-preplan
+name: foo-bar-auth-techplan
 valid: true
 parsed:
   initiative_root: foo-bar-auth
   milestone: techplan
-  phase: preplan
 ```
 
-Domain-only example (no milestone — domains don't have milestone branches):
+Domain-only example (no milestone — initiative root branch):
 ```yaml
 name: test
 valid: true
@@ -339,17 +409,23 @@ parsed:
   scope: domain
 ```
 
-Feature-level example:
+Feature-level milestone example:
 ```yaml
-name: test-worker-techplan
+name: test-worker-devproposal
 valid: true
 parsed:
   initiative_root: test-worker
-  milestone: techplan
-  phase: null
+  milestone: devproposal
 ```
 
-Invalid example:
+Invalid milestone token:
+```yaml
+name: foo-bar-auth-medium
+valid: false
+reason: "Token 'medium' is not a valid milestone. Valid milestones: techplan, devproposal, sprintplan, dev-ready"
+```
+
+Invalid slug:
 ```yaml
 name: Foo Bar Auth
 valid: false
@@ -435,7 +511,13 @@ git pull origin "$(git symbolic-ref --short HEAD)"
 
 ---
 
-### `start-phase`
+### `start-phase` ⚠️ DEPRECATED
+
+> **Deprecated.** Retained for backward compatibility. Use `create-milestone-branch` instead.
+> In the v3 milestone model, phase branches are no longer created. Phases run on the
+> initiative root branch (preplan, businessplan, techplan) or on the previous milestone
+> branch (devproposal on techplan, sprintplan on devproposal). Milestone branches are
+> created at phase closeout via `create-milestone-branch`.
 
 Create a phase branch from its parent and push to remote.
 
