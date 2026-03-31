@@ -8,7 +8,7 @@
 
 ## Purpose
 
-Encapsulates all git write operations for the lens-work lifecycle. Handles branch creation, commits, pushes, branch cleanup, and dirty working directory management. This is the WRITE counterpart to the read-only `git-state` skill.
+Encapsulates all git write operations for the lens-work lifecycle. Handles branch creation, commits, pushes, initiative-state updates, branch cleanup, and dirty working directory management. This is the WRITE counterpart to the read-only `git-state` skill.
 
 ## Read Operations
 
@@ -80,6 +80,54 @@ git commit -m "[${PHASE}] ${INITIATIVE} — ${DESCRIPTION}"
 - **Reviewable checkpoint:** commit + push (phase bundle complete or user requests)
 - **Draft save:** commit only, no push (incremental work)
 - Every commit that is pushed MUST be immediately followed by `git push`
+
+---
+
+### `create-initiative-state`
+
+Create the committed `initiative-state.yaml` file for a new initiative.
+
+**Path:**
+```text
+_bmad-output/lens-work/initiatives/{domain}/{service}/{initiative}/initiative-state.yaml
+```
+
+**Schema:**
+```yaml
+schema_version: 3
+initiative: foo-bar-auth
+domain: payments
+service: auth
+feature: ~
+milestone: techplan
+phase: preplan
+phase_status: in-progress
+lifecycle_status: active
+superseded_by: ~
+lens_version: '3.0.0'
+created: '2026-03-26'
+last_updated: '2026-03-26'
+artifacts:
+  preplan:
+    product-brief: 'product-brief-foo-bar-auth-2026-03-26.md'
+```
+
+**Algorithm:**
+```bash
+# 1. Resolve initiative metadata from current branch / config
+# 2. Initialize the YAML payload from lifecycle.yaml schema and architecture contract
+# 3. Write initiative-state.yaml at the initiative path
+# 4. Stage initiative-state.yaml together with the triggering phase-start commit
+# 5. Commit with the phase marker so state and audit trail remain atomic
+```
+
+**Output:**
+```yaml
+state_file: _bmad-output/lens-work/initiatives/foo/bar/auth/initiative-state.yaml
+schema_version: 3
+lifecycle_status: active
+phase_status: in-progress
+```
 
 ---
 
