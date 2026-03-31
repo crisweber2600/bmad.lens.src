@@ -24,6 +24,12 @@ if not has_prd or not has_architecture:
 # Commit artifacts with phase-complete marker and inline artifact list
 artifact_list = list_files(docs_path)
 
+# Update initiative-state.yaml: phase complete, record artifacts
+invoke: git-orchestration.update-phase-complete
+params:
+  phase: businessplan
+  artifacts: ${artifact_list}
+
 invoke: git-orchestration.commit-artifacts
 params:
   file_paths:
@@ -35,12 +41,6 @@ params:
   commit_body: |
     Artifacts:
     ${artifact_list.join('\n    - ')}
-
-# Update initiative-state.yaml: phase complete, record artifacts
-invoke: git-orchestration.update-phase-complete
-params:
-  phase: businessplan
-  artifacts: ${artifact_list}
 
 invoke: git-orchestration.push
 

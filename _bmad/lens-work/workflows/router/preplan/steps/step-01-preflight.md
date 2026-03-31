@@ -34,7 +34,7 @@ initiative_root = initiative.initiative_root
 output_path = initiative.docs.path || "{output_folder}/planning-artifacts"
 
 # v3: Work directly on the initiative root branch — no phase branch creation
-current_branch = git_current_branch()
+current_branch = invoke_command("git symbolic-ref --short HEAD")
 if current_branch != initiative_root:
   invoke: git-orchestration.checkout-branch
   params:

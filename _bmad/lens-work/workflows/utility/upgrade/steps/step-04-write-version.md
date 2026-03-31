@@ -34,9 +34,9 @@ git commit -m "[LENS:UPGRADE] migrated from v${detected_version || '2'} to v${ta
 ```yaml
 invoke_command("git add LENS_VERSION")
 commit_message = "[LENS:UPGRADE] migrated from v${detected_version || '2'} to v${target_version}"
-commit_result = invoke_command("git commit -m '${commit_message}'")
+commit_result = git-orchestration.exec("git commit -m '${commit_message}'")
 
-if commit_result.exitCode != 0:
+if commit_result.exit_code != 0:
   output: "⚠️  Commit failed: ${commit_result.stderr}. LENS_VERSION was written but not committed."
 else:
   output: "✅ Committed: ${commit_message}"

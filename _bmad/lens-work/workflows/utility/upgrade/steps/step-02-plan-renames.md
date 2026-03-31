@@ -107,7 +107,7 @@ For each detected initiative root, check if `initiative-state.yaml` already exis
 init_state_plan = []
 
 for root in initiative_roots:
-  state_exists = invoke_command("git show ${root}:initiative-state.yaml 2>/dev/null").exitCode == 0
+  state_exists = git-orchestration.exec("git show ${root}:initiative-state.yaml 2>/dev/null").exit_code == 0
 
   if not state_exists:
     init_state_plan.push({

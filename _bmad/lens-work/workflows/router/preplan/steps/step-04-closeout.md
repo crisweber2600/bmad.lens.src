@@ -18,6 +18,12 @@ description: 'Commit preplan artifacts, update initiative state, and report the 
 # The commit body includes an inline artifact list per Decision OD-2
 artifact_list = list_files(output_path)
 
+# Update initiative-state.yaml: phase complete, record artifacts
+invoke: git-orchestration.update-phase-complete
+params:
+  phase: preplan
+  artifacts: ${artifact_list}
+
 invoke: git-orchestration.commit-artifacts
 params:
   file_paths:
@@ -29,12 +35,6 @@ params:
   commit_body: |
     Artifacts:
     ${artifact_list.join('\n    - ')}
-
-# Update initiative-state.yaml: phase complete, record artifacts
-invoke: git-orchestration.update-phase-complete
-params:
-  phase: preplan
-  artifacts: ${artifact_list}
 
 invoke: git-orchestration.push
 
