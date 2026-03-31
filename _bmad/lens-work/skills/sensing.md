@@ -126,44 +126,53 @@ sensing_report:
 
 ### `format-report`
 
-Format the sensing results for display.
+Format the sensing results for display. Report structure is always:
+**[Live Conflicts]** → **[Historical Context]** → **[Summary]**
 
-**When overlaps found:**
+Pass 2 (Historical Context) **never** fails the gate — all governance errors are advisory only.
+
+**Full report template:**
 ```
+═══════════════════════════════════════
+  SENSING REPORT — ${current_initiative}
+  Scanned: ${scanned_at}
+═══════════════════════════════════════
+
+── Live Conflicts (Pass 1) ──────────
+
+${if overlaps.length > 0}
 ⚠️ Active initiatives in domain `{domain}`:
-  🔴 `{init-1}` ({phase}/{audience}) — same service (high conflict)
-  🟡 `{init-2}` ({phase}/{audience}) — same domain (medium conflict)
+  🔴 `{init-1}` ({phase}/{milestone}) — same service (high conflict)
+  🟡 `{init-2}` ({phase}/{milestone}) — same domain (medium conflict)
 
 Suggestion: Review overlapping initiatives before proceeding.
-```
-
-**When no overlaps found:**
-```
+${else}
 No overlapping initiatives detected ✅
-```
+${endif}
 
-**When sensing is a hard gate (constitution-upgraded):**
-```
+${if constitution_hard_gate}
 ⚠️ REQUIRES EXPLICIT CONFLICT REVIEW
-
-Active initiatives in domain `{domain}`:
-  🔴 `{init-1}` ({phase}/{audience}) — same service (high conflict)
-
 Constitution requires explicit conflict resolution for this domain.
-```
+${endif}
 
-**Historical Context section (Pass 2 — appended when governance available):**
-```
-📚 Historical Context (governance artifacts):
-  `payments-auth-oauth` — milestone: dev-ready, published: 2026-02-15
-    Artifacts: product-brief.md, prd.md, architecture.md, tech-decisions.md, epics.md, stories.md
-  `payments-auth-mfa` — milestone: sprintplan, published: 2026-03-01
-    Artifacts: product-brief.md, prd.md, architecture.md, tech-decisions.md
-```
+── Historical Context (Pass 2) ──────
 
-**When governance unavailable:**
-```
-ℹ️ Governance artifact history unavailable (remote not configured)
+${if historical_context.status == "available" and historical_context.initiatives.length > 0}
+📚 Prior initiatives in ${domain}/${service}:
+  `${init.initiative}` — milestone: ${init.milestone}, published: ${init.published_at}
+    Path: governance:artifacts/${init.domain}/${init.service}/${init.initiative}/
+    Artifacts: ${init.artifacts.join(', ')}
+${elif historical_context.status == "available"}
+No prior initiatives found in governance for ${domain}/${service}
+${else}
+ℹ️ Governance artifact history unavailable (${historical_context.note})
+${endif}
+
+── Summary ──────────────────────────
+
+Live conflicts: ${overlaps.length}
+Historical initiatives: ${historical_context.initiatives.length || 0}
+Total scanned: ${total_initiatives_scanned}
 ```
 
 ---
