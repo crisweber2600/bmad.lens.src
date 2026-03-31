@@ -59,8 +59,23 @@ current_scope: feature       # domain | service | feature
    - Current audience (highest audience branch that exists)
    - Current phase (phase branch suffix, if any)
    - Track type (read from committed init config if accessible)
+   - **Lifecycle status** (read from committed `initiative-state.yaml` if accessible)
 
-6. Identify overlapping initiatives:
+5a. **Filter closed initiatives from live conflicts:**
+   ```yaml
+   for each initiative:
+     state_yaml = git show ${initiative_root}:initiative-state.yaml 2>/dev/null
+     if state_yaml exists:
+       if state_yaml.lifecycle_status != "active":
+         # Exclude from Pass 1 overlap detection — closed initiatives are not active conflicts
+         mark initiative as "closed" and skip overlap classification
+         continue
+     else:
+       # No initiative-state.yaml (legacy v2) — treat as active (conservative fallback)
+       # Append note: "⚠️ No initiative-state.yaml — treating as active. Consider running /lens-upgrade"
+   ```
+
+6. Identify overlapping initiatives (only among active initiatives):
    - **Same domain:** initiatives sharing the `domain` segment
    - **Same service:** initiatives sharing the `domain`+`service` segments
    - **Same feature:** initiatives targeting the same feature (high conflict)
