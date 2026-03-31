@@ -25,10 +25,14 @@ Detect overlapping initiatives at lifecycle gates by analyzing git branch topolo
 | `/promote` | Pre-promotion gate — sensing report embedded in promotion PR |
 | `/sense` | On-demand — user explicitly requests sensing report |
 
-## Operations
+## Execution Model
 
-### `scan-initiatives`
+Sensing runs two passes:
 
+1. **Pass 1 — Live branch conflicts:** Scans git branch topology for active initiative overlaps (always runs)
+2. **Pass 2 — Historical governance context:** Reads `governance:artifacts/` for completed initiatives in the same domain/service (runs only when governance is configured)
+
+Pass 2 is strictly additive. If governance is unavailable, Pass 1 results are returned unchanged with a note.
 List all active initiatives and identify overlaps with the current initiative.
 
 **Input:**
@@ -83,8 +87,27 @@ sensing_report:
       phase: "{phase}"
       conflict_level: "high|medium|low"
       conflict_reason: "Same service — possible scope overlap"
+  historical_context:
+    status: "available|unavailable"
+    initiatives: []    # populated by scan-governance-history pass 2
+    note: ""           # set when governance unavailable
   summary: "⚠️ Active initiatives in domain `{domain}`: `{init-1}` ({phase}/{audience}), `{init-2}` ({phase}/{audience})"
 ```
+
+8. **Pass 2 — Governance history enrichment:**
+   ```yaml
+   governance_result = invoke: sensing.scan-governance-history
+   params:
+     current_domain: ${current_domain}
+     current_service: ${current_service}
+
+   if governance_result.status == "available":
+     sensing_report.historical_context.status = "available"
+     sensing_report.historical_context.initiatives = governance_result.historical_initiatives
+   else:
+     sensing_report.historical_context.status = "unavailable"
+     sensing_report.historical_context.note = "Governance artifact history unavailable (${governance_result.reason})"
+   ```
 
 ### `format-report`
 
@@ -112,6 +135,93 @@ Active initiatives in domain `{domain}`:
   🔴 `{init-1}` ({phase}/{audience}) — same service (high conflict)
 
 Constitution requires explicit conflict resolution for this domain.
+```
+
+**Historical Context section (Pass 2 — appended when governance available):**
+```
+📚 Historical Context (governance artifacts):
+  `payments-auth-oauth` — milestone: dev-ready, published: 2026-02-15
+    Artifacts: product-brief.md, prd.md, architecture.md, tech-decisions.md, epics.md, stories.md
+  `payments-auth-mfa` — milestone: sprintplan, published: 2026-03-01
+    Artifacts: product-brief.md, prd.md, architecture.md, tech-decisions.md
+```
+
+**When governance unavailable:**
+```
+ℹ️ Governance artifact history unavailable (remote not configured)
+```
+
+---
+
+### `scan-governance-history`
+
+Read completed-initiative context from governance artifacts as a second-pass enrichment. This pass is additive — it never replaces or modifies Pass 1 (branch-based) results.
+
+**Input:**
+```yaml
+current_domain: payments
+current_service: auth
+```
+
+**Algorithm:**
+
+1. Check if governance remote is configured:
+   ```bash
+   GOVERNANCE_REPO = resolve_governance_repo_path()
+   if not GOVERNANCE_REPO:
+     return { status: "unavailable", reason: "governance_not_configured" }
+   ```
+
+2. Read governance artifact directories for the current domain/service:
+   ```bash
+   cd "${GOVERNANCE_REPO}"
+   governance_root = load("lifecycle.yaml").artifact_publication.governance_root
+   search_path = "${governance_root}${current_domain}/${current_service}/"
+
+   if not exists(search_path):
+     return { status: "unavailable", reason: "no_artifacts_found" }
+
+   # List all initiative directories under the service path
+   completed_initiatives = list_dirs(search_path)
+   ```
+
+3. For each completed initiative, load `_manifest.yaml`:
+   ```bash
+   historical_context = []
+   for init_dir in completed_initiatives:
+     manifest_path = "${search_path}${init_dir}/_manifest.yaml"
+     if exists(manifest_path):
+       manifest = load(manifest_path)
+       historical_context.append({
+         initiative: manifest.initiative,
+         domain: manifest.domain,
+         service: manifest.service,
+         milestone: manifest.milestone,
+         published_at: manifest.published_at,
+         lens_version: manifest.lens_version,
+         artifact_count: len(manifest.artifacts),
+         artifacts: manifest.artifacts
+       })
+   ```
+
+**Output:**
+```yaml
+status: available          # available | unavailable
+historical_initiatives:
+  - initiative: "payments-auth-oauth"
+    domain: payments
+    service: auth
+    milestone: dev-ready
+    published_at: '2026-02-15T10:00:00Z'
+    artifact_count: 6
+    artifacts: [product-brief.md, prd.md, architecture.md, ...]
+  - initiative: "payments-auth-mfa"
+    domain: payments
+    service: auth
+    milestone: sprintplan
+    published_at: '2026-03-01T14:00:00Z'
+    artifact_count: 4
+    artifacts: [product-brief.md, prd.md, ...]
 ```
 
 ## Branch Naming Pattern
@@ -151,3 +261,5 @@ payments-billing-invoicing-medium          → domain:payments, service:billing,
 - Branch naming conventions from `lifecycle.yaml`
 - `git show {branch}:{path}` — for reading committed initiative configs (optional)
 - `constitution` skill — for checking if sensing is a hard gate (called by consumer, not by this skill)
+- Governance repo path — resolved via `lifecycle.yaml.artifact_publication.governance_root` (optional; Pass 2 skipped when absent)
+- `_manifest.yaml` in governance artifact directories — for historical initiative context (Pass 2)
