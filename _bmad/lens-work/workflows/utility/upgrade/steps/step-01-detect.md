@@ -23,11 +23,12 @@ dry_run = args.includes("--dry-run")
 ### 1. Read Current Version And Target
 
 ```yaml
-target_version = grep('^schema_version:', "{lifecycleContract}") | awk '{print $2}'
+lifecycle_header = load("{lifecycleContract}")
+target_version = str(lifecycle_header.schema_version)
 # e.g., "3"
 
 # Read LENS_VERSION — missing file is version "missing"
-detected_version = read_file("LENS_VERSION").trim() || "missing"
+detected_version = file_exists("LENS_VERSION") ? read_file("LENS_VERSION").trim() : "missing"
 # e.g., "missing", "2", "2.0.0", "3", "3.0.0"
 
 # Normalize to major integer for comparison
@@ -37,7 +38,7 @@ target_major = parseInt(target_version)
 # Check if already at target
 if detected_major != null and detected_major >= target_major:
   output: "Already at current version (LENS_VERSION: ${detected_version}, module schema: ${target_version})"
-  STOP()
+  STOP
 ```
 
 ### 2. Load Migration Descriptors

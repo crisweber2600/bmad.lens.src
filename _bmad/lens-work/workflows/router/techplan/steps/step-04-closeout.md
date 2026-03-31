@@ -24,6 +24,12 @@ if not has_architecture or not has_decisions:
 # Commit artifacts with phase-complete marker and inline artifact list
 artifact_list = list_files(docs_path)
 
+# Update initiative-state.yaml: phase complete, milestone, record artifacts
+invoke: git-orchestration.update-phase-complete
+params:
+  phase: techplan
+  artifacts: ${artifact_list}
+
 invoke: git-orchestration.commit-artifacts
 params:
   file_paths:
@@ -36,12 +42,6 @@ params:
     Artifacts:
     ${artifact_list.join('\n    - ')}
 
-# Update initiative-state.yaml: phase complete, milestone, record artifacts
-invoke: git-orchestration.update-phase-complete
-params:
-  phase: techplan
-  artifacts: ${artifact_list}
-
 invoke: git-orchestration.push
 
 # v3: Create the techplan milestone branch from current HEAD
@@ -49,9 +49,10 @@ milestone_branch = "${initiative.initiative_root}-techplan"
 
 invoke: git-orchestration.create-milestone-branch
 params:
-  branch_name: ${milestone_branch}
+  milestone: "techplan"
   initiative_root: ${initiative.initiative_root}
-  milestone: techplan
+  source_branch: ${initiative.initiative_root}
+  new_branch: ${milestone_branch}
 
 invoke: git-orchestration.update-milestone-promote
 params:

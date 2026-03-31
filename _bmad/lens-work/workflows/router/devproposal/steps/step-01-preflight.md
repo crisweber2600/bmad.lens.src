@@ -27,7 +27,7 @@ initiative = load(initiative_state.config_path)
 lifecycle = load("{lifecycleContract}")
 
 initiative_root = initiative.initiative_root
-current_branch = invoke: git-orchestration.current-branch
+current_branch = invoke_command("git symbolic-ref --short HEAD")
 docs_path = initiative.docs.path || "{output_folder}/planning-artifacts"
 
 ensure_directory(docs_path)
@@ -59,8 +59,6 @@ params:
   commit_message: "[PHASE:DEVPROPOSAL:START] Begin devproposal on ${current_branch}"
 
 invoke: git-orchestration.pull-latest
-params:
-  branch: ${current_branch}
 ```
 
 ---

@@ -41,7 +41,7 @@ if state.artifacts.preplan == null:
   warning: "⚠️ Preplan artifacts not recorded in initiative-state.yaml. BusinessPlan can continue, but inherited artifacts may be incomplete."
 
 # v3: Work directly on the initiative root branch — no phase branch creation
-current_branch = git_current_branch()
+current_branch = invoke_command("git symbolic-ref --short HEAD")
 if current_branch != initiative_root:
   invoke: git-orchestration.checkout-branch
   params:

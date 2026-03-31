@@ -47,12 +47,32 @@ Generate developer-facing story artifacts for ALL stories in the sprint backlog 
 
 ### 1. Load Sprint Backlog For Target Epic
 
-Load the sprint backlog (from sprint planning output or `sprint-status.yaml`).
+Resolve `target_epic` from session context. If not set, prompt the user to select from available epics in the sprint output.
+
+Load the sprint backlog from `sprint-status.yaml` if available (structured); otherwise read `sprint-backlog.md` and parse epic/story assignments from the markdown.
 Collect all stories assigned to the target epic into `epic_stories`.
 
 ```yaml
-sprint_backlog = load("${docs_path}/sprint-status.yaml") || load("${docs_path}/sprint-backlog.md")
-epic_stories = sprint_backlog.stories.filter(story => story.epic == target_epic)
+# Resolve target_epic: use session value if already set, otherwise prompt
+if not target_epic:
+  available_epics = list_files("${docs_path}").filter(f => f.startsWith("epic-"))
+  target_epic = ask_user("Which epic should dev-stories be generated for? (e.g., epic-1)")
+
+# Load structured sprint status if available; otherwise fall back to markdown
+sprint_status_yaml = load_if_exists("${docs_path}/sprint-status.yaml")
+if sprint_status_yaml != null:
+  epic_stories = sprint_status_yaml.stories.filter(story => story.epic == target_epic)
+else:
+  # sprint-backlog.md is markdown — the agent must read and parse it.
+  # Extract story entries (id and title) listed under the heading for target_epic.
+  # Produce a list of { id, title, epic } objects into epic_stories.
+  # If no stories are found for the target epic, set epic_stories = []
+  backlog_text = read_file("${docs_path}/sprint-backlog.md")
+  # Agent: scan backlog_text for stories assigned to target_epic and populate epic_stories
+  epic_stories = []
+  if epic_stories.length == 0:
+    warning: "⚠️ No stories found for epic '${target_epic}' in sprint-backlog.md. Verify epic ID and backlog format."
+
 created_count = 0
 skipped_count = 0
 created_stories = []
@@ -76,27 +96,29 @@ for story in epic_stories:
     output: "⏭️  Skipping ${story.id} — dev-story artifact already exists at ${artifact_path}"
     continue
 
-  # Generate dev-story artifact
-  invoke: workflow-engine.execute
-  params:
-    workflow_xml: "{workflowXml}"
-    workflow: "{devStoryWorkflow}"
-    inputs:
-      story_id: ${story.id}
-      story_title: ${story.title}
-      output_path: ${bmad_docs}
-      constitutional_context: ${constitutional_context}
+  # Generate dev-story artifact using the core workflow engine.
+  # Load {scrumMasterAgent} (already loaded once before loop) and execute {devStoryWorkflow}
+  # through the workflow engine ({workflowXml}) with the inputs below.
+  # The workflow engine drives story artifact creation to artifact_path.
+  # Inputs:
+  #   story_id: ${story.id}
+  #   story_title: ${story.title}
+  #   output_path: ${bmad_docs}
+  #   constitutional_context: ${constitutional_context}
+  # The workflow MUST write the dev-story file to: ${artifact_path}
 
   created_count += 1
   created_stories.append(story.id)
   output: "✅ Created dev-story artifact: ${artifact_path} (${created_count}/${epic_stories.length})"
 
-# Update sprint-status to mark all created stories as ready-for-dev
-for story_id in created_stories:
-  invoke: sprint-status.update-story-status
-  params:
-    story_id: ${story_id}
-    status: "ready-for-dev"
+# Mark all created stories as ready-for-dev in sprint-status.yaml
+if sprint_status_yaml != null and created_stories.length > 0:
+  for story_id in created_stories:
+    story_entry = sprint_status_yaml.stories.find(s => s.id == story_id)
+    if story_entry:
+      story_entry.status = "ready-for-dev"
+  write_file("${docs_path}/sprint-status.yaml", serialize_yaml(sprint_status_yaml))
+  output: "📝 Updated sprint-status.yaml: ${created_stories.length} stories marked as ready-for-dev"
 ```
 
 Finish workflow tracking after all stories are processed.

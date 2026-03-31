@@ -2,6 +2,7 @@
 name: 'step-01-validate'
 description: 'Validate initiative is active and closeable, parse close variant, collect close reason'
 nextStepFile: './step-02-tombstone.md'
+lifecycleContract: '../../../../lifecycle.yaml'
 ---
 
 # Step 1: Validate and Collect Close Parameters
@@ -51,7 +52,7 @@ if state_yaml.lifecycle_status != "active":
   STOP
 
 # Validate close_state against lifecycle.yaml
-valid_states = load("lifecycle.yaml").close_states
+valid_states = load("{lifecycleContract}").close_states
 if close_state not in valid_states:
   error: "❌ Invalid close state '${close_state}'. Valid: ${valid_states}"
   STOP

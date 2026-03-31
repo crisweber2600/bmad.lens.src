@@ -30,7 +30,7 @@ output: |
   ├── Close State: ${close_state}
   ├── Superseded By: ${superseded_by || 'N/A'}
   ├── Reason: ${close_reason}
-  ├── Commit Marker: [CLOSE:${close_state.upper()}] ${initiative} — ${close_reason}
+  ├── Commit Marker: [CLOSE:${close_state.toUpperCase()}] ${initiative} — ${close_reason}
   ├── Tombstone: ${tombstone_result.status == "published" ? tombstone_result.target_path : "skipped"}
   └── initiative-state.yaml: lifecycle_status = ${close_state}
 

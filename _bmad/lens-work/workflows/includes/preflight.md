@@ -65,7 +65,8 @@ if ([string]::IsNullOrWhiteSpace($moduleSchema)) {
 $controlVersion = if (Test-Path "LENS_VERSION") { (Get-Content "LENS_VERSION" -Raw).Trim() } else { "" }
 
 if ([string]::IsNullOrWhiteSpace($controlVersion) -or ($controlVersion -ne $moduleSchema -and $controlVersion -ne "$moduleSchema.0.0")) {
-                throw "VERSION MISMATCH: control repo is v$([string]::IsNullOrWhiteSpace($controlVersion) ? 'missing' : $controlVersion), module expects v$moduleSchema. Run /lens-upgrade."
+                $displayControlVersion = if ([string]::IsNullOrWhiteSpace($controlVersion)) { 'missing' } else { $controlVersion }
+                throw "VERSION MISMATCH: control repo is v$displayControlVersion, module expects v$moduleSchema. Run /lens-upgrade."
 }
 ```
 

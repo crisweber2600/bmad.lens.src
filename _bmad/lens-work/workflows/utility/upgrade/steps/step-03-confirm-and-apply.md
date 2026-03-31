@@ -69,7 +69,7 @@ if dry_run:
     ════════════════════════════════════════
 
     To execute this migration, run: /lens-upgrade
-  STOP()
+  STOP
 ```
 
 ### 3. Confirm
@@ -83,7 +83,7 @@ else:
 
 if not confirmed:
   output: "❌ Upgrade cancelled. No changes made."
-  STOP()
+  STOP
 ```
 
 ### 4. Apply YAML Field Changes
@@ -127,8 +127,8 @@ current_branch = invoke_command("git branch --show-current").trim()
 rename_errors = []
 
 for rename in rename_plan:
-  result = invoke_command("git branch -m ${rename.from} ${rename.to}")
-  if result.exitCode == 0:
+  result = git-orchestration.exec("git branch -m ${rename.from} ${rename.to}")
+  if result.exit_code == 0:
     renames_applied++
     output: "  ✅ Renamed: `${rename.from}` → `${rename.to}`"
   else:
