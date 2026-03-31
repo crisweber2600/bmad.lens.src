@@ -1,12 +1,12 @@
 ---
 name: 'step-02-plan-renames'
-description: 'Scan local branches and compute the rename plan from migration descriptors'
+description: 'Scan local branches, compute rename plan, identify YAML field changes, and plan initiative-state.yaml creation'
 nextStepFile: './step-03-confirm-and-apply.md'
 ---
 
-# Step 2: Branch Scan And Rename Plan
+# Step 2: Migration Plan Computation
 
-**Goal:** List all local branches, apply the v2 audience-to-milestone mapping from the migration descriptor, and produce a `rename_plan` and `phase_branch_notes` list.
+**Goal:** Compute the full migration plan: branch renames, lifecycle.yaml field changes, and initiative-state.yaml files to create.
 
 ---
 
@@ -44,6 +44,7 @@ audience_tokens = keys(audience_map)  # ["small", "medium", "large", "base"]
 ```yaml
 rename_plan = []
 phase_branch_notes = []
+initiative_roots = set()
 
 for branch in branch_scan:
   # Split branch name into segments to detect audience token position
@@ -58,12 +59,15 @@ for branch in branch_scan:
   audience_token = segments[audience_idx]
   milestone_token = audience_map[audience_token]
 
+  # Extract initiative root (everything before the audience token)
+  init_root = segments.slice(0, audience_idx).join("-")
+  initiative_roots.add(init_root)
+
   # Determine if this is a phase branch (has segments after the audience token)
   trailing_segments = segments.slice(audience_idx + 1)
 
   if trailing_segments.length == 0:
     # Pure audience-root branch: {root}-{audience} → {root}-{milestone}
-    init_root = segments.slice(0, audience_idx).join("-")
     new_name = init_root + "-" + milestone_token
     rename_plan.push({ from: branch, to: new_name, type: "milestone-root" })
   else:
@@ -72,12 +76,71 @@ for branch in branch_scan:
       branch: branch,
       note: "v2 phase branch — no v3 equivalent. Verify merged, then delete."
     })
+```
+
+### 4. Compute YAML Field Changes
+
+Extract the lifecycle.yaml field transformations from the migration descriptor:
+
+```yaml
+yaml_changes = []
+
+if migration != null:
+  for change in migration.changes:
+    yaml_changes.push({
+      type: change.type,        # rename_key | rename_field | add_field
+      path: change.path,
+      new_path: change.new_path || null,
+      value: change.value || null
+    })
 
 output: |
-  📋 Branch scan complete
-  ├── Total local branches: ${branch_scan.length}
-  ├── Milestone renames planned: ${rename_plan.length}
-  └── Phase branch advisories: ${phase_branch_notes.length}
+  📋 YAML field changes from migration descriptor: ${yaml_changes.length}
+  ${yaml_changes.map(c => `  ${c.type}: ${c.path}${c.new_path ? ' → ' + c.new_path : ''}`).join('\n')}
+```
+
+### 5. Plan Initiative-State YAML Creation
+
+For each detected initiative root, check if `initiative-state.yaml` already exists. If not, plan its creation.
+
+```yaml
+init_state_plan = []
+
+for root in initiative_roots:
+  state_exists = invoke_command("git show ${root}:initiative-state.yaml 2>/dev/null").exitCode == 0
+
+  if not state_exists:
+    init_state_plan.push({
+      initiative_root: root,
+      branch: root,
+      action: "create",
+      content: {
+        schema_version: 3,
+        initiative: root,
+        lifecycle_status: "active",
+        current_phase: null,    # will be determined from branch topology
+        last_updated: now_iso8601()
+      }
+    })
+  else:
+    # Exists — plan update to ensure schema_version: 3
+    init_state_plan.push({
+      initiative_root: root,
+      branch: root,
+      action: "update",
+      fields: { schema_version: 3 }
+    })
+```
+
+### 6. Summary
+
+```yaml
+output: |
+  📋 Migration plan complete
+  ├── Branch renames planned: ${rename_plan.length}
+  ├── Phase branch advisories: ${phase_branch_notes.length}
+  ├── YAML field changes: ${yaml_changes.length}
+  └── Initiative-state files to create/update: ${init_state_plan.length}
 ```
 
 ---

@@ -1,17 +1,24 @@
 ---
 name: 'step-01-detect'
-description: 'Detect LENS_VERSION, load lifecycle migration descriptors, determine upgrade path'
+description: 'Detect LENS_VERSION, load lifecycle migration descriptors, determine upgrade path, parse --dry-run flag'
 nextStepFile: './step-02-plan-renames.md'
 lifecycleContract: '../../../../lifecycle.yaml'
 ---
 
 # Step 1: Version Detection
 
-**Goal:** Read the current `LENS_VERSION`, load the `lifecycle.yaml` migration descriptors, decide whether an upgrade is needed, and identify the applicable migration path.
+**Goal:** Parse command flags, read the current `LENS_VERSION`, load the `lifecycle.yaml` migration descriptors, decide whether an upgrade is needed, and identify the applicable migration path.
 
 ---
 
 ## EXECUTION SEQUENCE
+
+### 0. Parse Flags
+
+```yaml
+# Parse --dry-run flag from invocation arguments
+dry_run = args.includes("--dry-run")
+```
 
 ### 1. Read Current Version And Target
 
@@ -29,10 +36,7 @@ target_major = parseInt(target_version)
 
 # Check if already at target
 if detected_major != null and detected_major >= target_major:
-  output: |
-    ✅ Already up to date
-    ├── LENS_VERSION: ${detected_version}
-    └── Module schema: ${target_version}
+  output: "Already at current version (LENS_VERSION: ${detected_version}, module schema: ${target_version})"
   STOP()
 ```
 

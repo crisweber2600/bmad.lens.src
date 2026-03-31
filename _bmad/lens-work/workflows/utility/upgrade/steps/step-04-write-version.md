@@ -28,17 +28,18 @@ output: "📝 Wrote LENS_VERSION: ${version_string}"
 
 ```bash
 git add LENS_VERSION
-git commit -m "chore: upgrade to LENS v${target_version} schema"
+git commit -m "[LENS:UPGRADE] migrated from v${detected_version || '2'} to v${target_version}"
 ```
 
 ```yaml
 invoke_command("git add LENS_VERSION")
-commit_result = invoke_command("git commit -m 'chore: upgrade to LENS v${target_version} schema'")
+commit_message = "[LENS:UPGRADE] migrated from v${detected_version || '2'} to v${target_version}"
+commit_result = invoke_command("git commit -m '${commit_message}'")
 
 if commit_result.exitCode != 0:
   output: "⚠️  Commit failed: ${commit_result.stderr}. LENS_VERSION was written but not committed."
 else:
-  output: "✅ Committed LENS_VERSION"
+  output: "✅ Committed: ${commit_message}"
 ```
 
 ### 3. Report
