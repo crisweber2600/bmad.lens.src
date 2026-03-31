@@ -115,6 +115,7 @@ if yaml_changes.length > 0:
 
   write_file("_bmad/lens-work/lifecycle.yaml", serialize_yaml(yaml_doc))
   invoke_command("git add _bmad/lens-work/lifecycle.yaml")
+  invoke_command("git commit -m '[LENS:UPGRADE] apply lifecycle.yaml field migrations v${detected_version || 2} → v${target_version}'")
   output: "  ✅ Applied ${yaml_changes.length} YAML field changes to lifecycle.yaml"
 ```
 
