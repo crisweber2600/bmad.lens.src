@@ -256,18 +256,45 @@ write file and stage with the promotion commit
 
 Record a formal lifecycle close event.
 
+**Input:**
+```yaml
+close_state: completed       # completed | abandoned | superseded (from lifecycle.yaml.close_states)
+superseded_by: null           # initiative slug if close_state == superseded, else null
+reason: "Feature shipped to production and verified"
+```
+
 **Updates:**
-- `lifecycle_status`
-- `superseded_by` (if applicable)
-- `last_updated`
+- `lifecycle_status` → set to close_state
+- `superseded_by` → set when close_state is superseded
+- `last_updated` → refreshed to current timestamp
 
 **Algorithm:**
 ```yaml
-read initiative-state.yaml
-set lifecycle_status = ${CLOSE_STATE}
-set superseded_by = ${SUCCESSOR?}
-set last_updated = now_iso8601()
-write file and stage with the close commit
+state_yaml = read("initiative-state.yaml")
+
+# Validate close_state against lifecycle.yaml.close_states
+valid_states = load("lifecycle.yaml").close_states
+if close_state not in valid_states:
+  error: "Invalid close state '${close_state}'. Valid: ${valid_states}"
+
+if state_yaml.lifecycle_status != "active":
+  error: "Initiative already closed (status: ${state_yaml.lifecycle_status})"
+
+state_yaml.lifecycle_status = ${close_state}
+if close_state == "superseded" and superseded_by:
+  state_yaml.superseded_by = ${superseded_by}
+state_yaml.last_updated = now_iso8601()
+
+write("initiative-state.yaml", state_yaml)
+git add initiative-state.yaml
+git commit -m "[CLOSE:${close_state.upper()}] ${initiative} — ${reason}"
+```
+
+**Output:**
+```yaml
+status: closed
+close_state: completed
+commit_marker: "[CLOSE:COMPLETED] foo-bar-auth — Feature shipped to production and verified"
 ```
 
 ---
@@ -378,6 +405,17 @@ manifest_generated: true
 ### `publish-tombstone`
 
 Publish a lifecycle tombstone to governance when an initiative is formally closed.
+Direct-pushes a rich tombstone markdown to `governance:tombstones/{domain}/{service}/{initiative}-tombstone.md`.
+
+**Input:**
+```yaml
+initiative: foo-bar-auth
+domain: payments
+service: auth
+close_state: completed         # completed | abandoned | superseded
+superseded_by: null            # initiative slug or null
+reason: "Feature shipped to production and verified"
+```
 
 **Updates:**
 - Writes a governance tombstone record for completed, abandoned, or superseded initiatives
@@ -385,10 +423,68 @@ Publish a lifecycle tombstone to governance when an initiative is formally close
 
 **Algorithm:**
 ```bash
-# 1. Resolve governance repo path and tombstone destination
-# 2. Write tombstone metadata derived from initiative-state.yaml and close inputs
-# 3. Commit and push the governance tombstone update with the close event
+# 1. Resolve governance repo path
+GOVERNANCE_REPO = resolve_governance_repo_path()
+if not GOVERNANCE_REPO:
+  log "⚠️ Governance repo not configured — skipping tombstone publication (non-fatal)"
+  return { status: "skipped", reason: "governance_not_configured" }
+
+# 2. Load initiative-state.yaml for tombstone content
+state_yaml = load("initiative-state.yaml")
+tombstone_dir = "tombstones/${domain}/${service}"
+tombstone_file = "${tombstone_dir}/${initiative}-tombstone.md"
+
+# 3. Generate rich tombstone markdown
+cat > "${GOVERNANCE_REPO}/${tombstone_file}" <<EOF
+# Tombstone: ${initiative}
+
+| Field | Value |
+|-------|-------|
+| Initiative | ${initiative} |
+| Domain | ${domain} |
+| Service | ${service} |
+| Status | ${close_state} |
+| Closed Date | $(date -u +%Y-%m-%dT%H:%M:%SZ) |
+| Final Milestone | ${state_yaml.milestone || 'none'} |
+| LENS Version | $(cat LENS_VERSION) |
+| Superseded By | ${superseded_by || 'N/A'} |
+
+## Close Reason
+
+${reason}
+
+## Artifact Summary
+
+| Phase | Artifacts |
+|-------|-----------|
+$(for phase in state_yaml.artifacts:
+  echo "| ${phase} | $(join(state_yaml.artifacts[phase], ', ')) |")
+
+## Phase History
+
+$(for phase in state_yaml.phases:
+  echo "- **${phase.name}**: ${phase.status} (${phase.completed_at || 'N/A'})")
+EOF
+
+# 4. Commit and direct-push
+cd "${GOVERNANCE_REPO}"
+git pull --rebase origin main
+mkdir -p "${tombstone_dir}"
+git add "${tombstone_file}"
+git commit -m "[TOMBSTONE] ${initiative} — ${close_state}: ${reason}"
+git push origin main
 ```
+
+**Output:**
+```yaml
+status: published              # published | skipped
+target_path: "tombstones/payments/auth/foo-bar-auth-tombstone.md"
+close_state: completed
+```
+
+**Error Handling:**
+- If governance repo is not configured: log warning, return `skipped` — do NOT hard-fail
+- If push fails: log error with instructions to manually resolve
 
 ---
 
