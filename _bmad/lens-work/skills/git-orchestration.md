@@ -295,17 +295,83 @@ write file and stage with the upgrade commit
 ### `publish-to-governance`
 
 Publish milestone artifacts to the governance repo after a milestone promotion succeeds.
+Direct-pushes all initiative artifacts to `governance:artifacts/{domain}/{service}/{initiative}/`
+and generates a `_manifest.yaml` index.
+
+**Input:**
+```yaml
+initiative: foo-bar-auth
+domain: payments
+service: auth
+milestone: techplan              # current milestone being promoted
+artifact_list:                   # from initiative-state.yaml.artifacts
+  - product-brief.md
+  - prd.md
+  - architecture.md
+  - tech-decisions.md
+```
 
 **Updates:**
-- Copies approved artifacts from the control repo initiative path into the configured governance publication root
-- Writes or refreshes governance-side publication metadata required by downstream readers
+- Replaces all files under `governance:artifacts/{domain}/{service}/{initiative}/` atomically (removes stale files from earlier phases)
+- Generates and includes `_manifest.yaml` in the push
+- Does NOT create a PR — this is a direct push
 
 **Algorithm:**
 ```bash
-# 1. Resolve governance repo path and artifact_publication.governance_root from lifecycle.yaml
-# 2. Copy milestone-approved artifacts into the governance repo publication tree
-# 3. Commit and push the governance update directly after the promotion gate succeeds
+# 1. Resolve governance repo path
+publication_config = load("lifecycle.yaml").artifact_publication
+if not publication_config.enabled:
+  log "ℹ️ Artifact publication disabled in lifecycle.yaml — skipping"
+  return { status: "skipped", reason: "disabled" }
+
+GOVERNANCE_REPO = resolve_governance_repo_path()
+if not GOVERNANCE_REPO:
+  log "⚠️ Governance repo not configured — skipping publication (non-fatal)"
+  return { status: "skipped", reason: "governance_not_configured" }
+
+governance_root = publication_config.governance_root  # e.g. "artifacts/"
+target_dir = "${governance_root}${domain}/${service}/${initiative}"
+
+# 2. Clean previous publication (atomic replace)
+cd "${GOVERNANCE_REPO}"
+git pull --rebase origin main
+rm -rf "${target_dir}"
+mkdir -p "${target_dir}"
+
+# 3. Copy milestone-approved artifacts
+initiative_output_path = resolve_initiative_output_path()
+for artifact in artifact_list:
+  cp "${initiative_output_path}/${artifact}" "${target_dir}/${artifact}"
+
+# 4. Generate _manifest.yaml
+cat > "${target_dir}/_manifest.yaml" <<EOF
+initiative: ${initiative}
+domain: ${domain}
+service: ${service}
+published_at: '$(date -u +%Y-%m-%dT%H:%M:%SZ)'
+milestone: ${milestone}
+lens_version: '$(cat LENS_VERSION)'
+artifacts:
+$(for artifact in artifact_list; echo "  - ${artifact}")
+EOF
+
+# 5. Commit and direct-push
+git add "${target_dir}"
+git commit -m "[GOVERNANCE] Publish ${initiative} artifacts at milestone ${milestone}"
+git push origin main
 ```
+
+**Output:**
+```yaml
+status: published                # published | skipped
+target_path: "artifacts/payments/auth/foo-bar-auth/"
+artifact_count: 4
+manifest_generated: true
+```
+
+**Error Handling:**
+- If governance repo is not configured: log warning, return `skipped` — do NOT hard-fail
+- If push fails (e.g., conflict): log error with instructions to manually resolve, do NOT retry automatically
 
 ---
 
