@@ -1,0 +1,3062 @@
+{
+  "scanner": "path-standards",
+  "script": "scan-path-standards.py",
+  "version": "1.0.0",
+  "skill_path": "D:\\bmad.lens.bmad\\bmad.lens.src\\_bmad\\lens-work",
+  "timestamp": "2026-04-01T20:40:32.973205+00:00",
+  "files_scanned": [
+    "agents\\lens.agent.md",
+    "assets\\templates\\architecture-template.md",
+    "assets\\templates\\epics-template.md",
+    "assets\\templates\\implementation-readiness-template.md",
+    "assets\\templates\\prd-template.md",
+    "assets\\templates\\product-brief-template.md",
+    "assets\\templates\\stories-template.md",
+    "assets\\templates\\ux-design-template.md",
+    "bmad-lens-work-setup\\SKILL.md",
+    "docs\\architecture.md",
+    "docs\\component-inventory.md",
+    "docs\\configuration-examples.md",
+    "docs\\copilot-adapter-reference.md",
+    "docs\\copilot-adapter-templates.md",
+    "docs\\copilot-instructions.md",
+    "docs\\copilot-repo-instructions.md",
+    "docs\\development-guide.md",
+    "docs\\GETTING-STARTED.md",
+    "docs\\index.md",
+    "docs\\lex-persona.md",
+    "docs\\lifecycle-reference.md",
+    "docs\\lifecycle-visual-guide.md",
+    "docs\\onboarding-checklist.md",
+    "docs\\pipeline-source-to-release.md",
+    "docs\\project-overview.md",
+    "docs\\script-integration.md",
+    "docs\\source-tree-analysis.md",
+    "docs\\v3.1-improvements.md",
+    "docs\\whats-new.md",
+    "prompts\\lens-work.businessplan.prompt.md",
+    "prompts\\lens-work.close.prompt.md",
+    "prompts\\lens-work.compliance-check.prompt.md",
+    "prompts\\lens-work.constitution.prompt.md",
+    "prompts\\lens-work.dev.prompt.md",
+    "prompts\\lens-work.devproposal.prompt.md",
+    "prompts\\lens-work.discover.prompt.md",
+    "prompts\\lens-work.expressplan.prompt.md",
+    "prompts\\lens-work.help.prompt.md",
+    "prompts\\lens-work.log-problem.prompt.md",
+    "prompts\\lens-work.module-management.prompt.md",
+    "prompts\\lens-work.move-feature.prompt.md",
+    "prompts\\lens-work.new-initiative.prompt.md",
+    "prompts\\lens-work.next.prompt.md",
+    "prompts\\lens-work.onboard.prompt.md",
+    "prompts\\lens-work.preplan.prompt.md",
+    "prompts\\lens-work.promote.prompt.md",
+    "prompts\\lens-work.retrospective.prompt.md",
+    "prompts\\lens-work.sense.prompt.md",
+    "prompts\\lens-work.setup-repo.prompt.md",
+    "prompts\\lens-work.split-feature.prompt.md",
+    "prompts\\lens-work.sprintplan.prompt.md",
+    "prompts\\lens-work.status.prompt.md",
+    "prompts\\lens-work.switch.prompt.md",
+    "prompts\\lens-work.techplan.prompt.md",
+    "prompts\\lens-work.upgrade.prompt.md",
+    "README.md",
+    "skills\\checklist\\SKILL.md",
+    "skills\\constitution\\SKILL.md",
+    "skills\\git-orchestration\\SKILL.md",
+    "skills\\git-state\\SKILL.md",
+    "skills\\sensing\\SKILL.md",
+    "tests\\contracts\\branch-parsing.md",
+    "tests\\contracts\\governance.md",
+    "tests\\contracts\\provider-adapter.md",
+    "tests\\contracts\\sensing.md",
+    "TODO.md",
+    "workflows\\core\\audience-promotion\\resources\\workflow-plan.md",
+    "workflows\\core\\audience-promotion\\SKILL.md",
+    "workflows\\core\\audience-promotion\\steps\\step-01-preflight.md",
+    "workflows\\core\\audience-promotion\\steps\\step-02-run-gates.md",
+    "workflows\\core\\audience-promotion\\steps\\step-03-create-promotion.md",
+    "workflows\\core\\audience-promotion\\steps\\step-04-render-result.md",
+    "workflows\\core\\audience-promotion\\workflow.md",
+    "workflows\\core\\milestone-promotion\\resources\\workflow-plan.md",
+    "workflows\\core\\milestone-promotion\\SKILL.md",
+    "workflows\\core\\milestone-promotion\\steps\\step-01-preflight.md",
+    "workflows\\core\\milestone-promotion\\steps\\step-02-run-gates.md",
+    "workflows\\core\\milestone-promotion\\steps\\step-03-create-promotion.md",
+    "workflows\\core\\milestone-promotion\\steps\\step-04-render-result.md",
+    "workflows\\core\\milestone-promotion\\workflow.md",
+    "workflows\\core\\phase-lifecycle\\resources\\workflow-plan.md",
+    "workflows\\core\\phase-lifecycle\\SKILL.md",
+    "workflows\\core\\phase-lifecycle\\steps\\step-01-preflight.md",
+    "workflows\\core\\phase-lifecycle\\steps\\step-02-validate-completion.md",
+    "workflows\\core\\phase-lifecycle\\steps\\step-03-create-phase-pr.md",
+    "workflows\\core\\phase-lifecycle\\steps\\step-04-cleanup.md",
+    "workflows\\core\\phase-lifecycle\\workflow.md",
+    "workflows\\governance\\compliance-check\\resources\\workflow-plan.md",
+    "workflows\\governance\\compliance-check\\SKILL.md",
+    "workflows\\governance\\compliance-check\\steps\\step-01-preflight.md",
+    "workflows\\governance\\compliance-check\\steps\\step-02-resolve-constitution.md",
+    "workflows\\governance\\compliance-check\\steps\\step-03-run-compliance.md",
+    "workflows\\governance\\compliance-check\\steps\\step-04-render-result.md",
+    "workflows\\governance\\compliance-check\\workflow.md",
+    "workflows\\governance\\cross-initiative\\resources\\workflow-plan.md",
+    "workflows\\governance\\cross-initiative\\SKILL.md",
+    "workflows\\governance\\cross-initiative\\steps\\step-01-preflight.md",
+    "workflows\\governance\\cross-initiative\\steps\\step-02-run-sensing.md",
+    "workflows\\governance\\cross-initiative\\steps\\step-03-resolve-gate.md",
+    "workflows\\governance\\cross-initiative\\steps\\step-04-render-result.md",
+    "workflows\\governance\\cross-initiative\\workflow.md",
+    "workflows\\governance\\resolve-constitution\\resources\\workflow-plan.md",
+    "workflows\\governance\\resolve-constitution\\SKILL.md",
+    "workflows\\governance\\resolve-constitution\\steps\\step-01-preflight.md",
+    "workflows\\governance\\resolve-constitution\\steps\\step-02-resolve.md",
+    "workflows\\governance\\resolve-constitution\\steps\\step-03-render-result.md",
+    "workflows\\governance\\resolve-constitution\\workflow.md",
+    "workflows\\includes\\artifact-validator.md",
+    "workflows\\includes\\pr-links.md",
+    "workflows\\includes\\preflight.md",
+    "workflows\\includes\\promotion-check.md",
+    "workflows\\includes\\sensing-report.md",
+    "workflows\\includes\\size-topology.md",
+    "workflows\\router\\businessplan\\resources\\workflow-plan.md",
+    "workflows\\router\\businessplan\\SKILL.md",
+    "workflows\\router\\businessplan\\steps\\step-01-preflight.md",
+    "workflows\\router\\businessplan\\steps\\step-02-select-workflows.md",
+    "workflows\\router\\businessplan\\steps\\step-03-run-workflows.md",
+    "workflows\\router\\businessplan\\steps\\step-04-closeout.md",
+    "workflows\\router\\businessplan\\workflow.md",
+    "workflows\\router\\close\\SKILL.md",
+    "workflows\\router\\close\\steps\\step-01-validate.md",
+    "workflows\\router\\close\\steps\\step-02-tombstone.md",
+    "workflows\\router\\close\\steps\\step-03-closeout.md",
+    "workflows\\router\\close\\workflow.md",
+    "workflows\\router\\dev\\resources\\preflight-promotion-and-context.md",
+    "workflows\\router\\dev\\resources\\story-implementation-guidance.md",
+    "workflows\\router\\dev\\resources\\story-review-loop.md",
+    "workflows\\router\\dev\\resources\\story-target-repo-routing.md",
+    "workflows\\router\\dev\\resources\\workflow-plan.md",
+    "workflows\\router\\dev\\SKILL.md",
+    "workflows\\router\\dev\\steps\\step-01-preflight.md",
+    "workflows\\router\\dev\\steps\\step-02-story-discovery.md",
+    "workflows\\router\\dev\\steps\\step-03-story-loop.md",
+    "workflows\\router\\dev\\steps\\step-04-epic-completion.md",
+    "workflows\\router\\dev\\steps\\step-05-closeout.md",
+    "workflows\\router\\dev\\workflow.md",
+    "workflows\\router\\devproposal\\resources\\workflow-plan.md",
+    "workflows\\router\\devproposal\\SKILL.md",
+    "workflows\\router\\devproposal\\steps\\step-01-preflight.md",
+    "workflows\\router\\devproposal\\steps\\step-02-select-mode.md",
+    "workflows\\router\\devproposal\\steps\\step-03-run-workflows.md",
+    "workflows\\router\\devproposal\\steps\\step-04-closeout.md",
+    "workflows\\router\\devproposal\\workflow.md",
+    "workflows\\router\\discover\\resources\\workflow-plan.md",
+    "workflows\\router\\discover\\SKILL.md",
+    "workflows\\router\\discover\\steps\\step-01-preflight.md",
+    "workflows\\router\\discover\\steps\\step-02-scan-repos.md",
+    "workflows\\router\\discover\\steps\\step-03-inspect-repos.md",
+    "workflows\\router\\discover\\steps\\step-04-governance-and-branches.md",
+    "workflows\\router\\discover\\steps\\step-05-report.md",
+    "workflows\\router\\discover\\workflow.md",
+    "workflows\\router\\expressplan\\SKILL.md",
+    "workflows\\router\\expressplan\\steps\\step-01-preflight.md",
+    "workflows\\router\\expressplan\\steps\\step-02-plan.md",
+    "workflows\\router\\expressplan\\steps\\step-03-review.md",
+    "workflows\\router\\expressplan\\steps\\step-04-epics-stories.md",
+    "workflows\\router\\expressplan\\steps\\step-05-dev-ready.md",
+    "workflows\\router\\expressplan\\workflow.md",
+    "workflows\\router\\init-initiative\\resources\\workflow-plan.md",
+    "workflows\\router\\init-initiative\\SKILL.md",
+    "workflows\\router\\init-initiative\\steps\\step-01-preflight.md",
+    "workflows\\router\\init-initiative\\steps\\step-02-collect-scope.md",
+    "workflows\\router\\init-initiative\\steps\\step-03-validate-and-sense.md",
+    "workflows\\router\\init-initiative\\steps\\step-04-create-initiative.md",
+    "workflows\\router\\init-initiative\\steps\\step-05-respond.md",
+    "workflows\\router\\init-initiative\\workflow.md",
+    "workflows\\router\\preplan\\resources\\workflow-plan.md",
+    "workflows\\router\\preplan\\SKILL.md",
+    "workflows\\router\\preplan\\steps\\step-01-preflight.md",
+    "workflows\\router\\preplan\\steps\\step-02-select-workflows.md",
+    "workflows\\router\\preplan\\steps\\step-03-run-workflows.md",
+    "workflows\\router\\preplan\\steps\\step-04-closeout.md",
+    "workflows\\router\\preplan\\workflow.md",
+    "workflows\\router\\retrospective\\SKILL.md",
+    "workflows\\router\\retrospective\\steps\\step-01-gather.md",
+    "workflows\\router\\retrospective\\steps\\step-02-analyze.md",
+    "workflows\\router\\retrospective\\steps\\step-03-report.md",
+    "workflows\\router\\retrospective\\steps\\step-04-actions.md",
+    "workflows\\router\\retrospective\\workflow.md",
+    "workflows\\router\\sprintplan\\resources\\workflow-plan.md",
+    "workflows\\router\\sprintplan\\SKILL.md",
+    "workflows\\router\\sprintplan\\steps\\step-01-preflight.md",
+    "workflows\\router\\sprintplan\\steps\\step-02-readiness.md",
+    "workflows\\router\\sprintplan\\steps\\step-03-sprint-planning.md",
+    "workflows\\router\\sprintplan\\steps\\step-04-dev-story.md",
+    "workflows\\router\\sprintplan\\steps\\step-05-closeout.md",
+    "workflows\\router\\sprintplan\\workflow.md",
+    "workflows\\router\\techplan\\resources\\workflow-plan.md",
+    "workflows\\router\\techplan\\SKILL.md",
+    "workflows\\router\\techplan\\steps\\step-01-preflight.md",
+    "workflows\\router\\techplan\\steps\\step-02-select-mode.md",
+    "workflows\\router\\techplan\\steps\\step-03-run-workflows.md",
+    "workflows\\router\\techplan\\steps\\step-04-closeout.md",
+    "workflows\\router\\techplan\\workflow.md",
+    "workflows\\utility\\dashboard\\SKILL.md",
+    "workflows\\utility\\dashboard\\workflow.md",
+    "workflows\\utility\\help\\resources\\workflow-plan.md",
+    "workflows\\utility\\help\\SKILL.md",
+    "workflows\\utility\\help\\steps\\step-01-preflight.md",
+    "workflows\\utility\\help\\steps\\step-02-detect-context.md",
+    "workflows\\utility\\help\\steps\\step-03-load-registry.md",
+    "workflows\\utility\\help\\steps\\step-04-render-help.md",
+    "workflows\\utility\\help\\workflow.md",
+    "workflows\\utility\\log-problem\\SKILL.md",
+    "workflows\\utility\\log-problem\\steps\\step-01-log.md",
+    "workflows\\utility\\log-problem\\workflow.md",
+    "workflows\\utility\\module-management\\resources\\workflow-plan.md",
+    "workflows\\utility\\module-management\\SKILL.md",
+    "workflows\\utility\\module-management\\steps\\step-01-preflight.md",
+    "workflows\\utility\\module-management\\steps\\step-02-compare-report.md",
+    "workflows\\utility\\module-management\\steps\\step-03-update-guidance.md",
+    "workflows\\utility\\module-management\\steps\\step-04-compatibility-closeout.md",
+    "workflows\\utility\\module-management\\workflow.md",
+    "workflows\\utility\\move-feature\\SKILL.md",
+    "workflows\\utility\\move-feature\\steps\\step-01-move.md",
+    "workflows\\utility\\move-feature\\workflow.md",
+    "workflows\\utility\\next\\resources\\workflow-plan.md",
+    "workflows\\utility\\next\\SKILL.md",
+    "workflows\\utility\\next\\steps\\step-01-preflight.md",
+    "workflows\\utility\\next\\steps\\step-02-derive-action.md",
+    "workflows\\utility\\next\\steps\\step-03-execute-or-report.md",
+    "workflows\\utility\\next\\workflow.md",
+    "workflows\\utility\\onboard\\resources\\workflow-plan.md",
+    "workflows\\utility\\onboard\\SKILL.md",
+    "workflows\\utility\\onboard\\steps\\step-01-preflight.md",
+    "workflows\\utility\\onboard\\steps\\step-02-auth-and-governance.md",
+    "workflows\\utility\\onboard\\steps\\step-03-profile-and-bootstrap.md",
+    "workflows\\utility\\onboard\\steps\\step-04-health-and-report.md",
+    "workflows\\utility\\onboard\\workflow.md",
+    "workflows\\utility\\promote\\resources\\workflow-plan.md",
+    "workflows\\utility\\promote\\SKILL.md",
+    "workflows\\utility\\promote\\steps\\step-01-preflight.md",
+    "workflows\\utility\\promote\\steps\\step-02-route.md",
+    "workflows\\utility\\promote\\workflow.md",
+    "workflows\\utility\\split-feature\\SKILL.md",
+    "workflows\\utility\\split-feature\\steps\\step-01-split.md",
+    "workflows\\utility\\split-feature\\workflow.md",
+    "workflows\\utility\\status\\resources\\workflow-plan.md",
+    "workflows\\utility\\status\\SKILL.md",
+    "workflows\\utility\\status\\steps\\step-01-preflight.md",
+    "workflows\\utility\\status\\steps\\step-02-scan-initiatives.md",
+    "workflows\\utility\\status\\steps\\step-03-derive-state.md",
+    "workflows\\utility\\status\\steps\\step-04-render-report.md",
+    "workflows\\utility\\status\\workflow.md",
+    "workflows\\utility\\switch\\resources\\workflow-plan.md",
+    "workflows\\utility\\switch\\SKILL.md",
+    "workflows\\utility\\switch\\steps\\step-01-preflight.md",
+    "workflows\\utility\\switch\\steps\\step-02-resolve-target.md",
+    "workflows\\utility\\switch\\steps\\step-03-handle-dirty-state.md",
+    "workflows\\utility\\switch\\steps\\step-04-checkout-target.md",
+    "workflows\\utility\\switch\\steps\\step-05-report-context.md",
+    "workflows\\utility\\switch\\workflow.md",
+    "workflows\\utility\\upgrade\\resources\\workflow-plan.md",
+    "workflows\\utility\\upgrade\\SKILL.md",
+    "workflows\\utility\\upgrade\\steps\\step-01-detect.md",
+    "workflows\\utility\\upgrade\\steps\\step-02-plan-renames.md",
+    "workflows\\utility\\upgrade\\steps\\step-03-confirm-and-apply.md",
+    "workflows\\utility\\upgrade\\steps\\step-04-write-version.md",
+    "workflows\\utility\\upgrade\\workflow.md"
+  ],
+  "status": "fail",
+  "findings": [
+    {
+      "file": "bmad-lens-work-setup\\SKILL.md",
+      "line": 13,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- The target BMAD configuration directory (`_bmad/_config/`) must exist",
+      "action": ""
+    },
+    {
+      "file": "bmad-lens-work-setup\\SKILL.md",
+      "line": 14,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- The host `_bmad/_config/manifest.yaml` or equivalent config file must exist",
+      "action": ""
+    },
+    {
+      "file": "bmad-lens-work-setup\\SKILL.md",
+      "line": 64,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| Config file not found | Verify `_bmad/_config/` exists and contains the expected files |",
+      "action": ""
+    },
+    {
+      "file": "docs\\architecture.md",
+      "line": 324,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `target_projects_path` \u2014 Where target repos live (default: `../TargetProjects`)",
+      "action": ""
+    },
+    {
+      "file": "docs\\architecture.md",
+      "line": 334,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| `target-projects-path` | `../TargetProjects` | Where to find/create target repos |",
+      "action": ""
+    },
+    {
+      "file": "docs\\architecture.md",
+      "line": 187,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| Domain 2 (Release Module) | `bmad.lens.release/_bmad/lens-work/` | Module builder only | Read-only at runtime |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-adapter-reference.md",
+      "line": 44,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "All `.github/` adapter files are **generated by the CI/CD pipeline** (`promote-to-release.yml`) via the `_module-install",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 8,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- **Module path:** `bmad.lens.release/_bmad/lens-work/`",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 9,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- **Lifecycle contract:** `bmad.lens.release/_bmad/lens-work/lifecycle.yaml`",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 10,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- **Module version:** See `bmad.lens.release/_bmad/lens-work/module.yaml`",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 15,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "the module agent at `bmad.lens.release/_bmad/lens-work/agents/lens.agent.md`.",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 21,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| git-state | `bmad.lens.release/_bmad/lens-work/skills/git-state/SKILL.md` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 22,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| git-orchestration | `bmad.lens.release/_bmad/lens-work/skills/git-orchestration/SKILL.md` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 23,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| constitution | `bmad.lens.release/_bmad/lens-work/skills/constitution/SKILL.md` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 24,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| sensing | `bmad.lens.release/_bmad/lens-work/skills/sensing/SKILL.md` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-instructions.md",
+      "line": 25,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| checklist | `bmad.lens.release/_bmad/lens-work/skills/checklist/SKILL.md` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 33,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "Contains **cloned code repositories** organized by `{domain}/{service}/{repo}`. The base path is configured in `bmad.len",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 25,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/lens-work/` \u2014 The lens-work module: lifecycle contract, skills, workflows, prompts, scripts, agents, docs",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 26,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/bmm/`, `_bmad/core/`, `_bmad/cis/`, etc. \u2014 Other BMAD modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 26,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/bmm/`, `_bmad/core/`, `_bmad/cis/`, etc. \u2014 Other BMAD modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 26,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/bmm/`, `_bmad/core/`, `_bmad/cis/`, etc. \u2014 Other BMAD modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 27,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/_config/` \u2014 Global manifests (agent, workflow, task, tool, files)",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 29,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "**Write rules:** NEVER modify files in `bmad.lens.release/`. It is read-only reference material. All `_bmad/` path refer",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 33,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "Contains **cloned code repositories** organized by `{domain}/{service}/{repo}`. The base path is configured in `bmad.len",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 43,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `_bmad/lens-work/...` in a prompt or workflow | `bmad.lens.release/_bmad/lens-work/...` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 43,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `_bmad/lens-work/...` in a prompt or workflow | `bmad.lens.release/_bmad/lens-work/...` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 44,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `_bmad/_config/...` | `bmad.lens.release/_bmad/_config/...` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 44,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `_bmad/_config/...` | `bmad.lens.release/_bmad/_config/...` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 47,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `.github/prompts/lens-work.*.prompt.md` | Stub files \u2014 always follow the redirect to `bmad.lens.release/_bmad/lens-wor",
+      "action": ""
+    },
+    {
+      "file": "docs\\copilot-repo-instructions.md",
+      "line": 48,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `.github/skills/lens-work-*/SKILL.md` | Stub files \u2014 always follow the redirect to `bmad.lens.release/_bmad/lens-work/",
+      "action": ""
+    },
+    {
+      "file": "docs\\development-guide.md",
+      "line": 201,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "See [pipeline-source-to-release.md](./pipeline-source-to-release.md) for details.",
+      "action": ""
+    },
+    {
+      "file": "docs\\GETTING-STARTED.md",
+      "line": 122,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "See [Configuration Examples](./configuration-examples.md) for sample configs for different team sizes and git providers.",
+      "action": ""
+    },
+    {
+      "file": "docs\\GETTING-STARTED.md",
+      "line": 128,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Onboarding Checklist](./onboarding-checklist.md) \u2014 detailed step-by-step with troubleshooting",
+      "action": ""
+    },
+    {
+      "file": "docs\\GETTING-STARTED.md",
+      "line": 129,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Lifecycle Reference](./lifecycle-reference.md) \u2014 deep dive into phases, milestones, and tracks",
+      "action": ""
+    },
+    {
+      "file": "docs\\GETTING-STARTED.md",
+      "line": 130,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Lifecycle Visual Guide](./lifecycle-visual-guide.md) \u2014 Mermaid diagrams of the full lifecycle",
+      "action": ""
+    },
+    {
+      "file": "docs\\GETTING-STARTED.md",
+      "line": 131,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Configuration Examples](./configuration-examples.md) \u2014 sample configs for solo dev, teams, enterprise",
+      "action": ""
+    },
+    {
+      "file": "docs\\GETTING-STARTED.md",
+      "line": 112,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "LENS reads defaults from `_bmad/lens-work/bmadconfig.yaml`:",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 22,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| Run express planning (no PRs) | `/expressplan` \u2014 [Workflow](../workflows/router/expressplan/workflow.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 23,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| Run a retrospective | `/retrospective` \u2014 [Workflow](../workflows/router/retrospective/workflow.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 24,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| Log a problem | `/log-problem` \u2014 [Workflow](../workflows/utility/log-problem/workflow.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 25,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| Move a feature across domains | `/move-feature` \u2014 [Workflow](../workflows/utility/move-feature/workflow.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 26,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| Split a feature into children | `/split-feature` \u2014 [Workflow](../workflows/utility/split-feature/workflow.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 11,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| **Get started fast** | [**Getting Started**](./GETTING-STARTED.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 12,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Follow the setup checklist | [Onboarding Checklist](./onboarding-checklist.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 13,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| See example configurations | [Configuration Examples](./configuration-examples.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 14,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Understand the project | [Project Overview](./project-overview.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 15,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| See the architecture | [Architecture](./architecture.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 16,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Browse the file tree | [Source Tree Analysis](./source-tree-analysis.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 17,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Find a skill/workflow/script | [Component Inventory](./component-inventory.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 18,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Set up for development | [Development Guide](./development-guide.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 19,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Understand the lifecycle | [Lifecycle Reference](./lifecycle-reference.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 20,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| See the lifecycle visually | [Lifecycle Visual Guide](./lifecycle-visual-guide.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 21,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| Understand CI/CD pipeline | [Pipeline: Source to Release](./pipeline-source-to-release.md) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 34,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Getting Started](./GETTING-STARTED.md) | Elevator pitch, 3-step quick start, track overview, decision flowchart | \u2705 G",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 35,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Onboarding Checklist](./onboarding-checklist.md) | Linear step-by-step checklist from zero to running initiative | \u2705 ",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 36,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Configuration Examples](./configuration-examples.md) | Sample bmadconfig.yaml for solo, team, enterprise, multi-IDE, ",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 37,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Project Overview](./project-overview.md) | High-level project summary, tech stack, architecture classification | \u2705 Ge",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 38,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Architecture](./architecture.md) | Design axioms, patterns, workflow/skills architecture, deployment | \u2705 Generated |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 39,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Source Tree Analysis](./source-tree-analysis.md) | Full annotated directory tree with critical folder descriptions | ",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 40,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Component Inventory](./component-inventory.md) | Complete inventory: 5 skills, 29 workflows, 26 prompts, 5 scripts, 1",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 41,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Development Guide](./development-guide.md) | Prerequisites, installation, environment setup, scripts reference, testi",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 49,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Lifecycle Reference](./lifecycle-reference.md) | Complete lifecycle.yaml contract reference | ~400 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 50,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Lifecycle Visual Guide](./lifecycle-visual-guide.md) | Mermaid diagrams for lifecycle flow | ~200 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 51,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Pipeline: Source to Release](./pipeline-source-to-release.md) | CI/CD pipeline documentation | 171 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 52,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Copilot Adapter Reference](./copilot-adapter-reference.md) | GitHub Copilot IDE adapter details | \u2014 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 53,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Copilot Adapter Templates](./copilot-adapter-templates.md) | Template definitions for adapter generation | \u2014 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 54,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Copilot Instructions](./copilot-instructions.md) | Generated copilot-instructions.md reference | \u2014 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 55,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Copilot Repo Instructions](./copilot-repo-instructions.md) | Repository-level instruction patterns | \u2014 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 56,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Script Integration](./script-integration.md) | Script execution patterns and provider adapters | \u2014 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 57,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [Lex Persona](./lex-persona.md) | Constitutional governance voice definition | \u2014 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 58,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [What's New (v2.0 \u2192 v3.2)](./whats-new.md) | Full changelog from v2.0 through v3.2 | ~300 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 59,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [v3.1 Improvements](./v3.1-improvements.md) | Detailed changelog for schema v3.1 | ~420 |",
+      "action": ""
+    },
+    {
+      "file": "docs\\index.md",
+      "line": 67,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| [project-scan-report.json](./project-scan-report.json) | Scan state, progress tracking, resume data |",
+      "action": ""
+    },
+    {
+      "file": "docs\\lifecycle-reference.md",
+      "line": 159,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| Release Module | `bmad.lens.release/_bmad/lens-work/` | Module builder only (read-only at runtime) |",
+      "action": ""
+    },
+    {
+      "file": "docs\\onboarding-checklist.md",
+      "line": 53,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/lens-work/` folder contains the module files",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 52,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| Push to `master` changing `_bmad/lens-work/**` | Validate + full build + promote to alpha + open PR to beta |",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 71,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| lens-work module | `_bmad/lens-work/` in this repo |",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 79,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `build-output/_bmad/` | `_bmad/` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 79,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "| `build-output/_bmad/` | `_bmad/` |",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 87,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/lens-work/` \u2014 full module source",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 88,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/_config/` \u2014 manifest, agent configs",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 89,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` \u2014 standard modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 89,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` \u2014 standard modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 89,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` \u2014 standard modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 89,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` \u2014 standard modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\pipeline-source-to-release.md",
+      "line": 89,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` \u2014 standard modules",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 77,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Architecture](./architecture.md)",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 78,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Source Tree Analysis](./source-tree-analysis.md)",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 79,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Development Guide](./development-guide.md)",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 80,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Lifecycle Reference](./lifecycle-reference.md) (existing)",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 81,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Script Integration](./script-integration.md) (existing)",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 82,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Pipeline Source to Release](./pipeline-source-to-release.md) (existing)",
+      "action": ""
+    },
+    {
+      "file": "docs\\project-overview.md",
+      "line": 83,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "- [Copilot Adapter Reference](./copilot-adapter-reference.md) (existing)",
+      "action": ""
+    },
+    {
+      "file": "prompts\\lens-work.onboard.prompt.md",
+      "line": 50,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "- `bmad.lens.release/_bmad/lens-work/` must be accessible (release module)",
+      "action": ""
+    },
+    {
+      "file": "prompts\\lens-work.upgrade.prompt.md",
+      "line": 22,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "2. Read `bmad.lens.release/_bmad/lens-work/lifecycle.yaml` to load `schema_version` and `migrations`",
+      "action": ""
+    },
+    {
+      "file": "README.md",
+      "line": 140,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "| `target-projects-path` | Where repos are cloned | `../TargetProjects` |",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-run-gates.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-02-run-gates.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "artifactsRoot: '../../../_bmad-output/planning-artifacts'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-02-run-gates.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-create-promotion.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-03-create-promotion.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "createPrScript: '../../../scripts/create-pr.ps1'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-03-create-promotion.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "sensingReportInclude: '../../includes/sensing-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\steps\\step-03-create-promotion.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-render-result.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\audience-promotion\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-run-gates.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-02-run-gates.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "artifactsRoot: '../../../_bmad-output/planning-artifacts'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-02-run-gates.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-create-promotion.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-03-create-promotion.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "createPrScript: '../../../../scripts/create-pr.ps1'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-03-create-promotion.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "sensingReportInclude: '../../includes/sensing-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\steps\\step-03-create-promotion.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-render-result.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\milestone-promotion\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-validate-completion.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-02-validate-completion.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-create-phase-pr.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-03-create-phase-pr.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "promotionCheckInclude: '../../../includes/promotion-check.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-03-create-phase-pr.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "createPrScript: '../../../../scripts/create-pr.ps1'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\steps\\step-03-create-phase-pr.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-cleanup.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\workflow.md",
+      "line": 53,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `preflight_include = ../../includes/preflight.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\workflow.md",
+      "line": 54,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `promotion_check_include = ../../includes/promotion-check.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\workflow.md",
+      "line": 55,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `lifecycle_contract = ../../../lifecycle.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\core\\phase-lifecycle\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\compliance-check\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\compliance-check\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\compliance-check\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-resolve-constitution.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\compliance-check\\steps\\step-02-resolve-constitution.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-run-compliance.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\compliance-check\\steps\\step-03-run-compliance.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-render-result.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\compliance-check\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\cross-initiative\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\cross-initiative\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\cross-initiative\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-run-sensing.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\cross-initiative\\steps\\step-02-run-sensing.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-resolve-gate.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\cross-initiative\\steps\\step-03-resolve-gate.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-render-result.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\cross-initiative\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\resolve-constitution\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\resolve-constitution\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\resolve-constitution\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-resolve.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\resolve-constitution\\steps\\step-02-resolve.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-render-result.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\governance\\resolve-constitution\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\includes\\preflight.md",
+      "line": 282,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "| `bmad.lens.release/CLAUDE.md` | `./CLAUDE.md` | Claude Code agent entry point |",
+      "action": ""
+    },
+    {
+      "file": "workflows\\includes\\preflight.md",
+      "line": 26,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "Read `LENS_VERSION` from the control repo root and `schema_version` from `bmad.lens.release/_bmad/lens-work/lifecycle.ya",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-select-workflows.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\steps\\step-02-select-workflows.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-run-workflows.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\steps\\step-03-run-workflows.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\businessplan\\workflow.md",
+      "line": 14,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\close\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\close\\steps\\step-01-validate.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\close\\steps\\step-01-validate.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-tombstone.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\close\\steps\\step-02-tombstone.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\close\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-validate.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\resources\\workflow-plan.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "validationReport: './validation-report-2026-03-23.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "promotionAndContextData: '../resources/preflight-promotion-and-context.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-story-discovery.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-02-story-discovery.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-story-loop.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-03-story-loop.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "targetRepoRoutingData: '../resources/story-target-repo-routing.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-03-story-loop.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "implementationGuidanceData: '../resources/story-implementation-guidance.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-03-story-loop.md",
+      "line": 7,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "reviewLoopData: '../resources/story-review-loop.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-03-story-loop.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-epic-completion.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\steps\\step-04-epic-completion.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-05-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\workflow.md",
+      "line": 52,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `module_config = ../../../bmadconfig.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\workflow.md",
+      "line": 53,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `lifecycle_contract = ../../../lifecycle.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\workflow.md",
+      "line": 54,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `preflight_include = ../../includes/preflight.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\dev\\workflow.md",
+      "line": 17,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-select-mode.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-02-select-mode.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-run-workflows.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-03-run-workflows.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-04-closeout.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "promotionCheckInclude: '../../../includes/promotion-check.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\steps\\step-04-closeout.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "createPrScript: '../../../../scripts/create-pr.ps1'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\devproposal\\workflow.md",
+      "line": 13,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-scan-repos.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\steps\\step-02-scan-repos.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-inspect-repos.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\steps\\step-03-inspect-repos.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-governance-and-branches.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\steps\\step-04-governance-and-branches.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-05-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\discover\\workflow.md",
+      "line": 11,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-plan.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\steps\\step-02-plan.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-review.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\steps\\step-03-review.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-epics-stories.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\steps\\step-04-epics-stories.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-05-dev-ready.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\expressplan\\workflow.md",
+      "line": 13,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-01-preflight.md",
+      "line": 7,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "moduleConfigPath: '../../../../bmadconfig.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-collect-scope.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-02-collect-scope.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-validate-and-sense.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-03-validate-and-sense.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-create-initiative.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\steps\\step-04-create-initiative.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-05-respond.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\workflow.md",
+      "line": 64,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `preflight_include = ../../includes/preflight.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\workflow.md",
+      "line": 65,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `lifecycle_contract = ../../../lifecycle.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\workflow.md",
+      "line": 66,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `module_config = ../../../bmadconfig.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\init-initiative\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-select-workflows.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\steps\\step-02-select-workflows.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-run-workflows.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\steps\\step-03-run-workflows.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\preplan\\workflow.md",
+      "line": 13,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\retrospective\\steps\\step-01-gather.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\retrospective\\steps\\step-01-gather.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\retrospective\\steps\\step-01-gather.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-analyze.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\retrospective\\steps\\step-02-analyze.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\retrospective\\steps\\step-03-report.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-actions.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\retrospective\\workflow.md",
+      "line": 10,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-gather.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\resources\\workflow-plan.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "validationReport: './validation-report-2026-03-23.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-readiness.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\steps\\step-02-readiness.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-sprint-planning.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\steps\\step-03-sprint-planning.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-dev-story.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\steps\\step-04-dev-story.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-05-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\steps\\step-05-closeout.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "promotionCheckInclude: '../../includes/promotion-check.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\workflow.md",
+      "line": 48,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `module_config = ../../../bmadconfig.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\workflow.md",
+      "line": 49,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `lifecycle_contract = ../../../lifecycle.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\workflow.md",
+      "line": 50,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `preflight_include = ../../includes/preflight.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\workflow.md",
+      "line": 51,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `promotion_check_include = ../../includes/promotion-check.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\sprintplan\\workflow.md",
+      "line": 13,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-select-mode.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\steps\\step-02-select-mode.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-run-workflows.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\steps\\step-03-run-workflows.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\steps\\step-04-closeout.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "createPrScript: '../../../../scripts/create-pr.ps1'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\router\\techplan\\workflow.md",
+      "line": 13,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "commandRegistryPath: '../../../../module-help.csv'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-detect-context.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\steps\\step-02-detect-context.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-load-registry.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\steps\\step-03-load-registry.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-render-help.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\workflow.md",
+      "line": 49,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `preflight_include = ../../includes/preflight.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\workflow.md",
+      "line": 50,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `command_registry = ../../../module-help.csv`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\help\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\log-problem\\steps\\step-01-log.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\log-problem\\steps\\step-01-log.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\log-problem\\workflow.md",
+      "line": 10,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-log.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-01-preflight.md",
+      "line": 7,
+      "severity": "critical",
+      "category": "project-root-not-bmad",
+      "title": "{project-root} used for non-_bmad path \u2014 only valid use is {project-root}/_bmad/...",
+      "detail": "releaseModulePath: '{project-root}/bmad.lens.release/_bmad/lens-work/module.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "localModulePath: '../../../../module.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-compare-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-01-preflight.md",
+      "line": 7,
+      "severity": "high",
+      "category": "bare-bmad",
+      "title": "Bare _bmad reference without {project-root} prefix",
+      "detail": "releaseModulePath: '{project-root}/bmad.lens.release/_bmad/lens-work/module.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-02-compare-report.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-update-guidance.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\steps\\step-03-update-guidance.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-compatibility-closeout.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\module-management\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\move-feature\\steps\\step-01-move.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\move-feature\\steps\\step-01-move.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\move-feature\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-move.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\next\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\next\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\next\\steps\\step-01-preflight.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\next\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-derive-action.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\next\\steps\\step-02-derive-action.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-execute-or-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\next\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\onboard\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\onboard\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\onboard\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-auth-and-governance.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\onboard\\steps\\step-02-auth-and-governance.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-profile-and-bootstrap.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\onboard\\steps\\step-03-profile-and-bootstrap.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-health-and-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\onboard\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\promote\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\promote\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\promote\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-route.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\promote\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\split-feature\\SKILL.md",
+      "line": 10,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "See [workflow.md](./workflow.md) for full details.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\split-feature\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-split.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-scan-initiatives.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\steps\\step-02-scan-initiatives.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-derive-state.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\steps\\step-03-derive-state.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\steps\\step-03-derive-state.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-render-report.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\workflow.md",
+      "line": 48,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `preflight_include = ../../includes/preflight.md`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\workflow.md",
+      "line": 49,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "- `lifecycle_contract = ../../../lifecycle.yaml`",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\status\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\steps\\step-01-preflight.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "preflightInclude: '../../../includes/preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\steps\\step-01-preflight.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-resolve-target.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\steps\\step-02-resolve-target.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-handle-dirty-state.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\steps\\step-03-handle-dirty-state.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-checkout-target.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\steps\\step-04-checkout-target.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-05-report-context.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\switch\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-preflight.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\upgrade\\SKILL.md",
+      "line": 6,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "Follow the instructions in ./workflow.md.",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\upgrade\\steps\\step-01-detect.md",
+      "line": 5,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Parent directory reference (../) found \u2014 fragile, breaks with reorganization",
+      "detail": "lifecycleContract: '../../../../lifecycle.yaml'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\upgrade\\steps\\step-01-detect.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-02-plan-renames.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\upgrade\\steps\\step-02-plan-renames.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-03-confirm-and-apply.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\upgrade\\steps\\step-03-confirm-and-apply.md",
+      "line": 4,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "nextStepFile: './step-04-write-version.md'",
+      "action": ""
+    },
+    {
+      "file": "workflows\\utility\\upgrade\\workflow.md",
+      "line": 9,
+      "severity": "medium",
+      "category": "relative-prefix",
+      "title": "Relative prefix (./) found \u2014 breaks when execution directory changes",
+      "detail": "entryStep: './steps/step-01-detect.md'",
+      "action": ""
+    }
+  ],
+  "assessments": {},
+  "summary": {
+    "total_findings": 308,
+    "by_severity": {
+      "critical": 1,
+      "high": 45,
+      "medium": 262,
+      "low": 0
+    },
+    "by_category": {
+      "project_root_not_bmad": 1,
+      "bare_bmad": 45,
+      "double_prefix": 0,
+      "absolute_path": 0,
+      "relative_prefix": 262
+    },
+    "assessment": "Path standards scan complete"
+  }
+}
