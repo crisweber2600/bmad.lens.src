@@ -51,12 +51,15 @@ jobs:
           echo "Scanning for disallowed executable files..."
 
           # _module-installer/ is the official BMAD installer pattern — exempt
+          # scripts/ is the BMad Builder standard location for skill Python scripts — exempt
           EXECUTABLES=$(find _bmad/lens-work/ -type f \( \
             -name "*.js" -o -name "*.py" -o -name "*.ts" -o \
             -name "*.rb" -o -name "*.go" -o -name "*.rs" -o \
             -name "*.java" -o -name "*.exe" -o -name "*.bat" -o \
             -name "*.cmd" \
-          \) -not -path "*/_module-installer/*" 2>/dev/null || true)
+          \) -not -path "*/_module-installer/*" \
+             -not -path "*/scripts/*" \
+          2>/dev/null || true)
 
           ROGUE_SCRIPTS=$(find _bmad/lens-work/ -type f \( \
             -name "*.sh" -o -name "*.ps1" \
