@@ -1,7 +1,7 @@
 # LENS Workbench — Lifecycle Visual Guide
 
-**Module:** lens-work v3.0  
-**Schema Version:** 3  
+**Module:** lens-work v3.1  
+**Schema Version:** 3.1  
 **Last Updated:** April 1, 2026
 
 This guide provides a complete visual reference for the LENS Workbench lifecycle — from initiative creation through dev-ready execution, including every slash command, branch, commit, artifact, and PR along the way.
@@ -19,7 +19,7 @@ This guide provides a complete visual reference for the LENS Workbench lifecycle
 7. [Promotion & Gate Sequence](#promotion--gate-sequence)
 8. [Track Profiles](#track-profiles)
 9. [Command Reference Matrix](#command-reference-matrix)
-10. [Improvement Suggestions](#improvement-suggestions)
+10. [v3.1 Enhancements](#v31-enhancements)
 
 ---
 
@@ -53,16 +53,22 @@ flowchart TB
         DV["/dev<br/>🔧 Delegation to target repos"]
     end
 
+    subgraph DEVCOMPLETE["Milestone: dev-complete (v3.1)"]
+        DC["Dev-completion review<br/>All epics merged"]
+    end
+
     OB --> NI
     NI --> PP
     PP -->|"auto-advance"| BP
     BP -->|"auto-advance"| TP
-    TP -->|"PR merge + /promote"| GATE1{{"⚔️ Adversarial<br/>Review Gate"}}
+    TP -->|"auto-advance + promote"| GATE1{{"⚔️ Adversarial<br/>Review Gate"}}
     GATE1 --> DP
-    DP -->|"PR merge + /promote"| GATE2{{"👥 Stakeholder<br/>Approval Gate"}}
+    DP -->|"auto-advance + promote"| GATE2{{"👥 Stakeholder<br/>Approval Gate"}}
     GATE2 --> SP
-    SP -->|"PR merge + /promote"| GATE3{{"⚖️ Constitution<br/>Gate"}}
+    SP -->|"auto-advance + promote"| GATE3{{"⚖️ Constitution<br/>Gate"}}
     GATE3 --> DV
+    DV -->|"all stories merged"| DC
+    DC -->|"dev-completion review"| CLOSE["/close<br/>completed"]
 
     style ONBOARD fill:#e8f5e9,stroke:#4caf50
     style INIT fill:#e3f2fd,stroke:#2196f3
@@ -70,6 +76,8 @@ flowchart TB
     style DEVPROPOSAL_MS fill:#fce4ec,stroke:#e91e63
     style SPRINTPLAN_MS fill:#f3e5f5,stroke:#9c27b0
     style DEVREADY fill:#e0f2f1,stroke:#009688
+    style DEVCOMPLETE fill:#e8f5e9,stroke:#4caf50
+    style CLOSE fill:#efebe9,stroke:#795548
     style GATE1 fill:#ffcdd2,stroke:#f44336
     style GATE2 fill:#ffcdd2,stroke:#f44336
     style GATE3 fill:#ffcdd2,stroke:#f44336
@@ -137,15 +145,22 @@ flowchart LR
         P6["dev<br/><i>(delegation, not a phase)</i>"]
     end
 
+    subgraph MS5["dev-complete milestone (v3.1)"]
+        P7["close<br/><i>(dev-completion review)</i>"]
+    end
+
     MS1 -->|"Adversarial Review<br/>PR: techplan → devproposal"| MS2
     MS2 -->|"Stakeholder Approval<br/>PR: devproposal → sprintplan"| MS3
     MS3 -->|"Constitution Gate<br/>PR: sprintplan → dev-ready"| MS4
+    MS4 -->|"All stories merged<br/>Dev-completion review"| MS5
 
     style MS1 fill:#fff3e0,stroke:#ff9800
     style MS2 fill:#fce4ec,stroke:#e91e63
     style MS3 fill:#f3e5f5,stroke:#9c27b0
     style MS4 fill:#e0f2f1,stroke:#009688
+    style MS5 fill:#e8f5e9,stroke:#4caf50
     style P6 fill:#b2dfdb,stroke:#009688,stroke-dasharray: 5 5
+    style P7 fill:#c8e6c9,stroke:#4caf50,stroke-dasharray: 5 5
 ```
 
 **Key concepts:**
@@ -490,6 +505,9 @@ gantt
     section hotfix
     techplan          :d1, 2, 3
 
+    section hotfix-express
+    techplan          :g1, 2, 3
+
     section spike
     preplan           :e1, 0, 1
 
@@ -503,6 +521,7 @@ gantt
 | **feature** | businessplan → techplan → devproposal → sprintplan | techplan, devproposal, sprintplan, dev-ready | `/businessplan` | Known business context |
 | **tech-change** | techplan → devproposal → sprintplan | techplan, devproposal, sprintplan, dev-ready | `/techplan` | Pure technical change |
 | **hotfix** | techplan | techplan, dev-ready | `/techplan` | Urgent fix |
+| **hotfix-express** | techplan | techplan, dev-ready | `/techplan` | Critical fix — bypasses constitution + adversarial review |
 | **spike** | preplan | techplan | `/preplan` | Research only |
 | **quickdev** | devproposal | devproposal, dev-ready | `/devproposal` | Rapid execution |
 
@@ -535,13 +554,14 @@ gantt
 | `/module-management` | MM | Check/update module version | None | Console output |
 | `/close` | CL | Complete/abandon/supersede | None (state change) | Close state |
 | `/lens-upgrade` | UG | Migrate schema version | May update configs | Updated configs |
+| `/dashboard` | DB | Cross-initiative status + Gantt | None (read-only) | Consolidated overview |
 
 ### Governance Commands
 
 | Command | Code | Purpose | Gate Type | Sensing |
 |---------|------|---------|-----------|---------|
-| `/promote` | PR | Promote milestone | Per-milestone gate | Auto at promotion |
-| `/sense` | SN | Cross-initiative detection | Informational | On-demand |
+| `/promote` | PR | Promote milestone (approval-only) | Per-milestone gate | Auto at promotion |
+| `/sense` | SN | Cross-initiative detection (content-aware) | Informational or hard gate | On-demand |
 | `/constitution` | CN | Resolve governance | 4-level hierarchy | — |
 
 ---
@@ -578,7 +598,7 @@ flowchart TB
     L3 -->|"additive inheritance"| L4
 
     L4 --> RESOLVE["⚖️ Resolved Constitution<br/><i>Lower levels add, never remove</i>"]
-    RESOLVE --> CAPS["Capabilities:<br/>• permitted_tracks<br/>• required_gates<br/>• additional_review_participants<br/>• required_artifacts<br/>• enforce_stories"]
+    RESOLVE --> CAPS["Capabilities:<br/>• permitted_tracks<br/>• required_gates<br/>• additional_review_participants<br/>• required_artifacts<br/>• enforce_stories<br/>• gate_collapsing (v3.1)<br/>• parallel_phases (v3.1)<br/>• bypass_gates (v3.1)<br/>• dev_completion_requirements (v3.1)"]
 
     style L1 fill:#e8eaf6,stroke:#3f51b5
     style L2 fill:#c5cae9,stroke:#3f51b5
@@ -589,64 +609,19 @@ flowchart TB
 
 ---
 
-## Improvement Suggestions
+## v3.1 Enhancements
 
-### 1. Consolidate Auto-Advance with Implicit Promotion
+All 10 improvement suggestions from the original v3.0 visual guide have been implemented in v3.1. See [v3.1-improvements.md](v3.1-improvements.md) for full details.
 
-**Current state:** Phases within the same milestone (preplan → businessplan → techplan) auto-advance without promotion, but the last phase in each milestone (`techplan`, `devproposal`, `sprintplan`) has `auto_advance_promote: true` which creates a PR automatically.
-
-**Suggestion:** The auto-advance + auto-promote pattern means the user never explicitly runs `/promote` during the happy path — the PRs just appear. Consider making `/promote` a review/approval action only (not branch creation) and documenting that the happy path is entirely auto-driven. This would simplify the mental model: "phases auto-flow, gates auto-create PRs, you just approve."
-
-### 2. Reduce Branch Count with Squash-Merge Strategy
-
-**Current state:** Full lifecycle creates 5 branches per feature initiative (`{root}`, `techplan`, `devproposal`, `sprintplan`, `dev-ready`).
-
-**Suggestion:** Consider squash-merging milestone branches after promotion and deleting the source milestone branch. This keeps the branch topology clean post-promotion and avoids stale long-lived branches. The `dev-ready` branch becomes the single accumulation point with clean history.
-
-### 3. Streamline the Hotfix Track
-
-**Current state:** Hotfix track includes only `techplan` phase but still requires `techplan` and `dev-ready` milestones, meaning at least one promotion PR + constitution gate.
-
-**Suggestion:** For true hotfixes, consider a `hotfix-express` track that skips the constitution gate or allows it to be informational-only. The current flow requires a PR review even for urgent fixes, which may bottleneck urgent patches. A constitution flag like `bypass_gates_for_hotfix: true` could allow this without changing the core model.
-
-### 4. Parallel Phase Execution for Independent Artifacts
-
-**Current state:** Phases are strictly sequential — `businessplan` must complete before `techplan` starts.
-
-**Suggestion:** In the `full` track, `ux-design` (from businessplan/Sally) and `architecture` (from techplan/Winston) could potentially run in parallel once the PRD is drafted, since architecture doesn't strictly depend on finalized UX. A `parallel_phases` config could allow overlapping artifact production within the same milestone, reducing wall-clock time for the techplan milestone.
-
-### 5. Add Artifact Validation Gates
-
-**Current state:** Artifacts are committed and the phase is considered complete. Validation is adversarial review at promotion time, which reviews all artifacts at once.
-
-**Suggestion:** Add optional per-artifact validation hooks (configurable per constitution) that run lint-style checks before the artifact commit is accepted. For example: PRD must contain required sections, architecture must reference the PRD's NFRs, stories must have acceptance criteria. This catches issues earlier than the adversarial review gate.
-
-### 6. Simplify Sensing to a Diff-Based Model
-
-**Current state:** Sensing runs at `/create-initiative` and `/promote` with three overlap levels (same feature = high, same service = medium, same domain = low).
-
-**Suggestion:** Extend sensing to also compare artifact content (not just scope names). Two initiatives in the same service with overlapping `epics.md` entries is a much stronger signal than just sharing a service scope. Content-aware sensing would reduce false positives (low-value domain-level alerts) and catch true conflicts.
-
-### 7. Unified Status Dashboard
-
-**Current state:** `/status` shows the current initiative's git-derived state. Seeing all initiatives requires switching or manual branch listing.
-
-**Suggestion:** Add a `/dashboard` command that generates a Mermaid-based visual of all active initiatives across domains, showing their current phase, milestone, and any blocking PRs. This would be especially valuable for multi-initiative coordination and could replace the need to `/switch` + `/status` repeatedly.
-
-### 8. Template Artifact Starters
-
-**Current state:** Each phase agent produces artifacts from scratch using their own knowledge and the lifecycle contract.
-
-**Suggestion:** Provide per-artifact template files (in `assets/` or `references/`) that agents load as starting scaffolds. This ensures consistent artifact structure across initiatives and makes adversarial review faster (reviewers know where to look). Templates could be constitution-controlled per domain.
-
-### 9. Merge the Close + Dev-Ready Lifecycle Gap
-
-**Current state:** `/close` can mark initiatives as completed/abandoned/superseded, but there's no formal connection between dev-ready status and close state. Dev execution happens outside the lifecycle.
-
-**Suggestion:** Add an optional `dev-complete` milestone after `dev-ready` that tracks when all epics are merged to `develop` in the target repo. The `/close` command would then validate that all planned stories are in a terminal state (merged or explicitly deferred) before allowing `completed` close state.
-
-### 10. Reduce the 3-Gate Overhead for Smaller Features
-
-**Current state:** Even the `feature` track requires 3 promotion PRs with distinct gates (adversarial → stakeholder → constitution).
-
-**Suggestion:** Allow constitutions to collapse gates for smaller-scope features. For example: a constitution could declare `collapsed_gates: [adversarial-review, stakeholder-approval]` for features under a threshold (e.g., ≤3 stories), reducing the 3-PR chain to a single combined promotion PR. The constitution still controls this — no global bypass.
+| # | Improvement | Schema Key | Status |
+|---|------------|-----------|--------|
+| 1 | Promote as approval-only | `promote_semantics` | ✅ Implemented |
+| 2 | Squash-merge + branch cleanup | `branch_cleanup` | ✅ Implemented |
+| 3 | Express hotfix track | `tracks.hotfix-express` | ✅ Implemented |
+| 4 | Parallel phase execution | `parallel_phases` | ✅ Implemented |
+| 5 | Per-artifact validation hooks | `artifact_validation_hooks` | ✅ Implemented |
+| 6 | Content-aware sensing | `content_aware_sensing` | ✅ Implemented |
+| 7 | Dashboard command | `/dashboard` workflow | ✅ Implemented |
+| 8 | Template artifact starters | `assets/templates/` | ✅ Implemented |
+| 9 | dev-complete milestone | `milestones.dev-complete` | ✅ Implemented |
+| 10 | Gate collapsing | `gate_collapsing` | ✅ Implemented |
