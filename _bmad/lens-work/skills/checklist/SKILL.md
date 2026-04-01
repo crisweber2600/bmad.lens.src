@@ -1,3 +1,8 @@
+]633;E;echo '---';1f0482a0-f773-402e-9b8d-02ad2949aad3]633;C---
+name: lens-work-checklist
+description: "Phase gate checklists with progressive validation. Use when validating phase completion or running gate checks."
+---
+
 # Skill: checklist
 
 **Module:** lens-work

@@ -1,3 +1,8 @@
+]633;E;echo '---';1f0482a0-f773-402e-9b8d-02ad2949aad3]633;C---
+name: lens-work-git-orchestration
+description: "Git write operations for branches, commits, pushes, and PR management. Use when creating branches, committing, or managing PRs."
+---
+
 # Skill: git-orchestration
 
 **Module:** lens-work

@@ -1,3 +1,8 @@
+]633;E;echo '---';1f0482a0-f773-402e-9b8d-02ad2949aad3]633;C---
+name: lens-work-git-state
+description: "Derive initiative state from git primitives — read-only queries. Use when querying initiative state or branch status."
+---
+
 # Skill: git-state
 
 **Module:** lens-work

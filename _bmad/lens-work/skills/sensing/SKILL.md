@@ -1,3 +1,8 @@
+]633;E;echo '---';1f0482a0-f773-402e-9b8d-02ad2949aad3]633;C---
+name: lens-work-sensing
+description: "Cross-initiative overlap detection at lifecycle gates. Use when running sensing checks or detecting initiative conflicts."
+---
+
 # Skill: sensing
 
 **Module:** lens-work

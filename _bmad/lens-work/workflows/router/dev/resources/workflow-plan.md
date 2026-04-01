@@ -37,10 +37,10 @@ Implement every story in a selected epic inside the TargetProject repo, run cons
 
 ## Supporting Data Files
 
-- `data/preflight-promotion-and-context.md`
-- `data/story-target-repo-routing.md`
-- `data/story-implementation-guidance.md`
-- `data/story-review-loop.md`
+- `resources/preflight-promotion-and-context.md`
+- `resources/story-target-repo-routing.md`
+- `resources/story-implementation-guidance.md`
+- `resources/story-review-loop.md`
 
 ## Key State
 
