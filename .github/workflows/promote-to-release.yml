@@ -258,16 +258,15 @@ jobs:
 
           echo "✅ Overlaid $SRC_COUNT source skill(s) into release payload"
 
-      # ── 10.6 Enforce lens-work prompts only in embedded .github ──────
-      - name: Keep only lens-work prompt stubs
+      # ── 10.6 Sync all lens-work prompts → .github/prompts ─────────────
+      - name: Sync lens-work prompts to .github/prompts
         run: |
-          if [ -d "build-output/.github/prompts" ]; then
-            REMOVED=$(find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
-            find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' -delete
-            echo "✅ Removed $REMOVED non-lens prompt stub(s) from release payload"
-          else
-            echo "ℹ️ No build-output/.github/prompts directory found"
-          fi
+          mkdir -p build-output/.github/prompts
+          # Replace any installer-generated stubs with the canonical lens-work prompts
+          rm -f build-output/.github/prompts/*.prompt.md
+          cp build-output/_bmad/lens-work/prompts/*.prompt.md build-output/.github/prompts/
+          SYNCED=$(find build-output/.github/prompts -name '*.prompt.md' | wc -l)
+          echo "✅ Synced $SYNCED prompt(s) from lens-work to .github/prompts"
 
       # ── 11. Post-process: .xml→.yaml + config.yaml→bmadconfig.yaml ──
       - name: Post-process XML and config file names
@@ -390,13 +389,13 @@ jobs:
             MISSING=1
           fi
 
-          if [ -d "build-output/.github/prompts" ]; then
-            NON_LENS=$(find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md' | wc -l)
-            if [ "$NON_LENS" -gt 0 ]; then
-              echo "::error::.github/prompts must only contain lens-work*.prompt.md files"
-              find build-output/.github/prompts -type f -name '*.prompt.md' ! -name 'lens-work*.prompt.md'
-              MISSING=1
-            fi
+          LENS_WORK_COUNT=$(find build-output/_bmad/lens-work/prompts -name '*.prompt.md' | wc -l)
+          GITHUB_COUNT=$(find build-output/.github/prompts -name '*.prompt.md' | wc -l)
+          if [ "$GITHUB_COUNT" -ne "$LENS_WORK_COUNT" ]; then
+            echo "::error::.github/prompts count ($GITHUB_COUNT) != lens-work/prompts count ($LENS_WORK_COUNT)"
+            MISSING=1
+          else
+            echo "✅ .github/prompts ($GITHUB_COUNT) matches lens-work/prompts ($LENS_WORK_COUNT)"
           fi
 
           if [ "$MISSING" -eq 1 ]; then
