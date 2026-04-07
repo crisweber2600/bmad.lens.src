@@ -222,6 +222,46 @@ params:
   last_pulled: now_iso8601()
 ```
 
+### 8. Load feature.yaml State *(v3.4)*
+
+> **Conditional:** Only runs when the current initiative's track has `feature_yaml: true`
+> in lifecycle.yaml AND feature.yaml exists on the current branch.
+
+When present, feature.yaml becomes the preferred state source over git-derived state.
+Downstream workflows should check `session.feature_yaml_state.available` before using
+git-derived milestone/phase state.
+
+```yaml
+lifecycle = session.lifecycle || load("lifecycle.yaml")
+current_initiative = invoke: git-state.current-initiative
+if current_initiative is null:
+  session.feature_yaml_state = { available: false, reason: "not on initiative branch" }
+  goto: end
+
+track_config = lifecycle.tracks[current_initiative.track] || {}
+if track_config.feature_yaml != true:
+  session.feature_yaml_state = { available: false, reason: "track does not support feature.yaml" }
+  goto: end
+
+# Check if feature.yaml exists on the current branch
+feature_yaml_content = read_file_if_exists("feature.yaml")
+if feature_yaml_content is null:
+  session.feature_yaml_state = { available: false, reason: "feature.yaml not found on branch" }
+  goto: end
+
+session.feature_yaml_state = {
+  available: true,
+  topology: track_config.topology || "legacy",
+  feature: feature_yaml_content.feature,
+  status: feature_yaml_content.status,
+  current_milestone: feature_yaml_content.current_milestone,
+  current_phase: feature_yaml_content.current_phase,
+  owner: feature_yaml_content.owner,
+  updated_at: feature_yaml_content.updated_at,
+  raw: feature_yaml_content
+}
+```
+
 ---
 
 ## Authority Repos
@@ -270,6 +310,18 @@ session.preflight_result:
   auth_status: "authenticated" | "anonymous"        # Auth state
   sync_status: "synced" | "stale" | "failed"        # Repo sync outcome
   timestamp: "2026-04-01T12:00:00Z"                 # ISO 8601
+
+# v3.4: feature.yaml state (when track supports feature_yaml)
+session.feature_yaml_state:
+  available: true | false
+  topology: "legacy" | "2-branch"               # Track topology
+  feature: "{feature_id}"
+  status: "draft" | "planning" | "dev" | ...
+  current_milestone: "techplan" | ...
+  current_phase: "preplan" | ...
+  owner: "{username}"
+  updated_at: "2026-04-01T12:00:00Z"
+  raw: { ... }                                  # Full feature.yaml contents
 ```
 
 **Usage pattern:** Downstream workflows that need remote URL or provider info should reference `session.preflight_result` rather than re-deriving these values:
