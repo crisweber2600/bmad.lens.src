@@ -3,8 +3,8 @@
 #
 # PURPOSE:
 #   Bootstraps a new control repo by cloning all required authority domains:
-#   - bmad.lens.release   → Release module (read-only dependency)
-#   - .github             → Copied from bmad.lens.release/.github
+#   - lens.core   → Release module (read-only dependency)
+#   - .github             → Copied from lens.core/.github
 #   - governance repo     → Governance repo (constitutional authority)
 #
 #   Safe to re-run: pulls latest if repos already exist.
@@ -33,7 +33,7 @@ param(
 
     [string]$ReleaseOrg = "",
 
-    [string]$ReleaseRepo = "bmad.lens.release",
+    [string]$ReleaseRepo = "lens.core",
 
     [string]$ReleaseBranch = "beta",
 
@@ -370,7 +370,7 @@ function Ensure-GitIgnoreEntries {
     $entries = @(
         "_bmad-output/lens-work/personal/",
         ".github/",
-        "bmad.lens.release/",
+        "lens.core/",
         "TargetProjects/"
     )
 
@@ -636,7 +636,7 @@ if (-not $DryRun) {
     $lifecyclePath = Join-Path $ReleasePath "_bmad\lens-work\lifecycle.yaml"
 
     if (-not (Test-Path -Path $lifecyclePath)) {
-        throw "Unable to write LENS_VERSION: lifecycle file not found at '$lifecyclePath'. Ensure bmad.lens.release is correctly cloned and contains _bmad\lens-work\lifecycle.yaml."
+        throw "Unable to write LENS_VERSION: lifecycle file not found at '$lifecyclePath'. Ensure lens.core is correctly cloned and contains _bmad\lens-work\lifecycle.yaml."
     }
 
     $lifecycleContent = Get-Content -Path $lifecyclePath -ErrorAction Stop

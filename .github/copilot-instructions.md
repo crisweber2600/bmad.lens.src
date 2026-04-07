@@ -3,12 +3,12 @@
 
 ## Project Configuration
 
-- **Project**: bmad.lens.release
+- **Project**: lens.core
 - **User**: CrisWeber
 - **Communication Language**: English
 - **Document Output Language**: English
 - **User Skill Level**: intermediate
-- **Output Folder**: bmad.lens.release/_bmad-output
+- **Output Folder**: _bmad-output
 - **Planning Artifacts**: {project-root}/_bmad-output/planning-artifacts
 - **Implementation Artifacts**: {project-root}/_bmad-output/implementation-artifacts
 - **Project Knowledge**: {project-root}/docs
@@ -52,23 +52,7 @@
 | tech-writer | Paige | Technical Writer | documentation, Mermaid diagrams, standards compliance, concept explanation |
 | ux-designer | Sally | UX Designer | user research, interaction design, UI patterns, experience strategy |
 
-## LENS Module (Lens Next)
-
-The LENS Workbench module (`lens`) provides feature lifecycle management:
-
-- **Module path:** `_bmad/lens-work/`
-- **Module code:** `lens` (v4.0.0)
-- **Skills:** `_bmad/lens-work/skills/bmad-lens-*/SKILL.md` (21 Lens Next skills)
-- **Prompts:** `_bmad/lens-work/prompts/lens-*.prompt.md` (new feature-first model)
-- **Agent:** `.github/agents/bmad-agent-lens-work-lens.agent.md`
-- **Adapter:** `.github/lens-work-instructions.md`
-
-Use `lens-` prefixed prompts (e.g., `/lens-status`, `/lens-init-feature`) for the new feature-first model.
-Use `lens-work.` prefixed prompts for the legacy initiative-based model.
-
 ## Slash Commands
 
-Type `/bmad-` in Copilot Chat to see all available BMAD workflows and agent activators.
-Type `/lens-` to see Lens Next feature lifecycle commands.
-Agents are also available in the agents dropdown.
+Type `/bmad-` in Copilot Chat to see all available BMAD workflows and agent activators. Agents are also available in the agents dropdown.
 <!-- BMAD:END -->

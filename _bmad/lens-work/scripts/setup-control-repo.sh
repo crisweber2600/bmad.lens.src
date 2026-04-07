@@ -4,8 +4,8 @@
 #
 # PURPOSE:
 #   Bootstraps a new control repo by cloning all required authority domains:
-#   - bmad.lens.release   → Release module (read-only dependency)
-#   - .github             → Copied from bmad.lens.release/.github
+#   - lens.core   → Release module (read-only dependency)
+#   - .github             → Copied from lens.core/.github
 #   - governance repo     → Governance repo (constitutional authority)
 #
 #   Safe to re-run: pulls latest if repos already exist.
@@ -25,7 +25,7 @@
 #   --control-dir <path>       Directory to set up as the control repo (default: current git root or script location)
 #   --org <name>               Default GitHub org/user for all repos (falls back if specific org not set)
 #   --release-org <name>       Release repo owner (default: uses --org)
-#   --release-repo <name>      Release repo name (default: bmad.lens.release)
+#   --release-repo <name>      Release repo name (default: lens.core)
 #   --release-branch <name>    Release repo branch (default: beta)
 #   --governance-org <name>    Governance repo owner (default: uses --org)
 #   --governance-repo <name>   Governance repo name (default: auto-derived from control repo name)
@@ -54,7 +54,7 @@ RESET='\033[0m'
 # -- Defaults ---------------------------------------------------------------
 ORG=""
 RELEASE_ORG=""
-RELEASE_REPO="bmad.lens.release"
+RELEASE_REPO="lens.core"
 RELEASE_BRANCH="beta"
 GOVERNANCE_ORG=""
 GOVERNANCE_REPO=""
@@ -396,7 +396,7 @@ ensure_gitignore_entries() {
   local entries=(
     "_bmad-output/lens-work/personal/"
     ".github/"
-    "bmad.lens.release/"
+    "lens.core/"
     "TargetProjects/"
   )
 

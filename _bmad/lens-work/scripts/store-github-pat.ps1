@@ -10,7 +10,7 @@
 
 .USAGE
     cd <project-root>
-    .\bmad.lens.release\_bmad\lens-work\scripts\store-github-pat.ps1
+    .\_bmad\lens-work\scripts\store-github-pat.ps1
 
 .OUTPUTS
     Environment variables only: GITHUB_PAT, GH_ENTERPRISE_TOKEN

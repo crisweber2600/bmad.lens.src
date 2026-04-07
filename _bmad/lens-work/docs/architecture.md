@@ -258,7 +258,7 @@ Source (bmad.lens.src)
     ↓ [push to master changing bmad.lens.src/_bmad/lens-work/**]
 CI/CD Pipeline (promote-to-release.yml)
     ↓ [build → overlay → package → installer.js]
-Release (bmad.lens.release) alpha branch
+Release (lens.core) alpha branch
     ↓ [auto PR]
 Release beta branch
 ```

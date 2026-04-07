@@ -1,6 +1,6 @@
 # Source-to-Release Promotion Pipeline
 
-**Purpose:** Build a full BMAD release with the lens-work custom module embedded, then promote to `bmad.lens.release` (alpha → beta PR).
+**Purpose:** Build a full BMAD release with the lens-work custom module embedded, then promote to `lens.core` (alpha → beta PR).
 
 ## Workflow Location
 
@@ -76,7 +76,7 @@ The lens-work module is overlaid on top of the installed framework, then its `_m
 
 | Build output | Release (`alpha` branch) |
 |-------------|--------------------------|
-| `build-output/_bmad/` | `bmad.lens.release/_bmad/` |
+| `build-output/_bmad/` | `_bmad/` |
 | `build-output/.github/` | `.github/` |
 | `build-output/.github/agents/` | `.github/agents/` |
 | `build-output/.github/skills/` | `.github/skills/` |
@@ -84,9 +84,9 @@ The lens-work module is overlaid on top of the installed framework, then its `_m
 
 ### Included in promotion:
 All output from the BMAD installer + lens-work overlay, including:
-- `bmad.lens.release/_bmad/lens-work/` — full module source
-- `bmad.lens.release/_bmad/_config/` — manifest, agent configs
-- `bmad.lens.release/_bmad/core/`, `bmad.lens.release/_bmad/bmm/`, `bmad.lens.release/_bmad/cis/`, `bmad.lens.release/_bmad/gds/`, `bmad.lens.release/_bmad/tea/` — standard modules
+- `_bmad/lens-work/` — full module source
+- `_bmad/_config/` — manifest, agent configs
+- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` — standard modules
 - `.github/agents/`, `.github/skills/`, `.github/prompts/` — IDE-ready adapter stubs
 
 ### Excluded from promotion:
@@ -114,7 +114,7 @@ The pipeline is idempotent — re-running produces the same result. The clean `b
 
 ## Security
 
-- Release repo push requires `RELEASE_REPO_TOKEN` secret (PAT with `repo` scope on `bmad.lens.release`)
+- Release repo push requires `RELEASE_REPO_TOKEN` secret (PAT with `repo` scope on `lens.core`)
 - Pipeline runs as `github-actions[bot]` — no human credentials in git history
 - Executable file scan enforces the declarative-only constraint at CI level
 - Token is never logged; used only in `git remote` auth and GitHub REST API calls
@@ -123,4 +123,4 @@ The pipeline is idempotent — re-running produces the same result. The clean `b
 
 | Secret | Purpose |
 |--------|---------|
-| `RELEASE_REPO_TOKEN` | PAT with `repo` scope on `bmad.lens.release` — enables clone, push, and PR creation |
+| `RELEASE_REPO_TOKEN` | PAT with `repo` scope on `lens.core` — enables clone, push, and PR creation |

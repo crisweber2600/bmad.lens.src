@@ -25,7 +25,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
-RELEASE_DIR="${PROJECT_ROOT}/bmad.lens.release"
+RELEASE_DIR="${PROJECT_ROOT}/lens.core"
 TIMESTAMP_FILE="${PROJECT_ROOT}/_bmad-output/lens-work/personal/.preflight-timestamp"
 
 # -- Colors -----------------------------------------------------------------
@@ -62,7 +62,7 @@ cd "$PROJECT_ROOT"
 # =============================================================================
 echo -e "${CYAN}[preflight]${NC} Checking release branch..."
 if [ ! -d "$RELEASE_DIR" ]; then
-  echo -e "${RED}ERROR: bmad.lens.release directory not found at ${RELEASE_DIR}${NC}"
+  echo -e "${RED}ERROR: lens.core directory not found at ${RELEASE_DIR}${NC}"
   exit 1
 fi
 

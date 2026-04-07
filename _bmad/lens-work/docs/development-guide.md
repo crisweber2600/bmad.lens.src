@@ -193,9 +193,9 @@ CI/CD: promote-to-release.yml
     ↓ build → overlay → package
 _module-installer/installer.js    (called by pipeline)
     ↓ generate IDE adapter stubs
-bmad.lens.release (alpha branch)
+lens.core (alpha branch)
     ↓ auto PR
-bmad.lens.release (beta branch)
+lens.core (beta branch)
 ```
 
 See [pipeline-source-to-release.md](./pipeline-source-to-release.md) for details.

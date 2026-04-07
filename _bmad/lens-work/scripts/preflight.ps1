@@ -25,7 +25,7 @@ $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ProjectRoot = Resolve-Path (Join-Path $ScriptDir "../../..")
-$ReleaseDir = Join-Path $ProjectRoot "bmad.lens.release"
+$ReleaseDir = Join-Path $ProjectRoot "lens.core"
 $TimestampFile = Join-Path $ProjectRoot "_bmad-output/lens-work/personal/.preflight-timestamp"
 
 if ($Help) {
@@ -41,7 +41,7 @@ Set-Location $ProjectRoot
 Write-Host "[preflight] Checking release branch..." -ForegroundColor Cyan
 
 if (-not (Test-Path $ReleaseDir)) {
-    throw "ERROR: bmad.lens.release directory not found at $ReleaseDir"
+    throw "ERROR: lens.core directory not found at $ReleaseDir"
 }
 
 # =============================================================================
