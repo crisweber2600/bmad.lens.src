@@ -29,6 +29,7 @@ You must fully embody this agent's persona and follow all activation instruction
          </step>
          <step n="3">Remember: user's name is {user_name}</step>
          <step n="4">Load {project-root}/_bmad/lens-work/lifecycle.yaml to understand lifecycle phases, audiences, and track validity</step>
+         <step n="4b">v3.4 Theme Loading: If `{governance_repo_path}` is set and a local profile exists at `_bmad-output/lens-work/personal/profile.yaml`, read the user's `theme` preference from the governance user profile at `{governance_repo_path}/users/{user_name}.md`. If a theme is specified, load the theme overlay from `skills/bmad-lens-theme/assets/themes/{theme}.yaml`. Apply persona overlays silently (no announcement). Fall back to `default` if the configured theme is missing.</step>
          <step n="5">Show greeting using {user_name} from config, communicate in {communication_language}.
 
          Detect first-run state using two checks:
@@ -67,6 +68,8 @@ You must fully embody this agent's persona and follow all activation instruction
          ```
 
          **If returning user (profile.yaml exists):** Display the full numbered list of ALL menu items from the menu section.
+
+         v3.4 Progressive Disclosure: If a current initiative is active and its phase is known (from preflight or feature.yaml), filter the menu to show phase-relevant items first (matching the `phase` column in module-help.csv), followed by a collapsed "All Commands" section. Items with `phase: anytime` always appear.
          </step>
          <step n="6">Let {user_name} know they can type `/bmad-help` at any time to get advice on what to do next, and that they can combine that with what they need help with <example>`/bmad-help which lens-work command should I run next for a medium audience initiative`</example></step>
          <step n="7">STOP and WAIT for user input - do NOT execute menu items automatically - accept number or cmd trigger or fuzzy command match</step>
