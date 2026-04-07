@@ -109,10 +109,10 @@ jobs:
           cd release-repo
           git init
           git remote add origin \
-            "https://x-access-token:${{ secrets.RELEASE_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/lens.core
+            "https://x-access-token:${{ secrets.RELEASE_REPO_TOKEN }}@github.com/${{ github.repository_owner }}/lens.core.git"
           if ! git fetch --prune --no-tags origin \
             +refs/heads/beta:refs/remotes/origin/beta; then
-            echo "::error::Failed to fetch beta branch from lens.core
+            echo "::error::Failed to fetch beta branch from lens.core"
             exit 1
           fi
 
@@ -126,7 +126,7 @@ jobs:
           fi
 
           if ! git show-ref --verify --quiet refs/remotes/origin/beta; then
-            echo "::error::Failed to fetch beta branch from lens.core
+            echo "::error::Failed to fetch beta branch from lens.core"
             exit 1
           fi
 
@@ -337,8 +337,8 @@ jobs:
           INSTRUCTIONS="build-output/.github/copilot-instructions.md"
           if [ -f "$INSTRUCTIONS" ]; then
             # Fix the project name (BMAD CLI uses directory name)
-            sed -i 's/- \*\*Project\*\*: build-output/- **Project**: lens.coreS"
-            sed -i 's/- \*\*Output Folder\*\*: _bmad-output/- **Output Folder**: lens.core "$INSTRUCTIONS"
+            sed -i 's/- \*\*Project\*\*: build-output/- **Project**: lens.core/' "$INSTRUCTIONS"
+            sed -i 's/- \*\*Output Folder\*\*: _bmad-output/- **Output Folder**: lens.core/' "$INSTRUCTIONS"
             echo "✅ copilot-instructions.md patched"
           fi
 
@@ -490,7 +490,7 @@ jobs:
           OPEN_PRS=$(curl -s \
             -H "Authorization: token $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${{ github.repository_owner }}/lens.coregithub.repository_owner }}:alpha&base=beta&state=open")
+            "https://api.github.com/repos/${{ github.repository_owner }}/lens.core/pulls?head=${{ github.repository_owner }}:alpha&base=beta&state=open")
           PR_COUNT=$(echo "$OPEN_PRS" | jq 'length')
 
           if [ "$PR_COUNT" -gt 0 ]; then
@@ -500,7 +500,7 @@ jobs:
             PR_RESPONSE=$(curl -s -X POST \
               -H "Authorization: token $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/${{ github.repository_owner }}/lens.core
+              "https://api.github.com/repos/${{ github.repository_owner }}/lens.core/pulls" \
               -d "$(jq -n \
                 --arg title "[PROMOTE] Full BMAD + lens-work v${{ steps.version.outputs.version }}" \
                 --arg body "Full BMAD framework + lens-work custom module build.\n\n**lens-work version:** ${{ steps.version.outputs.version }}\n**Source commit:** ${{ github.sha }}\n**Triggered by:** ${{ github.actor }}\n\n**Included:**\n- BMAD core + bmm + bmb + cis + gds + tea\n- lens-work custom module\n- IDE adapters: GitHub Copilot, Cursor, Claude, Codex\n- Embedded .github payload (agents/prompts/instructions) with lens-work prompts only" \
