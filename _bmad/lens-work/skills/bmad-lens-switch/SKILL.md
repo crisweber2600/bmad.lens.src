@@ -47,7 +47,7 @@ You manage active feature context for the Lens agent session. You switch the wor
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root level and `lens` section). Expected config keys under `lens`: `governance_repo`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root level and `lens` section). Expected config keys under `lens`: `governance_repo`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 

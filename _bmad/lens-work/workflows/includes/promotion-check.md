@@ -96,10 +96,10 @@ If user selects **[P]** (Promote):
 Invoke the audience-promotion workflow using the shell (which internally uses promote-branch script with PAT + GitHub API):
 ```bash
 # For PowerShell:
-& .\_bmad\lens-work\workflows\core\audience-promotion\workflow.md
+& .\lens.core\_bmad\lens-work\workflows\core\audience-promotion\workflow.md
 
 # For Bash:
-bash ./_bmad/lens-work/workflows/core/audience-promotion/workflow.md
+bash ./lens.core/_bmad/lens-work/workflows/core/audience-promotion/workflow.md
 ```
 
 The promote workflow internally calls `promote-branch.ps1` or `promote-branch.sh`, which uses your PAT from `profile.yaml` to create PRs via GitHub REST API. No `gh` CLI required.
@@ -108,13 +108,13 @@ The promote workflow internally calls `promote-branch.ps1` or `promote-branch.sh
 If preferred, call the promote script directly with PAT support:
 ```bash
 # For PowerShell:
-& .\.\_bmad\lens-work\scripts\promote-branch.ps1 `
+& .\.\lens.core\_bmad\lens-work\scripts\promote-branch.ps1 `
   -SourceBranch "${initiative.id}-${audience}" `
   -CreatePR `
   -Cleanup
 
 # For Bash:
-./_bmad/lens-work/scripts/promote-branch.sh \
+./lens.core/_bmad/lens-work/scripts/promote-branch.sh \
   -s "${initiative.id}-${audience}" \
   --no-pr  # skip PR if you manually create via API
 ```
@@ -179,7 +179,7 @@ Add this at the end of router workflows (preplan, businessplan, techplan, devpro
 
 Run the promotion-check include:
 
-1. Execute `{project-root}/_bmad/lens-work/workflows/includes/promotion-check.md`
+1. Execute `{project-root}/lens.core/_bmad/lens-work/workflows/includes/promotion-check.md`
 2. If all phases for current audience are complete, present promotion options
 3. If promotion selected, invoke the audience-promotion workflow
 4. If declined, allow user to continue on current audience

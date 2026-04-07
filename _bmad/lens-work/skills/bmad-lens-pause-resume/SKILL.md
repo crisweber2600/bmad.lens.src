@@ -53,7 +53,7 @@ When a feature is resumed, `paused_from`, `pause_reason`, and `paused_at` are cl
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`. Resolve `{governance_repo}` (default: current repo).
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`. Resolve `{governance_repo}` (default: current repo).
 
 ## Capabilities
 

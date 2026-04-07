@@ -8,5 +8,5 @@ description: 'Contextual help system for Lens. Use when showing help, searching 
 > **This is a stub.** Load and execute the full prompt from the release module.
 
 ```
-Read and follow all instructions in: _bmad/lens-work/prompts/lens-help.prompt.md
+Read and follow all instructions in: lens.core/_bmad/lens-work/prompts/lens-help.prompt.md
 ```

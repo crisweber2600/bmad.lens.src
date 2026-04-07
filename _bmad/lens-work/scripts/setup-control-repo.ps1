@@ -679,14 +679,14 @@ Write-Host "GitHub Copilot adapter is installed from $ReleaseRepo/.github."
 Write-Host "No further setup is needed if GitHub Copilot is your only IDE."
 Write-Host ""
 Write-Host "For non-Copilot IDEs, run the module installer:"
-Write-Host "  .\_bmad\lens-work\scripts\install.ps1 -IDE cursor" -ForegroundColor Cyan
-Write-Host "  .\_bmad\lens-work\scripts\install.ps1 -AllIDEs" -ForegroundColor Cyan
+Write-Host "  .\lens.core\_bmad\lens-work\scripts\install.ps1 -IDE cursor" -ForegroundColor Cyan
+Write-Host "  .\lens.core\_bmad\lens-work\scripts\install.ps1 -AllIDEs" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Next Steps:" -ForegroundColor White
 Write-Host "  1. Store your GitHub PAT (run in terminal, " -NoNewline
 Write-Host "not in AI chat" -ForegroundColor Yellow -NoNewline
 Write-Host "):"
-Write-Host "     .\$ReleaseRepo\_bmad\lens-work\scripts\store-github-pat.ps1" -ForegroundColor Cyan
+Write-Host "     .\$ReleaseRepo\lens.core\_bmad\lens-work\scripts\store-github-pat.ps1" -ForegroundColor Cyan
 Write-Host "  2. Open VS Code + GitHub Copilot Chat and run:"
 Write-Host "     /onboard" -ForegroundColor Cyan
 Write-Host ""

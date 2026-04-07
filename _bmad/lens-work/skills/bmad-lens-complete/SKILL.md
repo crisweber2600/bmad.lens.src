@@ -46,7 +46,7 @@ You are the archivist. You close the feature lifecycle loop. You do not rush, yo
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 

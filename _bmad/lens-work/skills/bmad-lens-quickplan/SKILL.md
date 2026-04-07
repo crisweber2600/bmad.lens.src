@@ -50,7 +50,7 @@ You are the feature planning conductor for the Lens agent. You keep the flow mov
 
 ## On Activation
 
-1. Load config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root and `lens` section). Expected keys under `lens`: `governance_repo`, `default_mode`.
+1. Load config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root and `lens` section). Expected keys under `lens`: `governance_repo`, `default_mode`.
 2. Resolve `{governance_repo}` (default: current repo root) and `{feature_id}` (from `--feature-id` arg, active context, or prompt user).
 3. Load `feature.yaml` for the feature via `bmad-lens-feature-yaml`.
 4. Load cross-feature context (related summaries + depends_on full docs) via `bmad-lens-git-state`.

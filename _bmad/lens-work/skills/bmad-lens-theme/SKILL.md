@@ -47,7 +47,7 @@ You are the theme management skill for the Lens agent. You load theme YAML files
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root level and `lens` section). Expected config keys under `lens`: `governance_repo`, `default_theme`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root level and `lens` section). Expected config keys under `lens`: `governance_repo`, `default_theme`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 - `{username}` (default: `git config user.name`; if unavailable, skip user-profile lookup and use `default`)

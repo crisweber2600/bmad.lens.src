@@ -22,15 +22,15 @@ The top-level workspace. This is an **operational workspace**, not a code repo. 
 
 A **git submodule** containing the BMAD framework release payload. This is the **authority** for all module definitions.
 
-- `_bmad/lens-work/` — The lens-work module: lifecycle contract, skills, workflows, prompts, scripts, agents, docs
-- `_bmad/bmm/`, `_bmad/core/`, `_bmad/cis/`, etc. — Other BMAD modules
-- `_bmad/_config/` — Global manifests (agent, workflow, task, tool, files)
+- `lens.core/_bmad/lens-work/` — The lens-work module: lifecycle contract, skills, workflows, prompts, scripts, agents, docs
+- `lens.core/_bmad/bmm/`, `lens.core/_bmad/core/`, `lens.core/_bmad/cis/`, etc. — Other BMAD modules
+- `lens.core/_bmad/_config/` — Global manifests (agent, workflow, task, tool, files)
 
-**Write rules:** NEVER modify files in `lens.core/`. It is read-only reference material. All `_bmad/` path references in prompts and workflows resolve relative to `lens.core/`, NOT the workspace root.
+**Write rules:** NEVER modify files in `lens.core/`. It is read-only reference material. All `lens.core/_bmad/` path references in prompts and workflows resolve relative to `lens.core/`, NOT the workspace root.
 
 ### 3. TargetProjects
 
-Contains **cloned code repositories** organized by `{domain}/{service}/{repo}`. The base path is configured in `_bmad/lens-work/bmadconfig.yaml` as `target_projects_path` (default: `../TargetProjects`).
+Contains **cloned code repositories** organized by `{domain}/{service}/{repo}`. The base path is configured in `lens.core/_bmad/lens-work/bmadconfig.yaml` as `target_projects_path` (default: `../TargetProjects`).
 
 Each subfolder is an independent git repo with its own `.git/`, branches, and remotes.
 
@@ -40,12 +40,12 @@ Each subfolder is an independent git repo with its own `.git/`, branches, and re
 
 | Reference Pattern | Resolves To |
 |---|---|
-| `_bmad/lens-work/...` in a prompt or workflow | `_bmad/lens-work/...` |
-| `_bmad/_config/...` | `_bmad/_config/...` |
+| `lens.core/_bmad/lens-work/...` in a prompt or workflow | `lens.core/_bmad/lens-work/...` |
+| `lens.core/_bmad/_config/...` | `lens.core/_bmad/_config/...` |
 | `_bmad-output/...` | Workspace root `_bmad-output/...` (control repo) |
 | `{target_projects_path}/{domain}/{service}/{repo}/` | The cloned code repo for that initiative |
-| `.github/prompts/lens-work.*.prompt.md` | Stub files — always follow the redirect to `_bmad/lens-work/prompts/...` |
-| `.github/skills/lens-work-*/SKILL.md` | Stub files — always follow the redirect to `_bmad/lens-work/skills/...` |
+| `.github/prompts/lens-work.*.prompt.md` | Stub files — always follow the redirect to `lens.core/_bmad/lens-work/prompts/...` |
+| `.github/skills/lens-work-*/SKILL.md` | Stub files — always follow the redirect to `lens.core/_bmad/lens-work/skills/...` |
 
 ## The `/dev` Prompt — Strict Write Scope
 

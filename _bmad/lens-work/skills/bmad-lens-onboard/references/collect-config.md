@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Gather user preferences and write them to `user-profile.md` and `_bmad/config.user.yaml` inside the governance repo. This step runs after scaffold and before the first feature is created.
+Gather user preferences and write them to `user-profile.md` and `lens.core/_bmad/config.user.yaml` inside the governance repo. This step runs after scaffold and before the first feature is created.
 
 ## Config Fields
 
@@ -43,7 +43,7 @@ target_repos:
   - {repo2}
 ```
 
-### `_bmad/config.user.yaml`
+### `lens.core/_bmad/config.user.yaml`
 
 ```yaml
 github_pat: "{pat}"
@@ -55,7 +55,7 @@ default_track: "{default_track}"
 theme: "{theme}"
 ```
 
-The `_bmad/` directory is created if it does not exist. All writes are atomic (temp file + rename).
+The `lens.core/_bmad/` directory is created if it does not exist. All writes are atomic (temp file + rename).
 
 ## Output Contract
 
@@ -64,7 +64,7 @@ The `_bmad/` directory is created if it does not exist. All writes are atomic (t
   "status": "ok" | "error",
   "files_written": [
     "users/{username}.md",
-    "_bmad/config.user.yaml"
+    "lens.core/_bmad/config.user.yaml"
   ],
   "message": "optional error message"
 }

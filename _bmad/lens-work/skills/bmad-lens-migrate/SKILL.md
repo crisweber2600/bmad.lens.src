@@ -63,7 +63,7 @@ You are the migration bridge between LENS v3 and Lens Next. You scan for old-mod
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`, `username`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`, `username`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 - `{username}` (default: `git config user.name`) — username for migration attribution

@@ -11,7 +11,7 @@ bmad.lens.bmad/.github/workflows/promote-to-release.yml
 ## Pipeline Flow
 
 ```
-push to master (bmad.lens.src/_bmad/lens-work/**)
+push to master (bmad.lens.src/lens.core/_bmad/lens-work/**)
   │
   ├─ 1.  Validate declarative-only constraint
   ├─ 2.  Validate required files exist
@@ -25,8 +25,8 @@ push to master (bmad.lens.src/_bmad/lens-work/**)
   │       modules: core, bmm, cis, gds, tea + custom BMB
   │       IDEs:    github-copilot, cursor, claude-code
   │
-  ├─ 8.  Overlay lens-work custom module into build-output/_bmad/lens-work/
-  │       (also registered in build-output/_bmad/_config/custom/lens-work/)
+  ├─ 8.  Overlay lens-work custom module into build-output/lens.core/_bmad/lens-work/
+  │       (also registered in build-output/lens.core/_bmad/_config/custom/lens-work/)
   │
   ├─ 9.  Run lens-work _module-installer to generate IDE adapters
   │       (.github/agents/, .github/prompts/, .github/skills/)
@@ -49,7 +49,7 @@ push to master (bmad.lens.src/_bmad/lens-work/**)
 
 | Trigger | Action |
 |---------|--------|
-| Push to `master` changing `bmad.lens.src/_bmad/lens-work/**` | Validate + full build + promote to alpha + open PR to beta |
+| Push to `master` changing `bmad.lens.src/lens.core/_bmad/lens-work/**` | Validate + full build + promote to alpha + open PR to beta |
 | Push to `master` changing `.github/workflows/promote-to-release.yml` | Same |
 | Manual `workflow_dispatch` | Same as above |
 
@@ -68,7 +68,7 @@ The pipeline installs a complete BMAD framework (not just lens-work) into a clea
 |-----------|--------|
 | Core + standard modules | `npx bmad-method@6.2.0` (npm) |
 | BMB module | `bmad-builder@latest` npm package (`/src/`) |
-| lens-work module | `bmad.lens.src/_bmad/lens-work/` in this repo |
+| lens-work module | `bmad.lens.src/lens.core/_bmad/lens-work/` in this repo |
 
 The lens-work module is overlaid on top of the installed framework, then its `_module-installer/installer.js` generates IDE-specific adapter files.
 
@@ -76,7 +76,7 @@ The lens-work module is overlaid on top of the installed framework, then its `_m
 
 | Build output | Release (`alpha` branch) |
 |-------------|--------------------------|
-| `build-output/_bmad/` | `_bmad/` |
+| `build-output/lens.core/_bmad/` | `lens.core/_bmad/` |
 | `build-output/.github/` | `.github/` |
 | `build-output/.github/agents/` | `.github/agents/` |
 | `build-output/.github/skills/` | `.github/skills/` |
@@ -84,9 +84,9 @@ The lens-work module is overlaid on top of the installed framework, then its `_m
 
 ### Included in promotion:
 All output from the BMAD installer + lens-work overlay, including:
-- `_bmad/lens-work/` — full module source
-- `_bmad/_config/` — manifest, agent configs
-- `_bmad/core/`, `_bmad/bmm/`, `_bmad/cis/`, `_bmad/gds/`, `_bmad/tea/` — standard modules
+- `lens.core/_bmad/lens-work/` — full module source
+- `lens.core/_bmad/_config/` — manifest, agent configs
+- `lens.core/_bmad/core/`, `lens.core/_bmad/bmm/`, `lens.core/_bmad/cis/`, `lens.core/_bmad/gds/`, `lens.core/_bmad/tea/` — standard modules
 - `.github/agents/`, `.github/skills/`, `.github/prompts/` — IDE-ready adapter stubs
 
 ### Excluded from promotion:

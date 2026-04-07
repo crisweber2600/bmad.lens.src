@@ -56,7 +56,7 @@ You read feature state and return the most actionable next step. You are opinion
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root level and `lens` section). Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root level and `lens` section). Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 

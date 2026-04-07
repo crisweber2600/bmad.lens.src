@@ -7,9 +7,9 @@
 #   workflows/includes/preflight.md.
 #
 # USAGE:
-#   .\_bmad\lens-work\scripts\preflight.ps1
-#   .\_bmad\lens-work\scripts\preflight.ps1 -SkipConstitution
-#   .\_bmad\lens-work\scripts\preflight.ps1 -Caller onboard
+#   .\lens.core\_bmad\lens-work\scripts\preflight.ps1
+#   .\lens.core\_bmad\lens-work\scripts\preflight.ps1 -SkipConstitution
+#   .\lens.core\_bmad\lens-work\scripts\preflight.ps1 -Caller onboard
 #
 # =============================================================================
 
@@ -49,7 +49,7 @@ if (-not (Test-Path $ReleaseDir)) {
 # =============================================================================
 Write-Host "[preflight] Verifying LENS_VERSION compatibility..." -ForegroundColor Cyan
 
-$moduleSchemaLine = Get-Content (Join-Path $ReleaseDir "_bmad/lens-work/lifecycle.yaml") |
+$moduleSchemaLine = Get-Content (Join-Path $ReleaseDir "lens.core/_bmad/lens-work/lifecycle.yaml") |
     Where-Object { $_ -match '^schema_version:' } | Select-Object -First 1
 
 if ([string]::IsNullOrWhiteSpace($moduleSchemaLine)) {
@@ -162,7 +162,7 @@ foreach ($entryPoint in @("CLAUDE.md")) {
 # =============================================================================
 if (-not (Test-Path ".claude/commands")) {
     Write-Host "[preflight] .claude/commands missing — running installer..." -ForegroundColor Yellow
-    bash (Join-Path $ReleaseDir "_bmad/lens-work/scripts/install.sh") --ide claude
+    bash (Join-Path $ReleaseDir "lens.core/_bmad/lens-work/scripts/install.sh") --ide claude
 }
 
 # =============================================================================

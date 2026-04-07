@@ -40,11 +40,11 @@ You surface the current state of features with progressive disclosure. You read 
 | **plan branch** | `{featureId}-plan` — has full planning docs including `feature.yaml` |
 | **summary.md** | Mechanically extracted snapshot on `main` — updated atomically with each plan commit |
 | **active feature** | Any feature whose status is not `archived` |
-| **governance repo** | Dedicated repo holding all Lens metadata; configured via `{governance_repo}` in `_bmad/config.yaml` |
+| **governance repo** | Dedicated repo holding all Lens metadata; configured via `{governance_repo}` in `lens.core/_bmad/config.yaml` |
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root level and `lens` section). Expected config keys under `lens`: `governance_repo`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root level and `lens` section). Expected config keys under `lens`: `governance_repo`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 

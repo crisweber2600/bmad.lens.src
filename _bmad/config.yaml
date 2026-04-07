@@ -1,6 +1,6 @@
 # BMAD Config Bridge
 # Maps the Lens Next config schema to this project's structure.
-# New Lens skills (bmad-lens-*) reference this file at {project-root}/_bmad/config.yaml
+# New Lens skills (bmad-lens-*) reference this file at {project-root}/lens.core/_bmad/config.yaml
 # This file bootstraps by loading the authoritative lens-work bmadconfig.yaml values.
 
 # --- Core BMAD defaults ---
@@ -19,13 +19,13 @@ lens:
   target_repos: []
 
   # Path mappings for old-release compatibility
-  module_path: "_bmad/lens-work"
-  skills_path: "_bmad/lens-work/skills"
-  prompts_path: "_bmad/lens-work/prompts"
-  lifecycle_contract: "{project-root}/_bmad/lens-work/lifecycle.yaml"
+  module_path: "lens.core/_bmad/lens-work"
+  skills_path: "lens.core/_bmad/lens-work/skills"
+  prompts_path: "lens.core/_bmad/lens-work/prompts"
+  lifecycle_contract: "{project-root}/lens.core/_bmad/lens-work/lifecycle.yaml"
   output_folder: "{project-root}/_bmad-output/lens-work"
 
 # --- Reference: Authoritative config ---
 # The canonical bmadconfig.yaml for this project lives at:
-#   _bmad/lens-work/bmadconfig.yaml
+#   lens.core/_bmad/lens-work/bmadconfig.yaml
 # If they diverge, lens-work/bmadconfig.yaml takes precedence for legacy workflows.

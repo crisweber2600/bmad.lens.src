@@ -100,12 +100,12 @@ Run with **no arguments** to enter the interactive wizard:
 
 ```bash
 # macOS / Linux / Git Bash:
-./_bmad/lens-work/scripts/setup-control-repo.sh
+./lens.core/_bmad/lens-work/scripts/setup-control-repo.sh
 ```
 
 ```powershell
 # Windows PowerShell:
-.\_bmad\lens-work\scripts\setup-control-repo.ps1
+.\lens.core\_bmad\lens-work\scripts\setup-control-repo.ps1
 ```
 
 The wizard auto-detects your GitHub username, walks you through each setting with smart defaults, and asks for confirmation before making changes.
@@ -113,7 +113,7 @@ The wizard auto-detects your GitHub username, walks you through each setting wit
 > **For CI / scripted use**, pass `--org` (bash) or `-Org` (PowerShell) to skip the wizard:
 >
 > ```bash
-> ./_bmad/lens-work/scripts/setup-control-repo.sh --org your-username
+> ./lens.core/_bmad/lens-work/scripts/setup-control-repo.sh --org your-username
 > ```
 
 The setup script will:
@@ -131,11 +131,11 @@ The setup script will:
 > **Run this in your terminal, not in AI chat.** PATs should never be typed into a chat interface.
 
 ```bash
-bash _bmad/lens-work/scripts/store-github-pat.sh
+bash lens.core/_bmad/lens-work/scripts/store-github-pat.sh
 ```
 
 ```powershell
-.\_bmad\lens-work\scripts\store-github-pat.ps1
+.\lens.core\_bmad\lens-work\scripts\store-github-pat.ps1
 ```
 
 ### Step 5: Run `/onboard`
@@ -153,13 +153,13 @@ This validates authentication, creates your profile, and clones target project r
 GitHub Copilot is ready after setup. For other IDEs, run the module installer:
 
 ```bash
-./_bmad/lens-work/scripts/install.sh --ide cursor    # single IDE
-./_bmad/lens-work/scripts/install.sh --all-ides       # all supported IDEs
+./lens.core/_bmad/lens-work/scripts/install.sh --ide cursor    # single IDE
+./lens.core/_bmad/lens-work/scripts/install.sh --all-ides       # all supported IDEs
 ```
 
 ```powershell
-.\_bmad\lens-work\scripts\install.ps1 -IDE cursor
-.\_bmad\lens-work\scripts\install.ps1 -AllIDEs
+.\lens.core\_bmad\lens-work\scripts\install.ps1 -IDE cursor
+.\lens.core\_bmad\lens-work\scripts\install.ps1 -AllIDEs
 ```
 
 > **Full setup details:** See [`scripts/README.md`](scripts/README.md) for parameter reference, generated file documentation, re-run behavior, and troubleshooting.
@@ -174,22 +174,22 @@ The setup script above handles the initial GitHub Copilot adapter automatically.
 
 ```bash
 # From the control repo root:
-./_bmad/lens-work/scripts/install.sh
+./lens.core/_bmad/lens-work/scripts/install.sh
 
 # Windows:
-powershell .\_bmad\lens-work\scripts\install.ps1
+powershell .\lens.core\_bmad\lens-work\scripts\install.ps1
 ```
 
 ### Multi-IDE Install
 
 ```bash
-./_bmad/lens-work/scripts/install.sh --all-ides
+./lens.core/_bmad/lens-work/scripts/install.sh --all-ides
 ```
 
 ### Update Existing Adapters
 
 ```bash
-./_bmad/lens-work/scripts/install.sh --update
+./lens.core/_bmad/lens-work/scripts/install.sh --update
 ```
 
 See `module.yaml` `install_questions` for configuration options (target projects path, default git provider, IDE selection).

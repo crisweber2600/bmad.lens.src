@@ -8,5 +8,5 @@ description: 'Feature status and portfolio visibility. Use when checking current
 > **This is a stub.** Load and execute the full prompt from the release module.
 
 ```
-Read and follow all instructions in: _bmad/lens-work/prompts/lens-status.prompt.md
+Read and follow all instructions in: lens.core/_bmad/lens-work/prompts/lens-status.prompt.md
 ```

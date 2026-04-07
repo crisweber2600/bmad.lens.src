@@ -48,7 +48,7 @@ You are the entry point for all feature work in the Lens system. You orchestrate
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root level and `lens` section). Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root level and `lens` section). Resolve:
 
 - `{governance_repo}` — governance repo root path. **If not configured, halt and instruct user to run `bmad-lens-onboard` first.**
 - `{control_repo}` (default: `{governance_repo}`) — source code repo root path

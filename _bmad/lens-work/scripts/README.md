@@ -75,7 +75,7 @@ After a successful run, your control repo will look like this:
 ```
 {control-repo}/
 ├── lens.core/                          ← cloned release module
-│   └── _bmad/lens-work/...                     ← LENS module source
+│   └── lens.core/_bmad/lens-work/...                     ← LENS module source
 ├── .github/                                    ← IDE adapter (copied from release)
 │   ├── copilot-instructions.md
 │   └── prompts/...
@@ -116,7 +116,7 @@ This file is read by the preflight system and `/onboard` workflow to locate your
 3.2.0.0
 ```
 
-The version is extracted from `_bmad/lens-work/lifecycle.yaml` (`schema_version` field) with `.0.0` appended. Preflight hard-stops if this doesn't match the module's expected version.
+The version is extracted from `lens.core/_bmad/lens-work/lifecycle.yaml` (`schema_version` field) with `.0.0` appended. Preflight hard-stops if this doesn't match the module's expected version.
 
 ### `.gitignore` Entries
 
@@ -147,12 +147,12 @@ cd myproject.src
 ```bash
 # The script is inside the release module (which you may not have yet).
 # If lens.core/ already exists locally, run directly:
-./_bmad/lens-work/scripts/setup-control-repo.sh
+./lens.core/_bmad/lens-work/scripts/setup-control-repo.sh
 
 # If this is a brand-new repo with no release module yet,
 # clone it first, then run setup:
 git clone --branch beta https://github.com/your-username/lens.core.git
-./_bmad/lens-work/scripts/setup-control-repo.sh
+./lens.core/_bmad/lens-work/scripts/setup-control-repo.sh
 ```
 
 The wizard walks you through:
@@ -171,11 +171,11 @@ The wizard walks you through:
 > **Run this in your terminal, not in AI chat.** PATs should never be typed into a chat interface.
 
 ```bash
-bash _bmad/lens-work/scripts/store-github-pat.sh
+bash lens.core/_bmad/lens-work/scripts/store-github-pat.sh
 ```
 
 ```powershell
-.\_bmad\lens-work\scripts\store-github-pat.ps1
+.\lens.core\_bmad\lens-work\scripts\store-github-pat.ps1
 ```
 
 ### 4. Run `/onboard` in your IDE
@@ -197,13 +197,13 @@ The onboard workflow will:
 If you use Cursor, Claude Code, or Codex in addition to GitHub Copilot:
 
 ```bash
-./_bmad/lens-work/scripts/install.sh --ide cursor
-./_bmad/lens-work/scripts/install.sh --all-ides
+./lens.core/_bmad/lens-work/scripts/install.sh --ide cursor
+./lens.core/_bmad/lens-work/scripts/install.sh --all-ides
 ```
 
 ```powershell
-.\_bmad\lens-work\scripts\install.ps1 -IDE cursor
-.\_bmad\lens-work\scripts\install.ps1 -AllIDEs
+.\lens.core\_bmad\lens-work\scripts\install.ps1 -IDE cursor
+.\lens.core\_bmad\lens-work\scripts\install.ps1 -AllIDEs
 ```
 
 ---

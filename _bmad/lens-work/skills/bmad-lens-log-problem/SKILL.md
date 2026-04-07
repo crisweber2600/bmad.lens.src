@@ -43,7 +43,7 @@ You are the lightweight problem capture layer for Lens. You run in the backgroun
 | **problems.md** | Append-only problem log in the feature directory at `{governance-repo}/features/{domain}/{service}/{featureId}/problems.md` |
 | **entry_id** | Unique identifier for a problem entry: `prob-{YYYYMMDDTHHMMSSz}` |
 | **inline fix** | Logging a problem and its resolution atomically in one operation — the problem is logged with status `resolved` |
-| **governance repo** | The repository containing feature directories, resolved from `_bmad/config.yaml` |
+| **governance repo** | The repository containing feature directories, resolved from `lens.core/_bmad/config.yaml` |
 
 ### Problem Entry Format
 
@@ -60,7 +60,7 @@ You are the lightweight problem capture layer for Lens. You run in the backgroun
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml`. Expected config keys under `lens`: `governance_repo`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 

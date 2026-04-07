@@ -20,15 +20,15 @@
 > The steps below describe the algorithm. Run the script to execute all checks:
 >
 > ```bash
-> bash {release_repo_root}/_bmad/lens-work/scripts/preflight.sh                    # default
-> bash {release_repo_root}/_bmad/lens-work/scripts/preflight.sh --caller onboard   # from /onboard
-> bash {release_repo_root}/_bmad/lens-work/scripts/preflight.sh --skip-constitution
+> bash {release_repo_root}/lens.core/_bmad/lens-work/scripts/preflight.sh                    # default
+> bash {release_repo_root}/lens.core/_bmad/lens-work/scripts/preflight.sh --caller onboard   # from /onboard
+> bash {release_repo_root}/lens.core/_bmad/lens-work/scripts/preflight.sh --skip-constitution
 > ```
 >
 > ```powershell
-> .\{release_repo_root}\_bmad\lens-work\scripts\preflight.ps1                      # default
-> .\{release_repo_root}\_bmad\lens-work\scripts\preflight.ps1 -Caller onboard      # from /onboard
-> .\{release_repo_root}\_bmad\lens-work\scripts\preflight.ps1 -SkipConstitution
+> .\{release_repo_root}\lens.core\_bmad\lens-work\scripts\preflight.ps1                      # default
+> .\{release_repo_root}\lens.core\_bmad\lens-work\scripts\preflight.ps1 -Caller onboard      # from /onboard
+> .\{release_repo_root}\lens.core\_bmad\lens-work\scripts\preflight.ps1 -SkipConstitution
 > ```
 
 ### 1. Check Release Branch
@@ -37,7 +37,7 @@ Verify that `{release_repo_root}` directory exists.
 
 ### 1a. Enforce LENS_VERSION Compatibility
 
-Read `LENS_VERSION` from the control repo root and `schema_version` from `{release_repo_root}/_bmad/lens-work/lifecycle.yaml`. If they don't match, show a diagnostic and hard-stop:
+Read `LENS_VERSION` from the control repo root and `schema_version` from `{release_repo_root}/lens.core/_bmad/lens-work/lifecycle.yaml`. If they don't match, show a diagnostic and hard-stop:
 
 ```
 ❌ LENS_VERSION mismatch

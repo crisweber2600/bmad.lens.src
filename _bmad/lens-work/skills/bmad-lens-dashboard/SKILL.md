@@ -44,7 +44,7 @@ You generate the cross-feature command center. You read `main` for the fast path
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml`. Expected keys under `lens`: `governance_repo`. Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml`. Expected keys under `lens`: `governance_repo`. Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 

@@ -51,11 +51,11 @@ You are the relocation specialist for Lens features. A move is not a casual oper
 | **in-progress stories** | Stories in the feature's sprint plan with status `in-progress` or `done` — these block a move |
 | **reference patch** | Replacing old `domain/service/featureId` path strings in all text files of dependent features |
 | **feature-index.yaml** | Registry at `{governance_repo}/feature-index.yaml` — flat list of all features with domain/service fields |
-| **governance repo** | The repository containing all Lens metadata; resolved from `{governance_repo}` in `_bmad/config.yaml` |
+| **governance repo** | The repository containing all Lens metadata; resolved from `{governance_repo}` in `lens.core/_bmad/config.yaml` |
 
 ## On Activation
 
-Load config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml`. Resolve:
+Load config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml`. Resolve:
 
 - `{governance_repo}` (default: current repo root) — governance repo root path
 

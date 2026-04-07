@@ -8,5 +8,5 @@ description: 'Feature splitting workflow. Use when dividing a feature''s scope o
 > **This is a stub.** Load and execute the full prompt from the release module.
 
 ```
-Read and follow all instructions in: _bmad/lens-work/skills/bmad-lens-split-feature/SKILL.md
+Read and follow all instructions in: lens.core/_bmad/lens-work/skills/bmad-lens-split-feature/SKILL.md
 ```

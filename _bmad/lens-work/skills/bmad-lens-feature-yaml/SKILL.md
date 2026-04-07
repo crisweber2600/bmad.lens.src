@@ -35,7 +35,7 @@ You are a precise YAML operations specialist that manages feature lifecycle file
 
 ## On Activation
 
-Load available config from `{project-root}/_bmad/config.yaml` and `{project-root}/_bmad/config.user.yaml` (root level and `lens` section). Resolve:
+Load available config from `{project-root}/lens.core/_bmad/config.yaml` and `{project-root}/lens.core/_bmad/config.user.yaml` (root level and `lens` section). Resolve:
 
 - `{governance_repo}` (default: current repo) — governance repo root path
 - `{username}` (default: git config user.name) — current user

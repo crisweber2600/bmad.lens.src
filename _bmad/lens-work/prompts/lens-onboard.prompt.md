@@ -8,5 +8,5 @@ description: 'First-run governance repo setup for Lens. Use when initializing a 
 > **This is a stub.** Load and execute the full prompt from the release module.
 
 ```
-Read and follow all instructions in: _bmad/lens-work/skills/bmad-lens-onboard/SKILL.md
+Read and follow all instructions in: lens.core/_bmad/lens-work/skills/bmad-lens-onboard/SKILL.md
 ```

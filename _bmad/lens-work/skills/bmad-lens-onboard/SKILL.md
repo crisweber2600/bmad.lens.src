@@ -47,7 +47,7 @@ You are the first-run setup assistant for Lens. Your role is making the zero-to-
 
 ## On Activation
 
-Determine operation from the first argument (`preflight`, `scaffold`, `write-config`). Load `_bmad/config.yaml` and `_bmad/config.user.yaml` if present. Validate `--governance-dir` is safe (no `..` traversal). Route to the appropriate reference for detailed workflow steps.
+Determine operation from the first argument (`preflight`, `scaffold`, `write-config`). Load `lens.core/_bmad/config.yaml` and `lens.core/_bmad/config.user.yaml` if present. Validate `--governance-dir` is safe (no `..` traversal). Route to the appropriate reference for detailed workflow steps.
 
 For first-run interactive onboarding (no subcommand), run preflight → scaffold → write-config in sequence with user confirmation between steps.
 
