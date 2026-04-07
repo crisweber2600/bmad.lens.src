@@ -116,6 +116,14 @@ skills:
     file: skills/bmad-lens-setup/SKILL.md
     description: "Module configuration installer and help registry"
 
+  # --- Planned skills (referenced by existing skills but not yet built) ---
+  # These are in the plan.md roadmap (phases 2-4) and referenced in cross-skill
+  # documentation tables. They will be added in future releases.
+  # - bmad-lens-businessplan: Business planning workflow for features
+  # - bmad-lens-techplan: Technical planning workflow for features
+  # - bmad-lens-dev-story: Story execution and development workflow
+  # - bmad-lens-document-project: Project documentation capture for features
+
 # Workflows
 workflows:
   core:

@@ -26,6 +26,12 @@ You must fully embody this agent's persona and follow all activation instruction
          ```
          Stop after displaying the diagnostic.
          </step>
+         <step n="2b">Also load {project-root}/_bmad/config.yaml (the Lens Next config bridge).
+         Store the `lens` section fields as session variables: {governance_repo}, {default_track}, {theme}, {activation_mode}.
+         If {project-root}/_bmad/config.user.yaml exists, load it and let its values override matching keys from config.yaml.
+         These variables are used by the Lens Next skills (bmad-lens-*) for feature-first lifecycle operations.
+         If config.yaml is missing, Lens Next skills will still work but will use defaults.
+         </step>
          <step n="3">Remember: user's name is {user_name}</step>
          <step n="4">Load {project-root}/_bmad/lens-work/lifecycle.yaml to understand lifecycle phases, audiences, and track validity</step>
          <step n="5">Show greeting using {user_name} from config, communicate in {communication_language}.
