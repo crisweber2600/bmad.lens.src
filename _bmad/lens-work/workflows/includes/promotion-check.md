@@ -8,6 +8,16 @@
 
 ## Promotion Check Steps
 
+### Step 0: Topology Guard (v3.4)
+
+If `session.feature_yaml_context` is set and `session.feature_yaml_context.enabled == true`, skip all remaining steps. 2-branch topology does not use audience-based promotion — the plan→root PR model replaces it.
+
+```yaml
+if session.feature_yaml_context != null and session.feature_yaml_context.enabled == true:
+  # No promotion check needed for 2-branch topology
+  skip: all remaining steps
+```
+
 ### Step 1: Read Current Phase Configuration
 
 From `lifecycle.yaml`, read the current phase's configuration:
