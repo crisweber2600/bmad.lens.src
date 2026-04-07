@@ -191,6 +191,30 @@ if features_registry_config.enabled:
   git checkout ${CURRENT_BRANCH}
 ```
 
+### 4. Scaffold Governance Feature Directory (v3.4)
+
+When the governance repo is available and this is a 2-branch topology feature,
+create the feature directory with a problems.md template in the governance repo.
+
+```yaml
+governance_path = session.governance_repo_path || ""
+
+if governance_path != "" and topology == "2-branch":
+  feature_dir = "${governance_path}/features/${domain}/${service}/${initiative_root}"
+  ensure_directory(feature_dir)
+
+  # Create problems.md from template
+  problems_path = "${feature_dir}/problems.md"
+  if not file_exists(problems_path):
+    template = load("../../assets/templates/problems-template.md")
+    rendered = template
+      .replace("{featureId}", initiative_root)
+      .replace("{domain}", domain)
+      .replace("{service}", service)
+      .replace("{created_date}", now_iso8601())
+    write_file(problems_path, rendered)
+```
+
 ---
 
 ## NEXT STEP DIRECTIVE
