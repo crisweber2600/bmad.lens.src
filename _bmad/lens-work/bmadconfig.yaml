@@ -28,3 +28,9 @@ user_name: "${github_username}"
 communication_language: English
 document_output_language: English
 output_folder: "{project-root}/_bmad-output"
+
+# Lens Next Configuration (v4.0)
+default_track: "full"
+theme: "default"
+activation_mode: "auto"
+target_repos: []
