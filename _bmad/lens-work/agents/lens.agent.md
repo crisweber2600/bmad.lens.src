@@ -131,6 +131,29 @@ You must fully embody this agent's persona and follow all activation instruction
       <item cmd="AA or fuzzy match on audit-all or audit all" exec="{project-root}/_bmad/lens-work/workflows/governance/audit-all/workflow.md">[AA] Audit All Initiatives: Run compliance dashboard across all active initiatives</item>
       <item cmd="PM or fuzzy match on party-mode" exec="{project-root}/_bmad/core/workflows/party-mode/workflow.md">[PM] Start Party Mode — delegates to core party-mode workflow; @lens participates as one voice among peer agents</item>
       <item cmd="DA or fuzzy match on exit, leave, goodbye or dismiss agent">[DA] Dismiss Agent</item>
+
+      <!-- Lens Next: Feature-first lifecycle skills (v4.0 model) -->
+      <item cmd="FY or fuzzy match on feature-yaml or feature yaml" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-feature-yaml/SKILL.md">[FY] Feature YAML: Create, read, update, or validate feature.yaml files</item>
+      <item cmd="GS or fuzzy match on git-state or git state" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-git-state/SKILL.md">[GS] Git State: Read-only branch queries for 2-branch feature model</item>
+      <item cmd="GO or fuzzy match on git-orchestration or git orchestration" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-git-orchestration/SKILL.md">[GO] Git Orchestration: Branch creation, commits, pushes for feature model</item>
+      <item cmd="TH or fuzzy match on theme or persona" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-theme/SKILL.md">[TH] Theme: Load theme, list themes, or set theme preference</item>
+      <item cmd="IF or fuzzy match on init-feature or new feature or init feature" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-init-feature/SKILL.md">[IF] Init Feature: Create 2-branch topology, feature.yaml, PR, and index entry</item>
+      <item cmd="QP or fuzzy match on quickplan or quick plan" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-quickplan/SKILL.md">[QP] QuickPlan: End-to-end planning pipeline from business plan through stories</item>
+      <item cmd="LG or fuzzy match on log-problem next or log problem next" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-log-problem/SKILL.md">[LG] Log Problem (Next): Capture and log problems for Lens features</item>
+      <item cmd="FS or fuzzy match on feature-status or feature status" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-status/SKILL.md">[FS] Feature Status: Feature status and portfolio visibility</item>
+      <item cmd="FN or fuzzy match on feature-next or feature next" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-next/SKILL.md">[FN] Feature Next: Recommend next action based on feature state</item>
+      <item cmd="FC or fuzzy match on feature-switch or feature context" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-switch/SKILL.md">[FC] Feature Switch: Switch active feature context</item>
+      <item cmd="FH or fuzzy match on feature-help or lens help" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-help/SKILL.md">[FH] Feature Help: Contextual help for current lifecycle state</item>
+      <item cmd="PS or fuzzy match on pause-resume or pause feature or resume feature" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-pause-resume/SKILL.md">[PS] Pause/Resume: Pause or resume feature with state preservation</item>
+      <item cmd="FR or fuzzy match on feature-retro or feature retrospective" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-retrospective/SKILL.md">[FR] Feature Retro: Analyze problems, root causes, and update insights</item>
+      <item cmd="FL or fuzzy match on feature-complete or finish feature" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-complete/SKILL.md">[FL] Feature Complete: Archive feature, run retrospective, document final state</item>
+      <item cmd="FM or fuzzy match on feature-move or relocate feature" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-move-feature/SKILL.md">[FM] Feature Move: Relocate feature to a different domain/service</item>
+      <item cmd="FP or fuzzy match on feature-split or split feature next" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-split-feature/SKILL.md">[FP] Feature Split: Divide feature scope or stories into two features</item>
+      <item cmd="FD or fuzzy match on feature-dashboard or cross-feature" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-dashboard/SKILL.md">[FD] Feature Dashboard: Cross-feature HTML dashboard and dependency graph</item>
+      <item cmd="LO or fuzzy match on lens-onboard or governance setup" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-onboard/SKILL.md">[LO] Lens Onboard: First-run governance repo setup</item>
+      <item cmd="LM or fuzzy match on lens-migrate or migrate legacy" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-migrate/SKILL.md">[LM] Lens Migrate: Migrate from LENS v3 initiative model to Lens Next feature model</item>
+      <item cmd="LS or fuzzy match on lens-setup or install lens" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-setup/SKILL.md">[LS] Lens Setup: Install or configure the Lens module</item>
+      <item cmd="LC or fuzzy match on lens-constitution or resolve rules" exec="{project-root}/_bmad/lens-work/skills/bmad-lens-constitution/SKILL.md">[LC] Lens Constitution: Resolve governance rules with 4-level hierarchy</item>
    </menu>
 </agent>
 ```
